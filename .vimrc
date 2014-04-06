@@ -35,6 +35,9 @@ NeoBundle 'Shougo/vimproc', {
 NeoBundle 'shougo/vimshell'
 NeoBundle 'Shougo/vimfiler'
 NeoBundle 'Shougo/neomru.vim'
+" 補完
+NeoBundle "Shougo/neocomplete.vim"
+let g:neocomplete#enable_at_startup = 1
 " Unite
 NeoBundle 'Shougo/unite.vim'
 let g:unite_enable_start_insert=1
@@ -54,9 +57,11 @@ NeoBundle 'open-browser.vim'
 let g:netrw_nogx = 1 " disable netrw's gx mapping.
 nmap gx <Plug>(openbrowser-smart-search)
 vmap gx <Plug>(openbrowser-smart-search)
-" SVN
+" Subversion/SVN
 NeoBundle 'vcscommand.vim'
 NeoBundle 'kmnk/vim-unite-svn'
+" Git
+NeoBundle 'tpope/vim-fugitive'
 
 filetype plugin indent on
 NeoBundleCheck
@@ -118,11 +123,15 @@ nnoremap <SPACE>   <PageDown>
 nnoremap <S-SPACE> <PageUp>
 vnoremap <SPACE>   <C-d>
 vnoremap <S-SPACE> <C-u>
-"強制全保存終了を無効化。
+"" 強制全保存終了を無効化。
 "nnoremap ZZ <Nop>
 " ; を : として使う
 nnoremap ; :
 vnoremap ; :
+" クリップボードを使う
+set clipboard+=unnamed
+" マウスを使う
+set mouse=a
 
 " ビープ音を消す
 set vb t_vb=
