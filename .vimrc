@@ -6,6 +6,8 @@ set encoding=utf8
 set fileencoding=utf-8
 
 " NeoBundleでプラグインを管理する
+" $ mkdir -p ~/.vim/bundle
+" $ git clone https://github.com/Shougo/neobundle.vim ~/.vim/bundle/neobundle.vim
 if has('vim_starting')
   set runtimepath+=~/.vim/bundle/neobundle.vim/
 endif
