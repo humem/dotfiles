@@ -16,7 +16,7 @@ NeoBundleFetch 'Shougo/neobundle.vim'
 
 " 以下のプラグインをバンドル
 " colorschemes
-if (&term =~ 'screen')
+if &term =~ 'screen'
   set t_Co=256
 endif
 NeoBundle 'nanotech/jellybeans.vim'
@@ -136,7 +136,7 @@ vnoremap <S-SPACE> <C-u>
 nnoremap ; :
 vnoremap ; :
 " クリップボードを使う
-if (&term =~ 'screen')
+if &term !~ 'screen'
   set clipboard+=unnamed
 endif
 " マウスを使う
