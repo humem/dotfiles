@@ -16,6 +16,9 @@ NeoBundleFetch 'Shougo/neobundle.vim'
 
 " 以下のプラグインをバンドル
 " colorschemes
+if (&term =~ 'screen')
+  set t_Co=256
+endif
 NeoBundle 'nanotech/jellybeans.vim'
 NeoBundle 'w0ng/vim-hybrid'
 NeoBundle 'vim-scripts/twilight'
@@ -38,8 +41,10 @@ NeoBundle 'shougo/vimshell'
 NeoBundle 'Shougo/vimfiler'
 NeoBundle 'Shougo/neomru.vim'
 " 補完
-NeoBundle "Shougo/neocomplete.vim"
-let g:neocomplete#enable_at_startup = 1
+if has('lua')
+  NeoBundle "Shougo/neocomplete.vim"
+  let g:neocomplete#enable_at_startup = 1
+endif
 " Unite
 NeoBundle 'Shougo/unite.vim'
 let g:unite_enable_start_insert=1
@@ -131,7 +136,9 @@ vnoremap <S-SPACE> <C-u>
 nnoremap ; :
 vnoremap ; :
 " クリップボードを使う
-set clipboard+=unnamed
+if (&term =~ 'screen')
+  set clipboard+=unnamed
+endif
 " マウスを使う
 set mouse=a
 
