@@ -32,12 +32,16 @@ colorscheme jellybeans
 NeoBundle 'Shougo/vimproc', {
   \ 'build' : {
     \ 'windows' : 'make -f make_mingw32.mak',
-    \ 'cygwin' : 'make -f make_cygwin.mak',
-    \ 'mac' : 'make -f make_mac.mak',
-    \ 'unix' : 'make -f make_unix.mak',
+    \ 'cygwin'  : 'make -f make_cygwin.mak',
+    \ 'mac'     : 'make -f make_mac.mak',
+    \ 'unix'    : 'make -f make_unix.mak',
   \ },
   \ }
 NeoBundle 'shougo/vimshell'
+" Use current directory as vimshell prompt.
+let g:vimshell_prompt_expr =
+\ 'escape(fnamemodify(getcwd(), ":~").">", "\\[]()?! ")." "'
+let g:vimshell_prompt_pattern = '^\%(\f\|\\.\)\+> '
 NeoBundle 'Shougo/vimfiler'
 NeoBundle 'Shougo/neomru.vim'
 " 補完
@@ -69,6 +73,12 @@ NeoBundle 'vcscommand.vim'
 NeoBundle 'kmnk/vim-unite-svn'
 " Git
 NeoBundle 'tpope/vim-fugitive'
+" jedi-vim for Python
+" $ cd ~/.vim/bundle/jedi-vim/
+" $ git submodule update --init
+NeoBundle 'davidhalter/jedi-vim'
+" IPython
+NeoBundle 'ivanov/vim-ipython'
 
 filetype plugin indent on
 NeoBundleCheck
