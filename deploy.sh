@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# link configuration files t
+# link configuration files to the home directory
 FILES=".vimrc .gvimrc"
 DIR=dotfiles
 for f in $FILES
@@ -10,8 +10,8 @@ done
 
 # download neobundle plugin
 BUNDLE=$HOME/.vim/bundle
-NEOBUNDLE=$BUNDLE/neobundle.
+NEOBUNDLE=$BUNDLE/neobundle.vim
 if ! [ -d $NEOBUNDLE ]; then
     mkdir -p $BUNDLE
-    git clone https://github
+    git clone https://github.com/Shougo/neobundle.vim $NEOBUNDLE
 fi
