@@ -83,7 +83,7 @@ if has('autocmd')  " minimumはサポート対象外
     NeoBundle 'davidhalter/jedi-vim'
     " IPython
     NeoBundle 'ivanov/vim-ipython'
-
+    " プラグインを確認する
     NeoBundleCheck
 endif
 
