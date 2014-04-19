@@ -129,12 +129,12 @@ set smartcase
 " インクリメンタルサーチを行う
 set incsearch
 " インデント
-set cindent         "C言語のインデントに従って高度な自動インデントを行う
-set expandtab       "Tabの代わりにSpaceを挿入する。Tabを打つ時は'Ctr-V Tab'。
-set smarttab        "行頭の余白内でTabを打ち込むと、'shiftwidth'の数だけインデントする
-set shiftwidth  =4
-set tabstop     =4 "タブの文字数を設定する
-set softtabstop =4 "ファイル内のTabが対応する空白の数
+set cindent       "C言語のインデントに従って高度な自動インデントを行う
+set expandtab     "Tabの代わりにSpaceを挿入する。Tabを打つ時は'Ctr-V Tab'。
+set smarttab      "行頭の余白内でTabを打ち込むと、'shiftwidth'の数だけインデントする
+set shiftwidth =4
+set tabstop    =4 "タブの文字数を設定する
+set softtabstop=4 "ファイル内のTabが対応する空白の数
 " Ctrl + hjkl でウィンドウ間を移動
 nnoremap <C-h> <C-w>h
 nnoremap <C-j> <C-w>j
@@ -159,5 +159,6 @@ if has('mouse')
   set mouse=a
 endif
 
+" その他
 " ビープ音を消す
 set vb t_vb=
