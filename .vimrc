@@ -1,3 +1,4 @@
+" .vimrc
 " vi互換ではなくVimのデフォルト設定にする
 set nocompatible
 
