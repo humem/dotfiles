@@ -103,6 +103,8 @@ set ruler
 set hlsearch
 " Escの2回押しでハイライト消去
 nmap <silent> <Esc><Esc> :nohlsearch<CR>
+" ビープ音を消す
+set vb t_vb=
 
 " ファイル・バッファ系
 " .swapファイルを作らない
@@ -158,8 +160,3 @@ endif
 if has('mouse')
   set mouse=a
 endif
-
-" その他
-" ビープ音を消す
-set vb t_vb=
-" 以上
