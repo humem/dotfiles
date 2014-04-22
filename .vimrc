@@ -1,3 +1,4 @@
+" .vimrc : vi:sw=2
 " vi互換ではなくVimのデフォルト設定にする
 set nocompatible
 
