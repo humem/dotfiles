@@ -136,10 +136,10 @@ set shiftwidth  =4
 set tabstop     =4 "タブの文字数を設定する
 set softtabstop =4 "ファイル内のTabが対応する空白の数
 " Ctrl + hjkl でウィンドウ間を移動
-nnoremap <C-h> <C-w>h
-nnoremap <C-j> <C-w>j
-nnoremap <C-k> <C-w>k
-nnoremap <C-l> <C-w>l
+"nnoremap <C-h> <C-w>h
+"nnoremap <C-j> <C-w>j
+"nnoremap <C-k> <C-w>k
+"nnoremap <C-l> <C-w>l
 "スペースキーで一画面移動
 nnoremap <SPACE>   <PageDown>
 nnoremap <S-SPACE> <PageUp>
