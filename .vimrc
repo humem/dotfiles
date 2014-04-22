@@ -15,76 +15,76 @@ endif
 " $ mkdir -p ~/.vim/bundle
 " $ git clone https://github.com/Shougo/neobundle.vim ~/.vim/bundle/neobundle.vim
 if has('autocmd')  " minimumはサポート対象外
-    if has('vim_starting')
-      set runtimepath+=~/.vim/bundle/neobundle.vim/
-    endif
-    call neobundle#rc(expand('~/.vim/bundle/'))
-    NeoBundleFetch 'Shougo/neobundle.vim'
+  if has('vim_starting')
+    set runtimepath+=~/.vim/bundle/neobundle.vim/
+  endif
+  call neobundle#rc(expand('~/.vim/bundle/'))
+  NeoBundleFetch 'Shougo/neobundle.vim'
 
-    " 以下のプラグインをバンドル
-    " colorschemes
-    NeoBundle 'nanotech/jellybeans.vim'
-    NeoBundle 'w0ng/vim-hybrid'
-    NeoBundle 'vim-scripts/twilight'
-    NeoBundle 'jonathanfilip/vim-lucius'
-    NeoBundle 'jpo/vim-railscasts-theme'
-    NeoBundle 'altercation/vim-colors-solarized'
-    NeoBundle 'vim-scripts/Wombat'
-    NeoBundle 'tomasr/molokai'
-    NeoBundle 'vim-scripts/rdark'
-    colorscheme jellybeans
-    NeoBundle 'Shougo/vimproc', {
-      \ 'build' : {
-        \ 'windows' : 'make -f make_mingw32.mak',
-        \ 'cygwin'  : 'make -f make_cygwin.mak',
-        \ 'mac'     : 'make -f make_mac.mak',
-        \ 'unix'    : 'make -f make_unix.mak',
-      \ },
-      \ }
-    NeoBundle 'shougo/vimshell'
-    " Use current directory as vimshell prompt.
-    let g:vimshell_prompt_expr =
-    \ 'escape(fnamemodify(getcwd(), ":~").">", "\\[]()?! ")." "'
-    let g:vimshell_prompt_pattern = '^\%(\f\|\\.\)\+> '
-    NeoBundle 'Shougo/vimfiler'
-    NeoBundle 'Shougo/neomru.vim'
-    " 補完
-    if has('lua')
-      NeoBundle "Shougo/neocomplete.vim"
-      let g:neocomplete#enable_at_startup = 1
-    endif
-    " Unite
-    NeoBundle 'Shougo/unite.vim'
-    let g:unite_enable_start_insert=1
-    let g:unite_source_history_yank_enable =1
-    let g:unite_source_file_mru_limit = 200
-    nnoremap <silent> ,uy :<C-u>Unite history/yank<CR>
-    nnoremap <silent> ,ub :<C-u>Unite buffer<CR>
-    nnoremap <silent> ,uf :<C-u>UniteWithBufferDir -buffer-name=files file<CR>
-    nnoremap <silent> ,ur :<C-u>Unite -buffer-name=register register<CR>
-    nnoremap <silent> ,uu :<C-u>Unite file_mru buffer<CR>
-    "ステータスバーを表示
-    NeoBundle 'itchyny/lightline.vim'
-    "ステータスラインを常に表示する
-    set laststatus=2
-    "URLをブラウザで開く
-    NeoBundle 'open-browser.vim'
-    let g:netrw_nogx = 1 " disable netrw's gx mapping.
-    nmap gx <Plug>(openbrowser-smart-search)
-    vmap gx <Plug>(openbrowser-smart-search)
-    " Subversion/SVN
-    NeoBundle 'vcscommand.vim'
-    NeoBundle 'kmnk/vim-unite-svn'
-    " Git
-    NeoBundle 'tpope/vim-fugitive'
-    " jedi-vim for Python
-    " $ cd ~/.vim/bundle/jedi-vim/
-    " $ git submodule update --init
-    NeoBundle 'davidhalter/jedi-vim'
-    " IPython
-    NeoBundle 'ivanov/vim-ipython'
+  " 以下のプラグインをバンドル
+  " colorschemes
+  NeoBundle 'nanotech/jellybeans.vim'
+  NeoBundle 'w0ng/vim-hybrid'
+  NeoBundle 'vim-scripts/twilight'
+  NeoBundle 'jonathanfilip/vim-lucius'
+  NeoBundle 'jpo/vim-railscasts-theme'
+  NeoBundle 'altercation/vim-colors-solarized'
+  NeoBundle 'vim-scripts/Wombat'
+  NeoBundle 'tomasr/molokai'
+  NeoBundle 'vim-scripts/rdark'
+  colorscheme jellybeans
+  NeoBundle 'Shougo/vimproc', {
+    \ 'build' : {
+      \ 'windows' : 'make -f make_mingw32.mak',
+      \ 'cygwin'  : 'make -f make_cygwin.mak',
+      \ 'mac'     : 'make -f make_mac.mak',
+      \ 'unix'    : 'make -f make_unix.mak',
+    \ },
+    \ }
+  NeoBundle 'shougo/vimshell'
+  " Use current directory as vimshell prompt.
+  let g:vimshell_prompt_expr =
+  \ 'escape(fnamemodify(getcwd(), ":~").">", "\\[]()?! ")." "'
+  let g:vimshell_prompt_pattern = '^\%(\f\|\\.\)\+> '
+  NeoBundle 'Shougo/vimfiler'
+  NeoBundle 'Shougo/neomru.vim'
+  " 補完
+  if has('lua')
+    NeoBundle "Shougo/neocomplete.vim"
+    let g:neocomplete#enable_at_startup = 1
+  endif
+  " Unite
+  NeoBundle 'Shougo/unite.vim'
+  let g:unite_enable_start_insert=1
+  let g:unite_source_history_yank_enable =1
+  let g:unite_source_file_mru_limit = 200
+  nnoremap <silent> ,uy :<C-u>Unite history/yank<CR>
+  nnoremap <silent> ,ub :<C-u>Unite buffer<CR>
+  nnoremap <silent> ,uf :<C-u>UniteWithBufferDir -buffer-name=files file<CR>
+  nnoremap <silent> ,ur :<C-u>Unite -buffer-name=register register<CR>
+  nnoremap <silent> ,uu :<C-u>Unite file_mru buffer<CR>
+  "ステータスバーを表示
+  NeoBundle 'itchyny/lightline.vim'
+  "ステータスラインを常に表示する
+  set laststatus=2
+  "URLをブラウザで開く
+  NeoBundle 'open-browser.vim'
+  let g:netrw_nogx = 1 " disable netrw's gx mapping.
+  nmap gx <Plug>(openbrowser-smart-search)
+  vmap gx <Plug>(openbrowser-smart-search)
+  " Subversion/SVN
+  NeoBundle 'vcscommand.vim'
+  NeoBundle 'kmnk/vim-unite-svn'
+  " Git
+  NeoBundle 'tpope/vim-fugitive'
+  " jedi-vim for Python
+  " $ cd ~/.vim/bundle/jedi-vim/
+  " $ git submodule update --init
+  NeoBundle 'davidhalter/jedi-vim'
+  " IPython
+  NeoBundle 'ivanov/vim-ipython'
 
-    NeoBundleCheck
+  NeoBundleCheck
 endif
 
 filetype plugin indent on
@@ -114,6 +114,8 @@ set nowritebackup
 set nobackup
 " 変更中のファイルでも、保存しないで他のファイルを表示
 "set hidden
+" ビープ音を消す
+set vb t_vb=
 
 " 操作系
 " [Backspace] で既存の文字を削除できるように設定
@@ -159,6 +161,3 @@ endif
 if has('mouse')
   set mouse=a
 endif
-
-" ビープ音を消す
-set vb t_vb=
