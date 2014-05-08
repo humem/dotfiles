@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # link configuration files to the home directory
-FILES=".vimrc .gvimrc"
+FILES=".vimrc .gvimrc .inputrc"
 DIR=dotfiles
 for f in $FILES
 do
