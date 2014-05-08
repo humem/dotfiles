@@ -103,8 +103,9 @@ set number
 set ruler
 " 検索結果をハイライト表示
 set hlsearch
-" Escの2回押しでハイライト消去
+" Escの2回押しまたはCtl-Lでハイライト消去
 nmap <silent> <Esc><Esc> :nohlsearch<CR>
+nnoremap <silent> <C-l> :nohlsearch<CR><C-l>
 " ビープ音を消す
 set vb t_vb=
 
@@ -140,10 +141,10 @@ set shiftwidth =4
 set tabstop    =4 "タブの文字数を設定する
 set softtabstop=4 "ファイル内のTabが対応する空白の数
 " Ctrl + hjkl でウィンドウ間を移動
-nnoremap <C-h> <C-w>h
-nnoremap <C-j> <C-w>j
-nnoremap <C-k> <C-w>k
-nnoremap <C-l> <C-w>l
+"nnoremap <C-h> <C-w>h
+"nnoremap <C-j> <C-w>j
+"nnoremap <C-k> <C-w>k
+"nnoremap <C-l> <C-w>l
 "スペースキーで一画面移動
 nnoremap <SPACE>   <PageDown>
 nnoremap <S-SPACE> <PageUp>
