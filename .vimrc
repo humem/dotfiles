@@ -114,6 +114,8 @@ set noswapfile
 set nowritebackup
 " バックアップをしない
 set nobackup
+" 操作取り消し用.un~ファイルを作らない
+set noundofile
 " 変更中のファイルでも、保存しないで他のファイルを表示
 "set hidden
 " ビープ音を消す
