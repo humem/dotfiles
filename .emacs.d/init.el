@@ -1,93 +1,29 @@
-;; Local Emacs-Lisp Repository ;;
+;; local emacs-lisp repository
 (setq load-path (cons "~/.emacs.d/lisp" load-path))
-;(setq load-path (cons "~/.emacs.d/lisp/ess/lisp" load-path))
-;(setq load-path (cons "~/.emacs.d/lisp/sicstus" load-path))
-
 (load "extra-autoloads" t)
 
-;; Language environment
+;; Japanese language environment
 (set-language-environment "Japanese")
 (set-default-coding-systems 'utf-8-unix)
-;(set-keyboard-coding-system 'utf-8)
-;(set-clipboard-coding-system 'utf-8)
-;(set-terminal-coding-system 'utf-8)
-;; (set-file-name-coding-system 'utf-8m) ; already set
 (prefer-coding-system 'utf-8-unix)
-
-;; Settings Japanese fonts for CocoaEmacs (version 23)
-(when (>= emacs-major-version 23)
-  (set-fontset-font
-     (frame-parameter nil 'font)
-     'japanese-jisx0208
-     '("osaka" . "iso10646-1"))
-;     '("Hiragino Kaku Gothic Pro" . "iso10646-1"))
-    (setq face-font-rescale-alist
-	  '(("^-apple-hiragino.*" . 1.2)
-	    (".*osaka-bold.*" . 1.0)
-  	    (".*osaka-medium.*" . 1.0)
-  	    (".*courier-bold-.*-mac-roman" . 1.0)
-  	    (".*monaco cy-bold-.*-mac-cyrillic" . 0.9)
-  	    (".*monaco-bold-.*-mac-roman" . 0.9)
-  	    ("-cdac$" . 1.3)))
-
-    ;; Encoding settings.
-;    (require 'ucs-normalize)
-;    (setq file-name-coding-system 'utf-8-hfs))
-;    (prefer-coding-system 'utf-8-hfs))
-
-;    (setq my-font
-;	  "-*-*-medium-r-normal--12-*-*-*-*-*-fontset-osaka")
-;    (setq mac-allow-anti-aliasing t)
-;    (set-default-font my-font)
-;    (add-to-list 'default-frame-alist `(font . ,my-font))
-;    (set-fontset-font
-;     (frame-parameter nil 'font)
-;     'japanese-jisx0208
-;     '("osaka" . "iso10646-1"))
-;    (setq face-font-rescale-alist
-;	  '(("^-apple-hiragino.*" . 1.2)
-;	    (".*osaka-bold.*" . 1.0)
-;  	    (".*osaka-medium.*" . 1.0)
-;  	    (".*courier-bold-.*-mac-roman" . 1.0)
-;  	    (".*monaco cy-bold-.*-mac-cyrillic" . 0.9)
-;  	    (".*monaco-bold-.*-mac-roman" . 0.9)
-;  	    ("-cdac$" . 1.3))))
-
 
 ;; Auto chmod+x for scripts
 (add-hook 'after-save-hook
           'executable-make-buffer-file-executable-if-script-p)
 
 ;;Dired
-;(setq dired-load-hook '(lambda () (load "dired-x"))) 
-(setq dired-guess-shell-alist-user
-      '(("\\.app" "open")
-        ("\\.csv" "open")
-        ("\\.dmg" "open")
-        ("\\.doc" "open")
-        ("\\.jpg" "open")
-        ("\\.htm" "open")
-        ("\\.html" "open")
-        ("\\.pdf" "open")
-        ("\\.pkg" "open")
-        ("\\.ppg" "open")
-        ("\\.ppt" "open")
-        ("\\.rtf" "open")
-        ("\\.tif" "open")
-        ("\\.tiff" "open")
-        ("\\.xdw" "open")
-        ("\\.xls" "open")))
+(defvar suffix-for-open-list
+  '(app csv dmg doc jpg htm html pdf pkg ppg ppt rtf tif tiff xdw xls))
+(let ((alist ()))
+  (setq dired-guess-shell-alist-user
+        (dolist (suffix suffix-for-open-list alist)
+          (push (list (concat "\\." (symbol-name suffix)) "open") alist))))
 
-;; ESS
-;(require 'ess-site)
-
-;; Ruby mode
-;(setq ruby-insert-encoding-magic-comment nil)
-; http://d.hatena.ne.jp/akm/20080605#1212644489
-;;(require 'ruby-mode)
-;;(defun ruby-mode-set-encoding () ())
 (add-to-list 'auto-mode-alist '("\\.rake"     . ruby-mode))
 (add-to-list 'auto-mode-alist '("[Rr]akefile" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.xhtml" . html-mode))
+(add-to-list 'auto-mode-alist '("\\.vm"    . html-mode))
+(add-to-list 'auto-mode-alist '("Portfile" . tcl-mode))
 
 ;; Ruby debugger (Rubydb)
 (autoload 'rubydb "rubydb3x"
@@ -96,15 +32,10 @@ The directory containing FILE becomes the initial working directory
 and source-file directory for your debugger." t nil)
 (global-set-key "\C-cd" 'rubydb)
 
-(add-to-list 'auto-mode-alist '("\\.xhtml" . html-mode))
-
 ;; Sdic-mode for lookuping up dictionaries
 (autoload 'sdic-describe-word "sdic"
   "look up English or Japanese words" t nil)
 (global-set-key "\C-cw" 'sdic-describe-word)
-;(autoload 'sdic-describe-word-at-point "sdic"
-;  "look up a word at the cursor" t nil)
-;(global-set-key "\C-cW" 'sdic-describe-word-at-point)
 
 ;; launch Dictionary.app
 ;; http://d.hatena.ne.jp/tunefs/20130212/p1
@@ -116,7 +47,6 @@ and source-file directory for your debugger." t nil)
      (browse-url url))))
 
 ;; Subversion (svn)
-(require 'psvn)
 (add-hook 'dired-mode-hook
           '(lambda ()
              (require 'dired-x)
@@ -128,72 +58,32 @@ and source-file directory for your debugger." t nil)
 (setq process-coding-system-alist
       (cons '("svn" . utf-8) process-coding-system-alist))
 
-;; Tcl-mode for MacPort portfile.
-(add-to-list 'auto-mode-alist '("Portfile" . tcl-mode))
-
-;; Auto-updating time stamp
-(require 'time-stamp)
-(add-hook 'before-save-hook 'time-stamp)
-(setq time-stamp-active t)
-(setq time-stamp-start "Last Modified: ")
-(setq time-stamp-format "%02m/%02d/%02y")
-(setq time-stamp-end " \\|$")
-
-;; Velocity template engine
-;(autoload 'vtl-mode "vtl" "fontify velocity template language code" t)
-;(add-to-list 'auto-mode-alist '("\\.vm"    . vtl-mode))
-(add-to-list 'auto-mode-alist '("\\.vm"    . html-mode))
-
 ;; Word count
 (autoload 'word-count-mode "word-count"
   "Minor mode to count words." t nil)
 (global-set-key "\M-+" 'word-count-mode)
 
-
-;; Syntax highlighting
-;(if window-system
-;    (progn
-;      (global-font-lock-mode t)   ; Always turn on syntax highlighting
-;      (require 'font-lock) ; Without this line, emacs throws an error on OS X.
-;      (set-face-foreground 'font-lock-comment-face "MediumSeaGreen")
-;      (set-face-foreground 'font-lock-string-face  "purple")
-;;      (set-face-foreground 'font-lock-keyword-face "blue")
-;;      (set-face-foreground 'font-lock-function-name-face "blue")
-;      (set-face-bold-p 'font-lock-function-name-face t)
-;;      (set-face-foreground 'font-lock-variable-name-face "black")
-;;      (set-face-foreground 'font-lock-type-face "LightSeaGreen")
-;;      (set-face-foreground 'font-lock-builtin-face "purple")
-;;      (set-face-foreground 'font-lock-constant-face "black")
-;;      (set-face-foreground 'font-lock-warning-face "blue")
-;;      (set-face-bold-p 'font-lock-warning-face nil)
-;      ))
-
 ;; Personal Preferences
 (if (fboundp 'blink-cursor-mode) (blink-cursor-mode 0))
 (setq migemo-isearch-enable-p nil)
-(display-time)
 (setq dabbrev-case-fold-search nil)
 (setq dired-dwim-target t)
 (setq kill-whole-line t)
 (setq make-backup-files nil)
 (setq next-line-add-newlines nil)
+(setq visible-bell t)
+(setq truncate-partial-width-windows nil)
+(custom-set-variables '(indent-tabs-mode nil))
+(display-time)
+(tool-bar-mode 0)
 (global-set-key "\C-cc" 'compile)
 (global-set-key "\C-cf" 'font-lock-fontify-buffer)
 (global-set-key "\C-cg" 'goto-line)
 (global-set-key "\C-cl" 'what-line)
-(custom-set-variables '(indent-tabs-mode nil))
-(setq visible-bell t)
-(tool-bar-mode 0)
-(setq truncate-partial-width-windows nil)
+(global-set-key "\M-n" 'linum-mode)
 
 ;; Disable to color the selected region
 (setq transient-mark-mode nil)
-
-;; Fullscreen
-(global-set-key "\C-c\C-f" 'ns-toggle-fullscreen)
-
-;; pdf-preview-buffer-with-faces
-;(require 'pdf-preview)
 
 ;; "y or n" instead of "yes or no"
 (fset 'yes-or-no-p 'y-or-n-p)
@@ -203,9 +93,6 @@ and source-file directory for your debugger." t nil)
 ;; Switch the Command-Key and the Option-Key
 ;(setq ns-command-modifier   'meta)
 ;(setq ns-alternate-modifier 'super)
-
-;; Linum mode.
-(global-set-key "\M-n" 'linum-mode)
 
 ;; Magnify and demagnify texts.
 (global-set-key [(control ?+)] (lambda () (interactive) (text-scale-increase 1)))
@@ -240,7 +127,6 @@ and source-file directory for your debugger." t nil)
     (vertical-motion n)
     (move-to-column (+ (current-column) cur-col)))
   (run-hooks 'auto-line-hook))
-)
 
 
 (when (>= emacs-major-version 24)
@@ -255,12 +141,16 @@ and source-file directory for your debugger." t nil)
   (defvar installing-package-list
     '(
       auto-complete
+      ess
       evil
+      evil-leader
       exec-path-from-shell
       helm
       magit
       powerline
+      powerline-evil
       popwin
+      psvn
       ))
   (let ((not-installed (loop for x in installing-package-list
                              when (not (package-installed-p x))
@@ -270,16 +160,47 @@ and source-file directory for your debugger." t nil)
       (dolist (pkg not-installed)
         (package-install pkg))))
 
+  ;; evil-leader
+  ;; http://stackoverflow.com/questions/8483182/evil-mode-best-practice
+  (global-evil-leader-mode)
+  ;; Note: You should enable `global-evil-leader-mode' before you enable
+  ;;       `evil-mode', otherwise `evil-leader' won't be enabled in initial
+  ;;       buffers (*scratch*, *Messages*, ...).
+  (evil-leader/set-leader ",")
+  (evil-leader/set-key
+    "SPC" 'set-mark-command
+    "x" 'helm-M-x
+    "b" 'switch-to-buffer-other-window
+    "f" 'find-file-other-window
+    "d" 'dired-other-window
+    "j" 'dired-jump-other-window
+    "k" 'kill-buffer
+    "q" 'View-quit
+    "w" 'evil-window-prev
+    "p" 'comint-previous-input
+    "n" 'comint-next-input)
+
   ;; evil
   (evil-mode 1)
+  ;; https://lists.ourproject.org/pipermail/implementations-list/2011-September/001140.html
+  ;(setq evil-emacs-state-cursor '("red" box))
+  ;; Movements
+  (define-key evil-motion-state-map " " 'evil-scroll-down)
+  (define-key evil-motion-state-map (kbd "S-SPC") 'evil-scroll-up)
+  (define-key evil-motion-state-map "H" 'evil-first-non-blank)
+  (define-key evil-motion-state-map "L" 'evil-end-of-line)
+
+  ;; ノーマルステートになったら IME をオフにする
+  ;; http://ichiroc.hatenablog.com/entry/2013/09/06/075832
+  (add-hook 'evil-normal-state-entry-hook
+            '(lambda ()
+               (mac-toggle-input-method nil)))
 
   ;; exec-path-from-shell
   (when (memq window-system '(mac ns))
     (exec-path-from-shell-initialize))
 
   ;; helm (anything); https://github.com/emacs-helm/helm
-  (global-set-key (kbd "C-c h") 'helm-mini)
-;  (helm-mode 1)
   ;; http://d.hatena.ne.jp/a_bicky/20140104/1388822688
   (when (require 'helm-config nil t)
     (helm-mode 1)
@@ -307,14 +228,6 @@ and source-file directory for your debugger." t nil)
   (require 'auto-complete-config)
   (ac-config-default)
   (setq ac-use-menu-map t) ; C-n, C-p
-;  ;; yasnippet; 
-;  (yas-global-mode 1)
-
-;  ;; ruby-mode, ruby-electric
-;  ;; flymake-ruby
-;  (require 'ruby-mode)
-;  (define-key ruby-mode-map "\C-cd" 'flymake-display-err-menu-for-current-line)
-
 
   ;; http://d.hatena.ne.jp/eiel/20101106
   (defun ruby-mode-hook-init ()
@@ -328,10 +241,6 @@ and source-file directory for your debugger." t nil)
     (ruby-mode-set-encoding))
   (require 'ruby-mode)
   (define-key ruby-mode-map "\C-ce" 'my-ruby-mode-set-encoding)
-
-
-;  ;; expand-region
-;  (global-set-key (kbd "C-;") 'er/expand-region)
 
   ;; web-mode
   (add-to-list 'auto-mode-alist '("\\.?html$" . web-mode))
@@ -406,5 +315,23 @@ and source-file directory for your debugger." t nil)
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
+;; 日本語フォント設定
+;; https://gist.github.com/mitukiii/4365568
+;; Monaco 12pt をデフォルトにする
+(set-face-attribute 'default nil
+                    :family "Menlo"
+;                    :family "Monaco"
+                    :height 140)
+;; 日本語をヒラギノ角ゴProNにする
+(set-fontset-font "fontset-default"
+                  'japanese-jisx0208
+                  '("osaka"))
+;                  '("Hiragino Kaku Gothic ProN"))
+;; 半角カナをヒラギノ角ゴProNにする
+(set-fontset-font "fontset-default"
+                  'katakana-jisx0201
+                  '("osaka"))
+;                  '("Hiragino Kaku Gothic ProN"))
 
 (load "../local" t)
