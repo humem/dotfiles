@@ -49,7 +49,7 @@ and source-file directory for your debugger." t nil)
    (let ((url (concat "dict://" (read-from-minibuffer "" (current-word)))))
      (browse-url url))))
 
-;; Subversion (svn)
+;; Subversion (svn): use patched version instead of HEAD trunk stored in packages to work with Subversion 1.7.
 (require 'psvn)
 (add-hook 'dired-mode-hook
           '(lambda ()
