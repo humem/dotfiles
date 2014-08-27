@@ -25,6 +25,9 @@
 (add-to-list 'auto-mode-alist '("\\.vm"    . html-mode))
 (add-to-list 'auto-mode-alist '("Portfile" . tcl-mode))
 
+;; recentf
+(recentf-mode 1)
+
 ;; Ruby debugger (Rubydb)
 (autoload 'rubydb "rubydb3x"
   "Run rubydb on program FILE in buffer *gud-FILE*.
@@ -47,6 +50,7 @@ and source-file directory for your debugger." t nil)
      (browse-url url))))
 
 ;; Subversion (svn)
+(require 'psvn)
 (add-hook 'dired-mode-hook
           '(lambda ()
              (require 'dired-x)
@@ -150,7 +154,7 @@ and source-file directory for your debugger." t nil)
       powerline
       powerline-evil
       popwin
-      psvn
+;      psvn
       ))
   (let ((not-installed (loop for x in installing-package-list
                              when (not (package-installed-p x))
