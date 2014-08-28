@@ -1,44 +1,32 @@
 #!/bin/sh
 
-# link configuration files to the home directory
-FILES=".vimrc .gvimrc .inputrc"
-DEST_DIR=
-SRC_DIR=dotfiles/$DEST_DIR
-REL_DIR=
-for f in $FILES
-do
-    if ! [ -f ../$DEST_DIR/$f ]; then
-        ln -s -i $REL_DIR/$SRC_DIR/$f ../$DEST_DIR
+# $1: files to be linked
+# $2: destination directory
+# $3: relative path
+link_files() {
+    if ! [ -d ../$2 ]; then
+        mkdir -p ../$2
     fi
-done
+    for _f in $1
+    do
+        if ! [ -f ../$2/$_f ]; then
+            echo "ln -s -i $3/dotfiles/$2/$_f ../$2"
+            ln -s -i $3/dotfiles/$2/$_f ../$2
+        fi
+    done
+}
+
+# link configuration files to the home directory
+link_files ".vimrc .gvimrc .inputrc" "" ""
 
 # for Emacs
-mkdir -p ../.emacs.d/lisp
-FILES="init.el"
-DEST_DIR=.emacs.d
-SRC_DIR=dotfiles/$DEST_DIR
-REL_DIR=../
-for f in $FILES
-do
-    if ! [ -f ../$DEST_DIR/$f ]; then
-        ln -s -i $REL_DIR$SRC_DIR/$f ../$DEST_DIR
-    fi
-done
-FILES="my-powerline.el psvn.el"
-DEST_DIR=.emacs.d/lisp
-SRC_DIR=dotfiles/$DEST_DIR
-REL_DIR=../../
-for f in $FILES
-do
-    if ! [ -f ../$DEST_DIR/$f ]; then
-        ln -s -i $REL_DIR$SRC_DIR/$f ../$DEST_DIR
-    fi
-done
+link_files "init.el" .emacs.d ..
+link_files "`ls .emacs.d/lisp`" .emacs.d/lisp ../..
 
 # download neobundle plugin
-BUNDLE=$HOME/.vim/bundle
-NEOBUNDLE=$BUNDLE/neobundle.vim
-if ! [ -d $NEOBUNDLE ]; then
-    mkdir -p $BUNDLE
-    git clone https://github.com/Shougo/neobundle.vim $NEOBUNDLE
+bundle=$HOME/.vim/bundle
+neobundle=$bundle/neobundle.vim
+if ! [ -d $neobundle ]; then
+    mkdir -p $bundle
+    git clone https://github.com/Shougo/neobundle.vim $neobundle
 fi

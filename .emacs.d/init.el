@@ -2,6 +2,9 @@
 (setq load-path (cons "~/.emacs.d/lisp" load-path))
 (load "extra-autoloads" t)
 
+;; load local setting e.g. PATH, http_proxy, ALL_PROXY
+(load "../local" t)
+
 ;; Japanese language environment
 (set-language-environment "Japanese")
 (set-default-coding-systems 'utf-8-unix)
@@ -19,14 +22,12 @@
         (dolist (suffix suffix-for-open-list alist)
           (push (list (concat "\\." (symbol-name suffix)) "open") alist))))
 
+;; file suffix and mode for programming languages
 (add-to-list 'auto-mode-alist '("\\.rake"     . ruby-mode))
 (add-to-list 'auto-mode-alist '("[Rr]akefile" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.xhtml" . html-mode))
 (add-to-list 'auto-mode-alist '("\\.vm"    . html-mode))
 (add-to-list 'auto-mode-alist '("Portfile" . tcl-mode))
-
-;; recentf
-(recentf-mode 1)
 
 ;; w3m http://www.emacswiki.org/emacs/emacs-w3m
 (setq browse-url-browser-function 'w3m-browse-url)
@@ -70,17 +71,16 @@ and source-file directory for your debugger." t nil)
      (browse-url url))))
 
 ;; Subversion (svn): use patched version instead of HEAD trunk stored in packages to work with Subversion 1.7.
-(require 'psvn)
-(add-hook 'dired-mode-hook
-          '(lambda ()
-             (require 'dired-x)
-             ;;(define-key dired-mode-map "V" 'cvs-examine)
-             (define-key dired-mode-map "V" 'svn-status)
-             (turn-on-font-lock)
-             ))
-(setq svn-status-hide-unmodified t)
-(setq process-coding-system-alist
-      (cons '("svn" . utf-8) process-coding-system-alist))
+(when (require 'psvn nil t)
+  (add-hook 'dired-mode-hook
+            '(lambda ()
+               (require 'dired-x)
+               (define-key dired-mode-map "V" 'svn-status)
+               (turn-on-font-lock)
+               ))
+  (setq svn-status-hide-unmodified t)
+  (setq process-coding-system-alist
+        (cons '("svn" . utf-8) process-coding-system-alist)))
 
 ;; Word count
 (autoload 'word-count-mode "word-count"
@@ -162,7 +162,7 @@ and source-file directory for your debugger." t nil)
   (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
   (package-initialize)
   ;; http://qiita.com/hottestseason/items/1e8a46ad1ebcf7d0e11c
-  (defvar installing-package-list
+  (defvar installed-package-list
     '(
       auto-complete
       ess
@@ -172,11 +172,10 @@ and source-file directory for your debugger." t nil)
       helm
       magit
       powerline
-      powerline-evil
       popwin
 ;      psvn
       ))
-  (let ((not-installed (loop for x in installing-package-list
+  (let ((not-installed (loop for x in installed-package-list
                              when (not (package-installed-p x))
                              collect x)))
     (when not-installed
@@ -204,11 +203,9 @@ and source-file directory for your debugger." t nil)
     "p" 'comint-previous-input
     "n" 'comint-next-input)
 
-  ;; evil
-  (evil-mode 1)
+  ;; Evil
   ;; https://lists.ourproject.org/pipermail/implementations-list/2011-September/001140.html
-  ;(setq evil-emacs-state-cursor '("red" box))
-  ;; Movements
+  (evil-mode 1)
   (define-key evil-motion-state-map " " 'evil-scroll-down)
   (define-key evil-motion-state-map (kbd "S-SPC") 'evil-scroll-up)
   (define-key evil-motion-state-map "H" 'evil-first-non-blank)
@@ -274,37 +271,25 @@ and source-file directory for your debugger." t nil)
   (setq web-mode-engines-alist
         '(("\\.xhtml$" . "smarty")))
 
-  ;; popwin; http://sleepboy-zzz.blogspot.jp/2012/09/anythinghelm.html
-;  (require 'popwin)
-;  (setq display-buffer-function 'popwin:display-buffer)
-;  (push '("^\*helm .+\*$" :regexp t) popwin:special-display-config)
-  ;;https://github.com/m2ym/popwin-el/blob/master/README.md
+  ;; powerline
+  ;; http://shibayu36.hatenablog.com/entry/2014/02/11/160945
+  (set-face-attribute 'mode-line nil
+                      :foreground "#fff"
+                      :background "#000066"
+                      :box nil)
+  (set-face-attribute 'powerline-active1 nil
+                      :foreground "#fff"
+                      :background "#666699"
+                      :inherit 'mode-line)
+  (set-face-attribute 'powerline-active2 nil
+                      :foreground "#000"
+                      :background "#aeaeb6"
+                      :inherit 'mode-line)
+  (powerline-center-evil-theme)
 
-  ;; powerline; http://safx-dev.blogspot.jp/2012/08/emacspower-line.html; https://gist.github.com/3366866
-;  (load "my-powerline" t)
-  (powerline-default-theme)
-
-  ;; dsvn
-;  (autoload 'svn-status "dsvn" "Run `svn status'." t)
-;  (autoload 'svn-update "dsvn" "Run `svn update'." t)
-
-  ;; https://gist.github.com/3105914
-
-  ;;色
-;  (custom-set-variables
-;   '(custom-enabled-themes (quote (tango-dark)))
-;   '(inhibit-startup-screen t))
-;  (custom-set-faces
-;   (set-frame-parameter nil 'alpha 95)
-;   )
-
-  ;; solarized-theme
-  ;(load-theme 'solarized-dark t)
-  ;(load-theme 'solarized-light t)
-
-  ;;外観
-  ;;スクロールバーを消す
-;  (set-scroll-bar-mode 'nil)
+  ;; バッファ自動再読み込み
+  ;; http://shibayu36.hatenablog.com/entry/2012/12/29/001418
+  (global-auto-revert-mode 1)
 
   ;;対応する括弧を光らせる
   (setq show-paren-delay 0)
@@ -316,6 +301,26 @@ and source-file directory for your debugger." t nil)
   (setq linum-format "%4d ")
 
   )
+
+;; uniquify
+;; http://www.clear-code.com/blog/2012/3/20.html
+;;; ファイル名が重複していたらディレクトリ名を追加する。
+(require 'uniquify)
+(setq uniquify-buffer-name-style 'post-forward-angle-brackets)
+
+;; ediff
+;; http://qiita.com/l3msh0@github/items/97909d6e2c92af3acc00
+;; コントロール用のバッファを同一フレーム内に表示
+(setq ediff-window-setup-function 'ediff-setup-windows-plain)
+;; diffのバッファを上下ではなく左右に並べる
+(setq ediff-split-window-function 'split-window-horizontally)
+
+;; 現在行をハイライト: http://keisanbutsuriya.blog.fc2.com/blog-entry-91.html
+(global-hl-line-mode t)
+
+;; Saving Emacs Sessions
+;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Saving-Emacs-Sessions.html
+(desktop-save-mode 1)
 
 ;; http://d.hatena.ne.jp/rubikitch/20100210/emacs 
 (defun other-window-or-split ()
@@ -338,24 +343,17 @@ and source-file directory for your debugger." t nil)
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(hl-line ((t (:background "color-236"))))
  )
 
 ;; 日本語フォント設定
 ;; https://gist.github.com/mitukiii/4365568
-;; Monaco 12pt をデフォルトにする
 (set-face-attribute 'default nil
                     :family "Menlo"
-;                    :family "Monaco"
                     :height 140)
-;; 日本語をヒラギノ角ゴProNにする
 (set-fontset-font "fontset-default"
                   'japanese-jisx0208
                   '("osaka"))
-;                  '("Hiragino Kaku Gothic ProN"))
-;; 半角カナをヒラギノ角ゴProNにする
 (set-fontset-font "fontset-default"
                   'katakana-jisx0201
                   '("osaka"))
-;                  '("Hiragino Kaku Gothic ProN"))
-
-(load "../local" t)
