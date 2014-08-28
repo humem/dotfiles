@@ -28,6 +28,26 @@
 ;; recentf
 (recentf-mode 1)
 
+;; w3m http://www.emacswiki.org/emacs/emacs-w3m
+(setq browse-url-browser-function 'w3m-browse-url)
+(autoload 'w3m-browse-url "w3m" "Ask a WWW browser to show a URL." t)
+(global-set-key "\C-xm" 'browse-url-at-point)
+
+;; IPython: invoke with run-python
+;; http://stackoverflow.com/questions/17817019/how-to-open-ipython-interpreter-in-emacs
+(when (executable-find "ipython")
+  (setq
+   python-shell-interpreter "ipython"
+   python-shell-interpreter-args ""
+   python-shell-prompt-regexp "In \\[[0-9]+\\]: "
+   python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: "
+   python-shell-completion-setup-code
+   "from IPython.core.completerlib import module_completion"
+   python-shell-completion-module-string-code
+   "';'.join(module_completion('''%s'''))\n"
+   python-shell-completion-string-code
+   "';'.join(get_ipython().Completer.all_completions('''%s'''))\n"))
+
 ;; Ruby debugger (Rubydb)
 (autoload 'rubydb "rubydb3x"
   "Run rubydb on program FILE in buffer *gud-FILE*.
