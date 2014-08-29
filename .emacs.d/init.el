@@ -173,7 +173,7 @@ and source-file directory for your debugger." t nil)
       magit
       powerline
       popwin
-;      psvn
+      web-mode
       ))
   (let ((not-installed (loop for x in installed-package-list
                              when (not (package-installed-p x))
