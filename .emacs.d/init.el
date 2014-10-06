@@ -9,6 +9,7 @@
 (set-language-environment "Japanese")
 (set-default-coding-systems 'utf-8-unix)
 (prefer-coding-system 'utf-8-unix)
+(setenv "LANG" "ja_JP.UTF-8")
 
 ;; Auto chmod+x for scripts
 (add-hook 'after-save-hook
@@ -39,7 +40,7 @@
 (when (executable-find "ipython")
   (setq
    python-shell-interpreter "ipython"
-   python-shell-interpreter-args ""
+   python-shell-interpreter-args "--pylab"
    python-shell-prompt-regexp "In \\[[0-9]+\\]: "
    python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: "
    python-shell-completion-setup-code
