@@ -169,6 +169,7 @@ and source-file directory for your debugger." t nil)
       ess
       evil
       evil-leader
+      evil-surround
       exec-path-from-shell
       helm
       magit
@@ -207,8 +208,8 @@ and source-file directory for your debugger." t nil)
   ;; Evil
   ;; https://lists.ourproject.org/pipermail/implementations-list/2011-September/001140.html
   (evil-mode 1)
-  (define-key evil-motion-state-map " " 'evil-scroll-down)
-  (define-key evil-motion-state-map (kbd "S-SPC") 'evil-scroll-up)
+  (define-key evil-motion-state-map " " 'evil-scroll-page-down)
+  (define-key evil-motion-state-map (kbd "S-SPC") 'evil-scroll-page-up)
   (define-key evil-motion-state-map "H" 'evil-first-non-blank)
   (define-key evil-motion-state-map "L" 'evil-end-of-line)
 
@@ -217,6 +218,8 @@ and source-file directory for your debugger." t nil)
   (add-hook 'evil-normal-state-entry-hook
             '(lambda ()
                (mac-toggle-input-method nil)))
+  ;; evil-surround
+  (global-evil-surround-mode 1)
 
   ;; exec-path-from-shell
   (when (memq window-system '(mac ns))
