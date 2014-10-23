@@ -100,7 +100,6 @@ and source-file directory for your debugger." t nil)
 (setq truncate-partial-width-windows nil)
 (custom-set-variables '(indent-tabs-mode nil))
 (display-time)
-(tool-bar-mode 0)
 (global-set-key "\C-cc" 'compile)
 (global-set-key "\C-cf" 'font-lock-fontify-buffer)
 (global-set-key "\C-cg" 'goto-line)
@@ -215,9 +214,11 @@ and source-file directory for your debugger." t nil)
 
   ;; ノーマルステートになったら IME をオフにする
   ;; http://ichiroc.hatenablog.com/entry/2013/09/06/075832
-  (add-hook 'evil-normal-state-entry-hook
-            '(lambda ()
-               (mac-toggle-input-method nil)))
+  (when (fboundp 'mac-toggle-input-method)
+    (add-hook 'evil-normal-state-entry-hook
+              '(lambda ()
+                 (mac-toggle-input-method nil))))
+
   ;; evil-surround
   (global-evil-surround-mode 1)
 
@@ -290,6 +291,9 @@ and source-file directory for your debugger." t nil)
                       :background "#aeaeb6"
                       :inherit 'mode-line)
   (powerline-center-evil-theme)
+  ;; fix for 24.4
+  ;; https://github.com/milkypostman/powerline/issues/58
+  (powerline-reset)
 
   ;; バッファ自動再読み込み
   ;; http://shibayu36.hatenablog.com/entry/2012/12/29/001418
@@ -319,9 +323,6 @@ and source-file directory for your debugger." t nil)
 ;; diffのバッファを上下ではなく左右に並べる
 (setq ediff-split-window-function 'split-window-horizontally)
 
-;; 現在行をハイライト: http://keisanbutsuriya.blog.fc2.com/blog-entry-91.html
-(global-hl-line-mode t)
-
 ;; Saving Emacs Sessions
 ;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Saving-Emacs-Sessions.html
 (desktop-save-mode 1)
@@ -350,14 +351,21 @@ and source-file directory for your debugger." t nil)
  '(hl-line ((t (:background "color-236"))))
  )
 
-;; 日本語フォント設定
-;; https://gist.github.com/mitukiii/4365568
-(set-face-attribute 'default nil
-                    :family "Menlo"
-                    :height 140)
-(set-fontset-font "fontset-default"
-                  'japanese-jisx0208
-                  '("osaka"))
-(set-fontset-font "fontset-default"
-                  'katakana-jisx0201
-                  '("osaka"))
+(when (memq window-system '(mac ns))
+  ;; 日本語フォント設定
+  ;; https://gist.github.com/mitukiii/4365568
+  (set-face-attribute 'default nil
+                      :family "Menlo"
+                      :height 140)
+  (set-fontset-font "fontset-default"
+                    'japanese-jisx0208
+                    '("osaka"))
+  (set-fontset-font "fontset-default"
+                    'katakana-jisx0201
+                    '("osaka"))
+
+  ;; 現在行をハイライト: http://keisanbutsuriya.blog.fc2.com/blog-entry-91.html
+  (global-hl-line-mode t)
+
+  ;; ツールバーを非表示
+  (tool-bar-mode 0))
