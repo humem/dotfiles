@@ -18,8 +18,9 @@ if has('autocmd')  " minimumはサポート対象外
   if has('vim_starting')
     set runtimepath+=~/.vim/bundle/neobundle.vim/
   endif
-  call neobundle#rc(expand('~/.vim/bundle/'))
+  call neobundle#begin(expand('~/.vim/bundle/'))
   NeoBundleFetch 'Shougo/neobundle.vim'
+  call neobundle#end()
   " 以下のプラグインをバンドル
   " colorschemes
   NeoBundle 'nanotech/jellybeans.vim'
@@ -117,7 +118,9 @@ set nowritebackup
 " バックアップをしない
 set nobackup
 " 操作取り消し用.un~ファイルを作らない
-set noundofile
+if has('persistent_undo')
+  set noundofile
+endif
 " 変更中のファイルでも、保存しないで他のファイルを表示
 "set hidden
 " ビープ音を消す

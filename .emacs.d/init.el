@@ -100,6 +100,7 @@ and source-file directory for your debugger." t nil)
 (setq truncate-partial-width-windows nil)
 (custom-set-variables '(indent-tabs-mode nil))
 (display-time)
+(menu-bar-mode -1)
 (global-set-key "\C-cc" 'compile)
 (global-set-key "\C-cf" 'font-lock-fontify-buffer)
 (global-set-key "\C-cg" 'goto-line)
@@ -153,7 +154,7 @@ and source-file directory for your debugger." t nil)
   (run-hooks 'auto-line-hook))
 
 
-(when (>= emacs-major-version 24)
+(when (>= emacs-major-version 23)
   (require 'cl)
 
   ;; package managenment; http://sakito.jp/emacs/emacs24.html
@@ -193,7 +194,8 @@ and source-file directory for your debugger." t nil)
   (evil-leader/set-leader ",")
   (evil-leader/set-key
     "SPC" 'set-mark-command
-    "x" 'helm-M-x
+    "x" 'execute-extended-command
+;    "x" 'helm-M-x
     "b" 'switch-to-buffer-other-window
     "f" 'find-file-other-window
     "d" 'dired-other-window
@@ -307,7 +309,6 @@ and source-file directory for your debugger." t nil)
   ;;行番号の表示
   (global-linum-mode t)
   (setq linum-format "%4d ")
-
   )
 
 ;; uniquify
