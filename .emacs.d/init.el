@@ -99,6 +99,7 @@ and source-file directory for your debugger." t nil)
 (setq visible-bell t)
 (setq truncate-partial-width-windows nil)
 (custom-set-variables '(indent-tabs-mode nil))
+(menu-bar-mode -1)
 (display-time)
 (global-set-key "\C-cc" 'compile)
 (global-set-key "\C-cf" 'font-lock-fontify-buffer)
@@ -307,7 +308,6 @@ and source-file directory for your debugger." t nil)
   ;;行番号の表示
   (global-linum-mode t)
   (setq linum-format "%4d ")
-
   )
 
 ;; uniquify
