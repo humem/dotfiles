@@ -18,8 +18,9 @@ if has('autocmd')  " minimumはサポート対象外
   if has('vim_starting')
     set runtimepath+=~/.vim/bundle/neobundle.vim/
   endif
-  call neobundle#rc(expand('~/.vim/bundle/'))
+  call neobundle#begin(expand('~/.vim/bundle/'))
   NeoBundleFetch 'Shougo/neobundle.vim'
+  call neobundle#end()
   " 以下のプラグインをバンドル
   " colorschemes
   NeoBundle 'nanotech/jellybeans.vim'
