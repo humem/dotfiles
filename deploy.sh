@@ -4,20 +4,24 @@
 # $2: destination directory
 # $3: relative path
 link_files() {
-    if ! [ -d ../$2 ]; then
+    if [ $2 != "." ] && ! [ -d ../$2 ]; then
         mkdir -p ../$2
     fi
     for _f in $1
     do
         if ! [ -f ../$2/$_f ]; then
             echo "ln -s -i $3/dotfiles/$2/$_f ../$2"
-            ln -s -i $3/dotfiles/$2/$_f ../$2
+            if [ $2 != "." ]; then
+                ln -s -i $3/dotfiles/$2/$_f ../$2
+            else
+                ln -s -i $3/dotfiles/$_f ..
+            fi
         fi
     done
 }
 
 # link configuration files to the home directory
-link_files ".vimrc .gvimrc .inputrc" "" ""
+link_files ".vimrc .gvimrc .inputrc" . .
 
 # for Emacs
 link_files "init.el" .emacs.d ..
