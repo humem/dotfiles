@@ -195,8 +195,8 @@ and source-file directory for your debugger." t nil)
   (evil-leader/set-leader ",")
   (evil-leader/set-key
     "SPC" 'set-mark-command
-    "x" 'execute-extended-command
-;    "x" 'helm-M-x
+;    "x" 'execute-extended-command
+    "x" 'helm-M-x
     "b" 'switch-to-buffer-other-window
     "f" 'find-file-other-window
     "d" 'dired-other-window
