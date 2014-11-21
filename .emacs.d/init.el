@@ -295,7 +295,7 @@ and source-file directory for your debugger." t nil)
   (powerline-center-evil-theme)
   ;; fix for 24.4
   ;; https://github.com/milkypostman/powerline/issues/58
-  (powerline-reset)
+  (add-hook 'desktop-after-read-hook 'powerline-reset)
 
   ;; バッファ自動再読み込み
   ;; http://shibayu36.hatenablog.com/entry/2012/12/29/001418
