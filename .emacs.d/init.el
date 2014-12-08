@@ -196,10 +196,17 @@ and source-file directory for your debugger." t nil)
     "SPC" 'set-mark-command
 ;    "x" 'execute-extended-command
     "x" 'helm-M-x
+<<<<<<< HEAD
     "b" 'switch-to-buffer-other-window
     "f" 'find-file-other-window
     "d" 'dired-other-window
     "j" 'dired-jump-other-window
+=======
+    "b" 'switch-to-buffer
+    "f" 'find-file
+    "d" 'dired
+    "j" 'dired-jump
+>>>>>>> 9c633cf09c0d39cb425c197f58558c6c1de7aab7
     "k" 'kill-buffer
     "q" 'View-quit
     "w" 'evil-window-prev
@@ -295,7 +302,7 @@ and source-file directory for your debugger." t nil)
   (powerline-center-evil-theme)
   ;; fix for 24.4
   ;; https://github.com/milkypostman/powerline/issues/58
-  (powerline-reset)
+  (add-hook 'desktop-after-read-hook 'powerline-reset)
 
   ;; バッファ自動再読み込み
   ;; http://shibayu36.hatenablog.com/entry/2012/12/29/001418
