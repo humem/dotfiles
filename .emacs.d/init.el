@@ -23,6 +23,10 @@
         (dolist (suffix suffix-for-open-list alist)
           (push (list (concat "\\." (symbol-name suffix)) "open") alist))))
 
+;;; wdired.el
+(require 'dired-x)
+(define-key dired-mode-map "r" 'wdired-change-to-wdired-mode)
+
 ;; file suffix and mode for programming languages
 (add-to-list 'auto-mode-alist '("\\.rake"     . ruby-mode))
 (add-to-list 'auto-mode-alist '("[Rr]akefile" . ruby-mode))
