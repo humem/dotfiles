@@ -52,7 +52,8 @@ cd word2vec
 cp ../word2vec.c .
 ###################
 gcc word2vec.c -o word2vec -lm -pthread -O3 -march=native -funroll-loops
-time ./word2vec -train ../alldata-id.txt -output vectors.txt -cbow 0 -size 100 -window 10 -negative 5 -hs 0 -sample 1e-4 -threads 40 -binary 0 -iter 20 -min-count 1 -sentence-vectors 1
+#time ./word2vec -train ../alldata-id.txt -output vectors.txt -cbow 0 -size 100 -window 10 -negative 5 -hs 0 -sample 1e-4 -threads 40 -binary 0 -iter 20 -min-count 1 -sentence-vectors 1
+time ./word2vec -train ../alldata-id.txt -output vectors.txt -cbow 0 -size 100 -window 10 -negative 5 -hs 1 -sample 1e-3 -threads 40 -binary 0 -iter 20 -min-count 1 -sentence-vectors 1 
 grep '_\*' vectors.txt > sentence_vectors.txt
 wget http://www.csie.ntu.edu.tw/~cjlin/liblinear/liblinear-1.96.zip
 unzip liblinear-1.96.zip
