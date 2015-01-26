@@ -176,6 +176,7 @@ and source-file directory for your debugger." t nil)
       evil-surround
       exec-path-from-shell
       helm
+      lua-mode
       magit
       powerline
       popwin
