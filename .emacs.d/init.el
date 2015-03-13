@@ -178,6 +178,7 @@ and source-file directory for your debugger." t nil)
       helm
       lua-mode
       magit
+      matlab-mode
       powerline
       popwin
       web-mode
