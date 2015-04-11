@@ -180,6 +180,7 @@ and source-file directory for your debugger." t nil)
       lua-mode
       magit
       markdown-mode
+      matlab-mode
       powerline
       popwin
       web-mode
@@ -287,6 +288,7 @@ and source-file directory for your debugger." t nil)
 
   ;; powerline
   ;; http://shibayu36.hatenablog.com/entry/2014/02/11/160945
+  (require 'powerline)
   (set-face-attribute 'mode-line nil
                       :foreground "#fff"
                       :background "#000066"
