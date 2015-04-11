@@ -21,7 +21,7 @@ link_files() {
 }
 
 # link configuration files to the home directory
-link_files ".dir_colors .gvimrc .inputrc .tmux.conf .vimrc" . .
+link_files ".bashrc .dir_colors .gvimrc .inputrc .profile .tmux.conf .vimrc" . .
 
 # for Emacs
 link_files "init.el" .emacs.d ..
