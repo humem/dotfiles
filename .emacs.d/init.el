@@ -170,6 +170,7 @@ and source-file directory for your debugger." t nil)
   (defvar installed-package-list
     '(
       auto-complete
+      cmake-mode
       ess
       evil
       evil-leader
@@ -178,6 +179,7 @@ and source-file directory for your debugger." t nil)
       helm
       lua-mode
       magit
+      markdown-mode
       powerline
       popwin
       web-mode
