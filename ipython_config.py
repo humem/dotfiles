@@ -39,7 +39,7 @@ c.InteractiveShellApp.exec_lines = [
 
 # Pre-load matplotlib and numpy for interactive use, selecting a particular
 # matplotlib backend and loop integration.
-c.InteractiveShellApp.pylab = 'auto'
+###c.InteractiveShellApp.pylab = 'auto'
 
 # Configure matplotlib for interactive use with the default matplotlib backend.
 # c.InteractiveShellApp.matplotlib = None
