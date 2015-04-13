@@ -26,3 +26,5 @@ alias ls='ls -FGv'
 # Python
 export PYTHONDONTWRITEBYTECODE=1
 alias i='ipython'
+
+if [ -r $HOME/.bashrc_local ]; then source $HOME/.bashrc_local; fi

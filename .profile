@@ -9,4 +9,3 @@ fi
 export PS1='\h:\w$ '
 
 if [ -r $HOME/.bashrc ]; then source $HOME/.bashrc; fi
-if [ -r $HOME/.bash_local ]; then source $HOME/.bash_local; fi
