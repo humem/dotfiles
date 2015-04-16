@@ -102,7 +102,14 @@ and source-file directory for your debugger." t nil)
 (setq next-line-add-newlines nil)
 (setq visible-bell t)
 (setq truncate-partial-width-windows nil)
-(custom-set-variables '(indent-tabs-mode nil))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(custom-enabled-themes (quote (tango-dark)))
+ '(indent-tabs-mode nil)
+ '(safe-local-variable-values (quote ((checkdoc-minor-mode . t) (mangle-whitespace . t)))))
 (menu-bar-mode -1)
 (display-time)
 (global-set-key "\C-cc" 'compile)
@@ -346,20 +353,13 @@ and source-file directory for your debugger." t nil)
 
 (global-set-key (kbd "C-;") 'other-window-or-split)
 
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(custom-enabled-themes (quote (tango-dark)))
- '(indent-tabs-mode nil))
+
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(hl-line ((t (:background "color-236"))))
- )
+ '(hl-line ((t (:background "color-236")))))
 
 (when (memq window-system '(mac ns))
   ;; 日本語フォント設定
