@@ -35,9 +35,9 @@
 (add-to-list 'auto-mode-alist '("Portfile" . tcl-mode))
 
 ;; w3m http://www.emacswiki.org/emacs/emacs-w3m
-(setq browse-url-browser-function 'w3m-browse-url)
-(autoload 'w3m-browse-url "w3m" "Ask a WWW browser to show a URL." t)
-(global-set-key "\C-xm" 'browse-url-at-point)
+;(setq browse-url-browser-function 'w3m-browse-url)
+;(autoload 'w3m-browse-url "w3m" "Ask a WWW browser to show a URL." t)
+;(global-set-key "\C-xm" 'browse-url-at-point)
 
 ;; IPython: invoke with run-python
 ;; http://stackoverflow.com/questions/17817019/how-to-open-ipython-interpreter-in-emacs
@@ -265,7 +265,7 @@ and source-file directory for your debugger." t nil)
 
   ;; markdown-mode
   (add-to-list 'auto-mode-alist '("\\.md" . markdown-mode))
-  (setq markdown-command "rdiscount")
+  (setq markdown-command "multimarkdown")
 
   ;; auto-complete; http://cx4a.org/software/auto-complete/manual.ja.html
   (require 'auto-complete-config)
