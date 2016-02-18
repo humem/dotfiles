@@ -8,7 +8,8 @@ else
     if [ -f /etc/bashrc ]; then
             . /etc/bashrc
     fi
-    export PATH=/opt/anaconda/bin:$PATH
+    export CUDA_DIR=/usr/local/cuda
+    export PATH=/opt/anaconda/bin:/usr/local/cuda/bin:$PATH
     export LD_LIBRARY_PATH=/opt/anaconda/lib:/usr/local/lib:/usr/local/cuda/lib64:$LD_LIBRARY_PATH
     unset SSH_ASKPASS
 fi
