@@ -24,6 +24,9 @@ alias la='ls -alFGv'
 alias ll='ls -lFGv'
 alias ls='ls -FGv'
 
+# Docker
+alias dev='eval $(docker-machine env dev)'
+
 if [ `uname -s` = 'Darwin' ]; then
     alias e='/Applications/MacPorts/Emacs.app/Contents/MacOS/Emacs -nw'
     alias v='/Applications/MacVim.app/Contents/MacOS/Vim'
