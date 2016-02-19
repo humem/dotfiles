@@ -178,6 +178,7 @@ and source-file directory for your debugger." t nil)
     '(
       auto-complete
       cmake-mode
+      dockerfile-mode
       ess
       evil
       evil-leader

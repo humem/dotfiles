@@ -22,9 +22,11 @@ alias ll='ls -lFGv'
 alias ls='ls -FGv'
 
 # Docker
-alias dev='eval $(docker-machine env dev)'
+alias neo4j='docker run -d -p 7474:7474 -v $HOME/neo4j/data:/data neo4j/neo4j'
+# VBoxManage controlvm "boot2docker-vm" natpf1 "neo4j,tcp,127.0.0.1,7474,,7474"
 
 if [ `uname -s` = 'Darwin' ]; then
+    alias dev='eval $(docker-machine env dev)'
     alias e='/Applications/MacPorts/Emacs.app/Contents/MacOS/Emacs -nw'
     alias v='/Applications/MacVim.app/Contents/MacOS/Vim'
     alias ql='qlmanage -p'
