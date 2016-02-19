@@ -11,6 +11,9 @@ unset LC_CTYPE
 alias en='unset LANG'
 alias ja='export LANG=ja_JP.UTF-8'
 
+# Torch
+alias use_torch='export PATH=/opt/torch/bin:/usr/local/cuda/bin:/usr/local/bin:/usr/bin:/bin; unset LD_LIBRARY_PATH'
+
 # Python
 export PYTHONDONTWRITEBYTECODE=1
 alias i='ipython'
