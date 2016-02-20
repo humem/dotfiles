@@ -24,9 +24,18 @@ alias la='ls -alFGv'
 alias ll='ls -lFGv'
 alias ls='ls -FGv'
 
+# IP address
+alias ipaddr='ipconfig getifaddr $NETIF'
+for i in {0..3}; do
+    export NETIF=en${i}
+    if [ $(ipaddr) ]; then break; fi
+done
+
 # Docker
 alias neo4j='docker run -d -p 7474:7474 -v $HOME/neo4j/data:/data neo4j/neo4j'
 # VBoxManage controlvm "boot2docker-vm" natpf1 "neo4j,tcp,127.0.0.1,7474,,7474"
+alias dr='docker run -it --rm -e DISPLAY=$(ipaddr):0 -e LANG=ja_JP.UTF-8 -v $HOME/work:/work'
+alias xd='socat TCP-LISTEN:6000,reuseaddr,fork UNIX-CLIENT:\"$DISPLAY\"'
 
 if [ `uname -s` = 'Darwin' ]; then
     alias dev='eval $(docker-machine env dev)'

@@ -100,7 +100,13 @@ and source-file directory for your debugger." t nil)
 (setq kill-whole-line t)
 (setq make-backup-files nil)
 (setq next-line-add-newlines nil)
-(setq visible-bell t)
+;;; Work around for El Capitan
+;(setq visible-bell t)
+(setq visible-bell nil)
+(setq ring-bell-function (lambda ()
+                           (invert-face 'mode-line)
+                           (run-with-timer 0.1 nil 'invert-face 'mode-line)))
+
 (setq truncate-partial-width-windows nil)
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
