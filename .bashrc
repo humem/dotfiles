@@ -26,23 +26,6 @@ alias la='ls -alFGv'
 alias ll='ls -lFGv'
 alias ls='ls -FGv'
 
-<<<<<<< HEAD
-# Docker
-alias neo4j='docker run -d -p 7474:7474 -v $HOME/neo4j/data:/data neo4j/neo4j'
-# VBoxManage controlvm "boot2docker-vm" natpf1 "neo4j,tcp,127.0.0.1,7474,,7474"
-alias xd='socat TCP-LISTEN:6000,reuseaddr,fork UNIX-CLIENT:\"$DISPLAY\"'
-alias dr='docker run -it -v $HOME/work:/work'
-
-if [ `uname -s` = 'Darwin' ]; then
-    alias dev='eval $(docker-machine env dev)'
-    alias e='/Applications/MacPorts/Emacs.app/Contents/MacOS/Emacs -nw'
-    alias ipaddr="/usr/sbin/ipconfig getifaddr en0"
-    alias ql='qlmanage -p'
-    alias v='/Applications/MacVim.app/Contents/MacOS/Vim'
-else
-    alias e='emacs-24.4'
-    alias ipaddr="/bin/hostname -I"
-=======
 if [ `uname -s` = 'Darwin' ]; then
     alias dev='eval $(docker-machine env dev)'
     alias e='/Applications/MacPorts/Emacs.app/Contents/MacOS/Emacs -nw'
@@ -61,7 +44,6 @@ else
         alias e='emacs'
     fi
     alias ipaddr='hostname -I'
->>>>>>> 07277f82b727d0b0e4990e42aa57824c6732c947
     alias la='ls -alF --color=auto'
     alias t='tmux a'
 fi
