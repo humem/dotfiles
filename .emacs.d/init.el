@@ -372,7 +372,7 @@ and source-file directory for your debugger." t nil)
   ;; 日本語フォント設定
   ;; https://gist.github.com/mitukiii/4365568
   (set-face-attribute 'default nil
-                      :family "Menlo"
+                      :family "Monaco"
                       :height 140)
   (set-fontset-font "fontset-default"
                     'japanese-jisx0208

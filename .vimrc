@@ -82,7 +82,7 @@ if has('autocmd')  " minimumはサポート対象外
   " jedi-vim for Python
   " $ cd ~/.vim/bundle/jedi-vim/
   " $ git submodule update --init
-  NeoBundle 'davidhalter/jedi-vim'
+  " NeoBundle 'davidhalter/jedi-vim'"
   " IPython
   NeoBundle 'ivanov/vim-ipython'
 
