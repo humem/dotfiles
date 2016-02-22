@@ -1,8 +1,8 @@
 # -*- Shell-script -*-
 
 if [ `uname -s` = 'Darwin' ]; then
-    export PATH=/opt/local/bin:/opt/local/sbin:$PATH
-    export PATH=$PATH:/usr/local/bin:/usr/local/sbin:/usr/X11R6/bin
+    export PATH=$HOME/anaconda3/bin:/opt/local/bin:/opt/local/sbin:$PATH
+    export PATH=$PATH:/usr/local/bin:/usr/local/sbin:/usr/X11/bin
     export MANPATH=/opt/local/share/man:$MANPATH
 else
     if [ -f /etc/bashrc ]; then
