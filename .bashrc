@@ -31,7 +31,7 @@ if [ `uname -s` = 'Darwin' ]; then
     alias e='/Applications/MacPorts/Emacs.app/Contents/MacOS/Emacs -nw'
     # IP address
     alias ipaddr='ipconfig getifaddr $NETIF'
-    for i in {0..3}; do
+    for i in 2, 1, 0; do
         export NETIF=en${i}
         if [ $(ipaddr) ]; then break; fi
     done
