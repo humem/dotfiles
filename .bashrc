@@ -24,13 +24,12 @@ export PYTHONDONTWRITEBYTECODE=1
 alias i='ipython'
 
 # Torch
-alias use_torch='export PATH=/opt/torch/bin:/usr/local/cuda/bin:/usr/local/bin:/usr/bin:/bin; \
-unset LD_LIBRARY_PATH'
+alias use_torch='export PATH=/opt/torch/bin:/usr/local/cuda/bin:/usr/local/bin:/usr/bin:/bin; unset LD_LIBRARY_PATH'
 
 if [ `uname -s` = 'Darwin' ]; then
     alias e='/Applications/MacPorts/Emacs.app/Contents/MacOS/Emacs -nw'
     alias ipaddr='ipconfig getifaddr $NETIF'
-    for i in 2, 1, 0; do
+    for i in 2 1 0; do
         export NETIF=en${i}
         if [ $(ipaddr) ]; then break; fi
     done
@@ -38,8 +37,7 @@ if [ `uname -s` = 'Darwin' ]; then
     alias v='/Applications/MacVim.app/Contents/MacOS/Vim'
     # Docker
     alias dev='eval $(docker-machine env dev)'
-    alias dr='docker run -e DISPLAY=$(ipaddr):0 -e LANG=$LANG -it --rm \
--v $HOME/work:/work'
+    alias dr='docker run -e "DISPLAY=$(ipaddr):0" -e "LANG=$LANG" -it --rm -v "$HOME/work:/work"'
     alias xd='socat TCP-LISTEN:6000,reuseaddr,fork UNIX-CLIENT:\"$DISPLAY\"'
 else
     if [ $(which emacs-24.4) ]; then
@@ -51,12 +49,12 @@ else
     alias la='ls -alF --color=auto'
     alias t='tmux a'
     # Docker
-    alias dr='docker run -e DISPLAY -e LANG=$LANG -it --net=host --rm \
--v $HOME/.Xauthority:/.Xauthority:rw -v $HOME/.Xauthority:/root/.Xauthority:rw \
--v $HOME/work:/work'
+    alias dr='docker run -e DISPLAY -e "LANG=$LANG" -it --net=host --rm -v "$HOME/.Xauthority:/.Xauthority:rw" -v "$HOME/.Xauthority:/root/.Xauthority:rw" -v "$HOME/work:/work"'
 fi
 
 # Docker
+alias drm='docker rm $(docker ps -a -q)'
+alias drmi='docker rmi $(docker images -a| awk "/^<none>/ { print $3 }")'
 alias neo4j='docker run -d --rm -p 7474:7474 -v $HOME/neo4j/data:/data neo4j/neo4j'
 # VBoxManage controlvm "boot2docker-vm" natpf1 "neo4j,tcp,127.0.0.1,7474,,7474"
 
