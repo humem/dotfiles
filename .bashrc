@@ -29,7 +29,7 @@ alias use_torch='export PATH=/opt/torch/bin:/usr/local/cuda/bin:/usr/local/bin:/
 if [ `uname -s` = 'Darwin' ]; then
     alias e='/Applications/MacPorts/Emacs.app/Contents/MacOS/Emacs -nw'
     alias ipaddr='ipconfig getifaddr $NETIF'
-    for i in 2, 1, 0; do
+    for i in 2 1 0; do
         export NETIF=en${i}
         if [ $(ipaddr) ]; then break; fi
     done
@@ -53,6 +53,8 @@ else
 fi
 
 # Docker
+alias drm='docker rm $(docker ps -a -q)'
+alias drmi='docker rmi $(docker images -a| awk "/^<none>/ { print $3 }")'
 alias neo4j='docker run -d --rm -p 7474:7474 -v $HOME/neo4j/data:/data neo4j/neo4j'
 # VBoxManage controlvm "boot2docker-vm" natpf1 "neo4j,tcp,127.0.0.1,7474,,7474"
 
