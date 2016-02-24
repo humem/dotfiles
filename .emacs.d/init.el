@@ -9,7 +9,7 @@
 (set-language-environment "Japanese")
 (set-default-coding-systems 'utf-8-unix)
 (prefer-coding-system 'utf-8-unix)
-(setenv "LANG" "ja_JP.UTF-8")
+(setenv "LANG" "C.UTF-8")
 
 ;; Auto chmod+x for scripts
 (add-hook 'after-save-hook
