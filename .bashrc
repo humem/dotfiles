@@ -24,8 +24,7 @@ export PYTHONDONTWRITEBYTECODE=1
 alias i='ipython'
 
 # Torch
-alias use_torch='export PATH=/opt/torch/bin:/usr/local/cuda/bin:/usr/local/bin:/usr/bin:/bin; \
-unset LD_LIBRARY_PATH'
+alias use_torch='export PATH=/opt/torch/bin:/usr/local/cuda/bin:/usr/local/bin:/usr/bin:/bin; unset LD_LIBRARY_PATH'
 
 if [ `uname -s` = 'Darwin' ]; then
     alias e='/Applications/MacPorts/Emacs.app/Contents/MacOS/Emacs -nw'
@@ -38,8 +37,7 @@ if [ `uname -s` = 'Darwin' ]; then
     alias v='/Applications/MacVim.app/Contents/MacOS/Vim'
     # Docker
     alias dev='eval $(docker-machine env dev)'
-    alias dr='docker run -e DISPLAY=$(ipaddr):0 -e LANG=$LANG -it --rm \
--v $HOME/work:/work'
+    alias dr='docker run -e "DISPLAY=$(ipaddr):0" -e "LANG=$LANG" -it --rm -v "$HOME/work:/work"'
     alias xd='socat TCP-LISTEN:6000,reuseaddr,fork UNIX-CLIENT:\"$DISPLAY\"'
 else
     if [ $(which emacs-24.4) ]; then
@@ -51,9 +49,7 @@ else
     alias la='ls -alF --color=auto'
     alias t='tmux a'
     # Docker
-    alias dr='docker run -e DISPLAY -e LANG=$LANG -it --net=host --rm \
--v $HOME/.Xauthority:/.Xauthority:rw -v $HOME/.Xauthority:/root/.Xauthority:rw \
--v $HOME/work:/work'
+    alias dr='docker run -e DISPLAY -e "LANG=$LANG" -it --net=host --rm -v "$HOME/.Xauthority:/.Xauthority:rw" -v "$HOME/.Xauthority:/root/.Xauthority:rw" -v "$HOME/work:/work"'
 fi
 
 # Docker
