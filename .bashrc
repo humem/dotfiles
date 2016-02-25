@@ -27,7 +27,7 @@ alias i='ipython'
 alias use_torch='export PATH=/opt/torch/bin:/usr/local/cuda/bin:/usr/local/bin:/usr/bin:/bin; unset LD_LIBRARY_PATH'
 
 # Docker
-export DOCKER_RUN_CMD='docker run -e LANG=$LANG -it --rm -v $HOME/work:/work'
+export DOCKER_RUN_CMD='docker run -e LANG=$LANG -it --rm -v $HOME:$HOME'
 
 if [ `uname -s` = 'Darwin' ]; then
     alias e='/Applications/MacPorts/Emacs.app/Contents/MacOS/Emacs -nw'
@@ -58,7 +58,7 @@ fi
 alias dr=$DOCKER_RUN_CMD
 alias drm='docker rm $(docker ps -a -q)'
 alias drmi='docker rmi $(docker images -a| awk "/^<none>/ { print $3 }")'
-alias neo4j='docker run -d --rm -p 7474:7474 -v $HOME/neo4j/data:/data neo4j/neo4j'
+alias neo4j='docker run -d --name neo4j -p 7474:7474 -v /var/lib/neo4j/data:/data neo4j/neo4j'
 # VBoxManage controlvm "boot2docker-vm" natpf1 "neo4j,tcp,127.0.0.1,7474,,7474"
 
 if [ -r $HOME/.bashrc_local ]; then source $HOME/.bashrc_local; fi
