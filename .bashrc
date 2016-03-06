@@ -8,8 +8,8 @@ alias m='more'
 # Locale
 #export LANG=ja_JP.UTF-8
 export LANG=en_US.UTF-8
+unset LC_CTYPE
 unset LC_ALL
-#unset LC_CTYPE
 #alias en='unset LANG'
 alias c='export LANG=C.UTF-8'
 alias en='export LANG=en_US.UTF-8'
@@ -30,7 +30,8 @@ alias i='ipython --pylab'
 alias use_torch='export PATH=/opt/torch/bin:/usr/local/cuda/bin:/usr/local/bin:/usr/bin:/bin; unset LD_LIBRARY_PATH'
 
 # Docker
-export DOCKER_RUN_CMD='docker run -e DOCKER_CONTAINER=docker -e LANG=$LANG -e TERM=xterm-256color -it --rm -v $HOME:$HOME'
+# note: combination of '--rm' and '--detach-keys' causes hung
+export DOCKER_RUN_CMD='docker run --detach-keys="ctrl-z,ctrl-q" -e DOCKER_CONTAINER=docker -e LANG=\$LANG -e TERM=xterm-256color -it' 
 if [ $DOCKER_CONTAINER ]; then
     export PS1='$DOCKER_CONTAINER:\w$ '
 fi
@@ -44,7 +45,7 @@ if [ `uname -s` = 'Darwin' ]; then
     alias ql='qlmanage -p'
     alias v='/Applications/MacVim.app/Contents/MacOS/Vim'
     # Docker
-    export DOCKER_RUN_CMD="$DOCKER_RUN_CMD -e DISPLAY=\$IPADDR:0"
+    export DOCKER_RUN_CMD="$DOCKER_RUN_CMD -e DISPLAY=\$IPADDR:0 -v $HOME:/home/jovyan"
     alias dev='eval $(docker-machine env dev)'
     alias xd='socat TCP-LISTEN:6000,reuseaddr,fork UNIX-CLIENT:\"$DISPLAY\"'
     # VBoxManage controlvm "dev" natpf1 "neo4j,tcp,127.0.0.1,7474,,7474"
@@ -58,7 +59,7 @@ else
     alias la='ls -al$LS_ARGS --color=auto'
     alias t='tmux a'
     # Docker
-    export DOCKER_RUN_CMD="$DOCKER_RUN_CMD -e DISPLAY --net=host -v \$HOME/.Xauthority:/.Xauthority:rw -v \$HOME/.Xauthority:/root/.Xauthority:rw"
+    export DOCKER_RUN_CMD="$DOCKER_RUN_CMD -e DISPLAY --net=host -v \$HOME/.Xauthority:/.Xauthority -v \$HOME/.Xauthority:/root/.Xauthority -v \$HOME:\$HOME"
 fi
 
 # Docker
