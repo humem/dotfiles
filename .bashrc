@@ -26,6 +26,9 @@ alias ls='ls -$LS_ARGS'
 export PYTHONDONTWRITEBYTECODE=1
 alias i='ipython --pylab'
 
+# Keras with TensorFlow
+export KERAS_BACKEND=tensorflow
+
 # Torch
 alias use_torch='export PATH=/opt/torch/bin:/usr/local/cuda/bin:/usr/local/bin:/usr/bin:/bin; unset LD_LIBRARY_PATH'
 
