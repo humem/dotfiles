@@ -33,11 +33,10 @@ export KERAS_BACKEND=tensorflow
 # Docker
 # note: combination of '--rm' and '--detach-keys' causes hung
 export DOCKER_DETACH_KEYS='--detach-keys="ctrl-z,ctrl-q"'
-export DOCKER_RUN_CMD='docker run $DOCKER_DETACH_KEYS -e DOCKER_CONTAINER=docker -e LANG=\$LANG -e TERM=xterm-256color -it' 
+export DOCKER_RUN_CMD="docker run \$DOCKER_DETACH_KEYS -e DOCKER_CONTAINER=docker -e LANG=\$LANG -e TERM=xterm-256color -it" 
 if [ $DOCKER_CONTAINER ]; then
     export PS1='$DOCKER_CONTAINER:\w$ '
 fi
-export NB_USER=jovyan
 
 if [ `uname -s` = 'Darwin' ]; then
     alias e='/Applications/MacPorts/Emacs.app/Contents/MacOS/Emacs -nw'
@@ -48,10 +47,10 @@ if [ `uname -s` = 'Darwin' ]; then
     alias ql='qlmanage -p'
     alias v='/Applications/MacVim.app/Contents/MacOS/Vim'
     # Docker
-    export DOCKER_RUN_CMD="$DOCKER_RUN_CMD -e DISPLAY=\$IPADDR:0 -v $HOME:/home/$NB_USER"
-    alias dev='eval $(docker-machine env dev)'
+    export DOCKER_RUN_CMD="$DOCKER_RUN_CMD -e DISPLAY=\$IPADDR:0 -v \$HOME:/home/\$USER"
+    alias dev='eval $(docker-machine env default)'
     alias xd='socat TCP-LISTEN:6000,reuseaddr,fork UNIX-CLIENT:\"$DISPLAY\"'
-    # VBoxManage controlvm "dev" natpf1 "neo4j,tcp,127.0.0.1,7474,,7474"
+    # VBoxManage controlvm "default" natpf1 "neo4j,tcp,127.0.0.1,7474,,7474"
 else
     export IPADDR=$(hostname -I)
     alias la='ls -al$LS_ARGS --color=auto'
