@@ -1,9 +1,7 @@
 # -*- Shell-script -*-
 
 if [ `uname -s` = 'Darwin' ]; then
-    export PATH=/usr/local/bin:/usr/local/sbin:/usr/X11/bin:$PATH
-    export PATH=/opt/local/bin:/opt/local/sbin:$PATH
-    export MANPATH=/opt/local/share/man:$MANPATH
+    export PATH=/usr/local/opt/coreutils/libexec/gnubin:/usr/local/bin:/usr/local/sbin:/usr/X11/bin:$PATH
 else
     if [ -f /etc/bashrc ]; then
             . /etc/bashrc

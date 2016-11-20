@@ -7,8 +7,9 @@ alias l='less'
 alias m='more'
 
 # Locale
-#export LANG=ja_JP.UTF-8
 export LANG=en_US.UTF-8
+#export LANG=ja_JP.UTF-8
+#export LANG=C.UTF-8
 unset LC_CTYPE
 unset LC_ALL
 #alias en='unset LANG'
@@ -30,16 +31,18 @@ alias i='ipython --pylab'
 # Keras with TensorFlow
 export KERAS_BACKEND=tensorflow
 
+# MXNet
+export MXNET_HOME=/opt/mxnet
+
 # Docker
 # note: combination of '--rm' and '--detach-keys' causes hung
 export DOCKER_DETACH_KEYS='--detach-keys="ctrl-z,ctrl-q"'
-export DOCKER_RUN_CMD="docker run \$DOCKER_DETACH_KEYS -e DOCKER_CONTAINER=docker -e LANG=\$LANG -e TERM=xterm-256color -it" 
+export DOCKER_RUN_CMD="docker run \$DOCKER_DETACH_KEYS -e DOCKER_CONTAINER=docker -e TERM=xterm-256color -it" 
 if [ $DOCKER_CONTAINER ]; then
     export PS1='$DOCKER_CONTAINER:\w$ '
 fi
 
 if [ `uname -s` = 'Darwin' ]; then
-    alias e='/Applications/MacPorts/Emacs.app/Contents/MacOS/Emacs -nw'
     for i in 2 1 0; do
         export IPADDR=$(ipconfig getifaddr en${i})
         if [ $IPADDR ]; then break; fi
