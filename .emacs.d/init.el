@@ -116,7 +116,11 @@ and source-file directory for your debugger." t nil)
  ;; If there is more than one, they won't work right.
  '(custom-enabled-themes (quote (tango-dark)))
  '(indent-tabs-mode nil)
- '(safe-local-variable-values (quote ((checkdoc-minor-mode . t) (mangle-whitespace . t)))))
+ '(package-selected-packages
+   (quote
+    (typescript-mode js2-mode web-mode protobuf-mode powerline popwin php-mode nim-mode matlab-mode markdown-mode magit lua-mode helm git-rebase-mode exec-path-from-shell evil-surround evil-leader ess dockerfile-mode cython-mode cmake-mode auto-complete atom-dark-theme)))
+ '(safe-local-variable-values (quote ((checkdoc-minor-mode . t) (mangle-whitespace . t))))
+ '(typescript-indent-level 2))
 (menu-bar-mode -1)
 (display-time)
 (global-set-key "\C-cc" 'compile)
@@ -293,6 +297,9 @@ and source-file directory for your debugger." t nil)
   (require 'ruby-mode)
   (define-key ruby-mode-map "\C-ce" 'my-ruby-mode-set-encoding)
 
+  ;; typescript-mode
+  (add-hook 'typescript-mode-hook (lambda () (setq typescript-indent-level 2)))
+
   ;; web-mode
   (add-to-list 'auto-mode-alist '("\\.?html$" . web-mode))
   (setq web-mode-markup-indent-offset 2)
@@ -331,9 +338,12 @@ and source-file directory for your debugger." t nil)
   (show-paren-mode t)
   
   ;;行番号の表示
-  (global-linum-mode t)
-  (setq linum-format "%4d ")
-  )
+  (if (version<= "26.0.50" emacs-version)
+      (global-display-line-numbers-mode)
+    (progn
+      (global-linum-mode t)
+      (setq linum-format "%4d ")
+      )))
 
 ;; uniquify
 ;; http://www.clear-code.com/blog/2012/3/20.html

@@ -32,7 +32,7 @@ alias i='ipython --pylab'
 export KERAS_BACKEND=tensorflow
 
 # MXNet
-export MXNET_HOME=/opt/mxnet
+##export MXNET_HOME=/opt/mxnet
 
 # Docker
 # note: combination of '--rm' and '--detach-keys' causes hung
