@@ -118,9 +118,8 @@ and source-file directory for your debugger." t nil)
  '(indent-tabs-mode nil)
  '(package-selected-packages
    (quote
-    (typescript-mode js2-mode web-mode protobuf-mode powerline popwin php-mode nim-mode matlab-mode markdown-mode magit lua-mode helm git-rebase-mode exec-path-from-shell evil-surround evil-leader ess dockerfile-mode cython-mode cmake-mode auto-complete atom-dark-theme)))
- '(safe-local-variable-values (quote ((checkdoc-minor-mode . t) (mangle-whitespace . t))))
- '(typescript-indent-level 2))
+    (csv-mode clojure-mode typescript typescript-mode evil-magit web-mode powerline popwin matlab-mode markdown-mode magit lua-mode helm exec-path-from-shell evil-surround evil-leader ess dockerfile-mode cmake-mode auto-complete)))
+ '(safe-local-variable-values (quote ((checkdoc-minor-mode . t) (mangle-whitespace . t)))))
 (menu-bar-mode -1)
 (display-time)
 (global-set-key "\C-cc" 'compile)
@@ -128,6 +127,10 @@ and source-file directory for your debugger." t nil)
 (global-set-key "\C-cg" 'goto-line)
 (global-set-key "\C-cl" 'what-line)
 (global-set-key "\M-n" 'linum-mode)
+
+;; Set tab width
+(setq default-tab-width 4)
+(add-hook 'c-mode-common-hook '(lambda () (setq tab-width 4)))
 
 ;; Disable to color the selected region
 (setq transient-mark-mode nil)
@@ -202,6 +205,7 @@ and source-file directory for your debugger." t nil)
       matlab-mode
       powerline
       popwin
+      typescript-mode
       web-mode
       ))
   (let ((not-installed (loop for x in installed-package-list
@@ -302,11 +306,39 @@ and source-file directory for your debugger." t nil)
 
   ;; web-mode
   (add-to-list 'auto-mode-alist '("\\.?html$" . web-mode))
-  (setq web-mode-markup-indent-offset 2)
-  (setq web-mode-css-indent-offset 2)
-  (setq web-mode-code-indent-offset 2)
-  (setq web-mode-engines-alist
-        '(("\\.xhtml$" . "smarty")))
+  (setq web-mode-engines-alist '(("\\.xhtml$" . "smarty")))
+  ;; http://qiita.com/kwappa/items/6bde1fe2bbeedc85023e
+  (add-to-list 'auto-mode-alist '("\\.js[x]?$" . web-mode))
+  (setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'")))
+  (add-hook 'web-mode-hook
+            '(lambda ()
+               (setq web-mode-attr-indent-offset nil)
+               (setq web-mode-markup-indent-offset 2)
+               (setq web-mode-css-indent-offset 2)
+               (setq web-mode-code-indent-offset 2)
+               (setq web-mode-sql-indent-offset 2)
+               (setq indent-tabs-mode nil)
+               (setq tab-width 2)
+               ))
+  (custom-set-faces
+   '(web-mode-doctype-face           ((t (:foreground "#4A8ACA"))))
+;;   '(web-mode-html-tag-face          ((t (:foreground "#4A8ACA"))))
+   '(web-mode-html-tag-face          ((t (:foreground "#6AAAEA"))))
+   '(web-mode-html-attr-name-face    ((t (:foreground "#87CEEB"))))
+   '(web-mode-html-attr-equal-face   ((t (:foreground "#FFFFFF"))))
+   '(web-mode-html-attr-value-face   ((t (:foreground "#D78181"))))
+;;   '(web-mode-comment-face           ((t (:foreground "#587F35"))))
+   '(web-mode-comment-face           ((t (:foreground "#98BF75"))))
+   '(web-mode-server-comment-face    ((t (:foreground "#98BF75"))))
+   '(web-mode-css-at-rule-face       ((t (:foreground "#DFCF44"))))
+   '(web-mode-css-selector-face      ((t (:foreground "#DFCF44"))))
+   '(web-mode-css-pseudo-class       ((t (:foreground "#DFCF44"))))
+   '(web-mode-css-property-name-face ((t (:foreground "#87CEEB"))))
+   '(web-mode-css-string-face        ((t (:foreground "#D78181"))))
+   )
+
+  ;; JavaScript
+  (setq js-indent-level 2)
 
   ;; powerline
   ;; http://shibayu36.hatenablog.com/entry/2014/02/11/160945
@@ -377,7 +409,19 @@ and source-file directory for your debugger." t nil)
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(hl-line ((t (:background "color-236")))))
+ '(hl-line ((t (:background "color-236"))))
+ '(web-mode-comment-face ((t (:foreground "#98BF75"))))
+ '(web-mode-css-at-rule-face ((t (:foreground "#DFCF44"))))
+ '(web-mode-css-property-name-face ((t (:foreground "#87CEEB"))))
+ '(web-mode-css-pseudo-class ((t (:foreground "#DFCF44"))))
+ '(web-mode-css-selector-face ((t (:foreground "#DFCF44"))))
+ '(web-mode-css-string-face ((t (:foreground "#D78181"))))
+ '(web-mode-doctype-face ((t (:foreground "#4A8ACA"))))
+ '(web-mode-html-attr-equal-face ((t (:foreground "#FFFFFF"))))
+ '(web-mode-html-attr-name-face ((t (:foreground "#87CEEB"))))
+ '(web-mode-html-attr-value-face ((t (:foreground "#D78181"))))
+ '(web-mode-html-tag-face ((t (:foreground "#6AAAEA"))))
+ '(web-mode-server-comment-face ((t (:foreground "#98BF75")))))
 
 (when (memq window-system '(mac ns))
   ;; 日本語フォント設定
