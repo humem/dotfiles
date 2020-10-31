@@ -118,7 +118,7 @@ and source-file directory for your debugger." t nil)
  '(indent-tabs-mode nil)
  '(package-selected-packages
    (quote
-    (csv-mode clojure-mode typescript typescript-mode evil-magit web-mode powerline popwin matlab-mode markdown-mode magit lua-mode helm exec-path-from-shell evil-surround evil-leader ess dockerfile-mode cmake-mode auto-complete)))
+    (jsonnet-mode mozc mozc-im mozc-popup evil-surround csv-mode clojure-mode typescript typescript-mode evil-magit web-mode powerline popwin matlab-mode markdown-mode magit lua-mode helm exec-path-from-shell evil-leader ess dockerfile-mode cmake-mode auto-complete)))
  '(safe-local-variable-values (quote ((checkdoc-minor-mode . t) (mangle-whitespace . t)))))
 (menu-bar-mode -1)
 (display-time)
@@ -184,6 +184,10 @@ and source-file directory for your debugger." t nil)
 
   ;; package managenment; http://sakito.jp/emacs/emacs24.html
   (require 'package)
+  (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
+  (add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/") t)
+  (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/") t)
+  (add-to-list 'package-archives '("ELPA" . "http://tromey.com/elpa/") t)
   (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
   (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
   (package-initialize)
@@ -199,10 +203,14 @@ and source-file directory for your debugger." t nil)
       evil-surround
       exec-path-from-shell
       helm
+      jsonnet-mode
       lua-mode
       magit
       markdown-mode
       matlab-mode
+      mozc
+      mozc-im
+      mozc-popup
       powerline
       popwin
       typescript-mode
@@ -409,7 +417,7 @@ and source-file directory for your debugger." t nil)
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(hl-line ((t (:background "color-236"))))
+ '(hl-line ((t (:background "gray13"))))
  '(web-mode-comment-face ((t (:foreground "#98BF75"))))
  '(web-mode-css-at-rule-face ((t (:foreground "#DFCF44"))))
  '(web-mode-css-property-name-face ((t (:foreground "#87CEEB"))))
@@ -441,3 +449,114 @@ and source-file directory for your debugger." t nil)
 
   ;; ツールバーを非表示
   (tool-bar-mode 0))
+
+;; WSL2 on Windows/Ubuntu
+(when (memq window-system '(x))
+  ;; 現在行をハイライト: http://keisanbutsuriya.blog.fc2.com/blog-entry-91.html
+  (global-hl-line-mode t)
+
+  ;; ツールバーを非表示
+  (tool-bar-mode 0))
+
+;; 日本語入力 emacs-mozc https://w.atwiki.jp/ntemacs/pages/48.html
+(require 'mozc-im)
+(require 'mozc-popup)
+(require 'mozc-cursor-color)
+(require 'wdired)
+
+(setq default-input-method "japanese-mozc-im")
+
+;; popupスタイル を使用する
+(setq mozc-candidate-style 'popup)
+
+;; カーソルカラーを設定する
+(setq mozc-cursor-color-alist '((direct        . "white")
+                                (read-only     . "yellow")
+                                (hiragana      . "light green")
+                                (full-katakana . "goldenrod")
+                                (half-ascii    . "dark orchid")
+                                (full-ascii    . "orchid")
+                                (half-katakana . "dark goldenrod")))
+
+;; カーソルの点滅を OFF にする
+(blink-cursor-mode 0)
+
+;; C-\ で IME をトグルする
+(global-set-key (kbd "C-\\") 'toggle-input-method)
+(define-key isearch-mode-map (kbd "C-\\") 'isearch-toggle-input-method)
+(define-key wdired-mode-map (kbd "C-\\") 'toggle-input-method)
+;; C-SPC で IME をトグルする
+(global-set-key (kbd "C-SPC") 'toggle-input-method)
+(define-key isearch-mode-map (kbd "C-SPC") 'isearch-toggle-input-method)
+(define-key wdired-mode-map (kbd "C-SPC") 'toggle-input-method)
+
+;; mozc-cursor-color を利用するための対策
+;; (defvar mozc-im-mode nil)
+;; (make-variable-buffer-local 'mozc-im-mode)
+(defvar-local mozc-im-mode nil)
+(add-hook 'mozc-im-activate-hook (lambda () (setq mozc-im-mode t)))
+(add-hook 'mozc-im-deactivate-hook (lambda () (setq mozc-im-mode nil)))
+(advice-add 'mozc-cursor-color-update
+            :around (lambda (orig-fun &rest args)
+                      (let ((mozc-mode mozc-im-mode))
+                        (apply orig-fun args))))
+
+;; isearch を利用する前後で IME の状態を維持するための対策
+(add-hook 'isearch-mode-hook (lambda () (setq im-state mozc-im-mode)))
+(add-hook 'isearch-mode-end-hook
+          (lambda ()
+            (unless (eq im-state mozc-im-mode)
+              (if im-state
+                  (activate-input-method default-input-method)
+                (deactivate-input-method)))))
+
+;; wdired 終了時に IME を OFF にする
+(advice-add 'wdired-finish-edit
+            :after (lambda (&rest args)
+                     (deactivate-input-method)))
+
+;; Windows の mozc では、セッション接続直後 directモード になるので hiraganaモード にする
+(advice-add 'mozc-session-execute-command
+            :after (lambda (&rest args)
+                     (when (eq (nth 0 args) 'CreateSession)
+                       ;; (mozc-session-sendkey '(hiragana)))))
+                       (mozc-session-sendkey '(Hankaku/Zenkaku)))))
+
+;; デフォルト フォント
+;(set-face-attribute 'default nil :family "Migu 1M" :height 120)
+;(set-face-attribute 'default nil :family "Ricty Diminished" :height 120)
+;(set-face-attribute 'default nil :family "Cica" :height 120)
+;(set-face-attribute 'default nil :family "NotoSansMonoCJKjp" :height 120)
+;(set-face-attribute 'default nil :family "HackGen" :height 120)
+;; プロポーショナル フォント
+;(set-face-attribute 'variable-pitch nil :family "Migu 1M" :height 120)
+;; 等幅フォント
+;(set-face-attribute 'fixed-pitch nil :family "Migu 1M" :height 120)
+;; ツールチップ表示フォント
+;(set-face-attribute 'tooltip nil :family "Migu 1M" :height 90)
+
+;; 色を設定する
+;(add-to-list 'default-frame-alist '(foreground-color . "white"))
+;(add-to-list 'default-frame-alist '(background-color . "black"))
+;(add-to-list 'default-frame-alist '(foreground-color . "#ffffff"))
+;(add-to-list 'default-frame-alist '(background-color . "#000000"))
+
+;; フレームの高さを補正する設定
+(defun reset-frame-parameter (frame)
+  (sleep-for 0.1)
+  (set-frame-parameter frame 'height 32))
+(add-hook 'after-make-frame-functions #'reset-frame-parameter)
+
+;; coding-system の設定
+(prefer-coding-system 'utf-8-unix)
+
+;; プロセスが出力する文字コードを判定して、process-coding-system の DECODING の設定値を決定する
+(setq default-process-coding-system '(undecided-dos . utf-8-unix))
+;; ※ 設定値の car を "undecided-dos" にしておくと、Windows コマンドの出力にも柔軟に対応できます。関連して 29) の説明も参照してください。
+
+;; shell の設定
+(setq shell-file-name "/bin/bash")
+(setq shell-command-switch "-c")
+(setq explicit-shell-file-name shell-file-name)
+
+;(require 'jsonnet-mode)
