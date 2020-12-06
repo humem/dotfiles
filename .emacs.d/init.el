@@ -3,7 +3,7 @@
 (load "extra-autoloads" t)
 
 ;; load local setting e.g. PATH, http_proxy, ALL_PROXY
-(load "../local" t)
+;(load "../local" t)
 
 ;; Japanese language environment
 (set-language-environment "Japanese")
@@ -15,9 +15,9 @@
 (add-hook 'after-save-hook
           'executable-make-buffer-file-executable-if-script-p)
 
-;;Dired
+;; Dired
 (defvar suffix-for-open-list
-  '(app csv dmg doc jpg htm html pdf pkg ppg ppt rtf tif tiff xdw xls))
+  '(app csv dmg doc docx jpg htm html pdf pkg ppg ppt pptx rtf svg tif tiff xdw xls xlsx))
 (let ((alist ()))
   (setq dired-guess-shell-alist-user
         (dolist (suffix suffix-for-open-list alist)
@@ -41,51 +41,58 @@
 
 ;; IPython: invoke with run-python
 ;; http://stackoverflow.com/questions/17817019/how-to-open-ipython-interpreter-in-emacs
-(when (executable-find "ipython")
-  (setq
-   python-shell-interpreter "ipython"
-   python-shell-interpreter-args "--pylab"
-   python-shell-prompt-regexp "In \\[[0-9]+\\]: "
-   python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: "
-   python-shell-completion-setup-code
-   "from IPython.core.completerlib import module_completion"
-   python-shell-completion-module-string-code
-   "';'.join(module_completion('''%s'''))\n"
-   python-shell-completion-string-code
-   "';'.join(get_ipython().Completer.all_completions('''%s'''))\n"))
+; (when (executable-find "ipython")
+;   (setq
+;    python-shell-interpreter "ipython"
+;    python-shell-interpreter-args "--pylab"
+;    python-shell-prompt-regexp "In \\[[0-9]+\\]: "
+;    python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: "
+;    python-shell-completion-setup-code
+;    "from IPython.core.completerlib import module_completion"
+;    python-shell-completion-module-string-code
+;    "';'.join(module_completion('''%s'''))\n"
+;    python-shell-completion-string-code
+;    "';'.join(get_ipython().Completer.all_completions('''%s'''))\n"))
+
+;; Python indent width
+(add-hook 'python-mode-hook
+    '(lambda ()
+        (setq python-indent 4)
+        (setq indent-tabs-mod nil)
+        ))
 
 ;; Ruby debugger (Rubydb)
-(autoload 'rubydb "rubydb3x"
-  "Run rubydb on program FILE in buffer *gud-FILE*.
-The directory containing FILE becomes the initial working directory
-and source-file directory for your debugger." t nil)
-(global-set-key "\C-cd" 'rubydb)
+; (autoload 'rubydb "rubydb3x"
+;   "Run rubydb on program FILE in buffer *gud-FILE*.
+; The directory containing FILE becomes the initial working directory
+; and source-file directory for your debugger." t nil)
+; (global-set-key "\C-cd" 'rubydb)
 
 ;; Sdic-mode for lookuping up dictionaries
-(autoload 'sdic-describe-word "sdic"
-  "look up English or Japanese words" t nil)
-(global-set-key "\C-cw" 'sdic-describe-word)
+; (autoload 'sdic-describe-word "sdic"
+;   "look up English or Japanese words" t nil)
+; (global-set-key "\C-cw" 'sdic-describe-word)
 
 ;; launch Dictionary.app
 ;; http://d.hatena.ne.jp/tunefs/20130212/p1
-(global-set-key
- "\C-cW"
- (lambda ()
-   (interactive)
-   (let ((url (concat "dict://" (read-from-minibuffer "" (current-word)))))
-     (browse-url url))))
+; (global-set-key
+;  "\C-cW"
+;  (lambda ()
+;    (interactive)
+;    (let ((url (concat "dict://" (read-from-minibuffer "" (current-word)))))
+;      (browse-url url))))
 
 ;; Subversion (svn): use patched version instead of HEAD trunk stored in packages to work with Subversion 1.7.
-(when (require 'psvn nil t)
-  (add-hook 'dired-mode-hook
-            '(lambda ()
-               (require 'dired-x)
-               (define-key dired-mode-map "V" 'svn-status)
-               (turn-on-font-lock)
-               ))
-  (setq svn-status-hide-unmodified t)
-  (setq process-coding-system-alist
-        (cons '("svn" . utf-8) process-coding-system-alist)))
+; (when (require 'psvn nil t)
+;   (add-hook 'dired-mode-hook
+;             '(lambda ()
+;                (require 'dired-x)
+;                (define-key dired-mode-map "V" 'svn-status)
+;                (turn-on-font-lock)
+;                ))
+;   (setq svn-status-hide-unmodified t)
+;   (setq process-coding-system-alist
+;         (cons '("svn" . utf-8) process-coding-system-alist)))
 
 ;; Word count
 (autoload 'word-count-mode "word-count"
@@ -97,6 +104,9 @@ and source-file directory for your debugger." t nil)
 (setq migemo-isearch-enable-p nil)
 (setq dabbrev-case-fold-search nil)
 (setq dired-dwim-target t)
+;; https://qiita.com/maangie/items/5a80ae50c13d14368a72
+; (let ((gls "/usr/local/bin/gls"))
+;   (if (file-exists-p gls) (setq insert-directory-program gls)))
 (setq dired-use-ls-dired t)
 (setq kill-whole-line t)
 (setq make-backup-files nil)
@@ -118,7 +128,7 @@ and source-file directory for your debugger." t nil)
  '(indent-tabs-mode nil)
  '(package-selected-packages
    (quote
-    (neotree jsonnet-mode mozc mozc-im mozc-popup evil-surround csv-mode clojure-mode typescript typescript-mode evil-magit web-mode powerline popwin matlab-mode markdown-mode magit lua-mode helm exec-path-from-shell evil-leader ess dockerfile-mode cmake-mode auto-complete)))
+    (neotree jsonnet-mode undo-tree mozc mozc-im mozc-popup evil-surround csv-mode clojure-mode typescript typescript-mode evil-magit web-mode powerline popwin matlab-mode markdown-mode magit lua-mode helm exec-path-from-shell evil-leader ess dockerfile-mode cmake-mode auto-complete)))
  '(safe-local-variable-values (quote ((checkdoc-minor-mode . t) (mangle-whitespace . t)))))
 (menu-bar-mode -1)
 (display-time)
@@ -143,6 +153,9 @@ and source-file directory for your debugger." t nil)
 ;; Switch the Command-Key and the Option-Key
 ;(setq ns-command-modifier   'meta)
 ;(setq ns-alternate-modifier 'super)
+
+;; Type backslash instead of yen mark
+(define-key global-map [165] [92]) ;; 165が¥（円マーク） , 92が\（バックスラッシュ）を表す
 
 ;; Magnify and demagnify texts.
 (setq text-scale-mode-step 1.05); 1.2
@@ -185,18 +198,19 @@ and source-file directory for your debugger." t nil)
 
   ;; package managenment; http://sakito.jp/emacs/emacs24.html
   (require 'package)
-  (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
-  (add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/") t)
-  (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/") t)
-  (add-to-list 'package-archives '("ELPA" . "http://tromey.com/elpa/") t)
-  (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
-  (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
+  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+;   (add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/") t)
+;   (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/") t)
+;   (add-to-list 'package-archives '("ELPA" . "http://tromey.com/elpa/") t)
+;   (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
+;   (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
   (package-initialize)
   ;; http://qiita.com/hottestseason/items/1e8a46ad1ebcf7d0e11c
   (defvar installed-package-list
     '(
       auto-complete
       cmake-mode
+      csv-mode
       dockerfile-mode
       ess
       evil
@@ -204,6 +218,7 @@ and source-file directory for your debugger." t nil)
       evil-surround
       exec-path-from-shell
       helm
+      julia-mode
       jsonnet-mode
       lua-mode
       magit
@@ -216,6 +231,7 @@ and source-file directory for your debugger." t nil)
       powerline
       popwin
       typescript-mode
+      undo-tree
       web-mode
       ))
   (let ((not-installed (loop for x in installed-package-list
@@ -320,6 +336,7 @@ and source-file directory for your debugger." t nil)
   ;; http://qiita.com/kwappa/items/6bde1fe2bbeedc85023e
   (add-to-list 'auto-mode-alist '("\\.js[x]?$" . web-mode))
   (setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'")))
+  (add-to-list 'auto-mode-alist '("\\.vue$" . web-mode))
   (add-hook 'web-mode-hook
             '(lambda ()
                (setq web-mode-attr-indent-offset nil)
@@ -327,6 +344,8 @@ and source-file directory for your debugger." t nil)
                (setq web-mode-css-indent-offset 2)
                (setq web-mode-code-indent-offset 2)
                (setq web-mode-sql-indent-offset 2)
+               (setq web-mode-script-padding 0)
+               (setq web-mode-style-padding 0)
                (setq indent-tabs-mode nil)
                (setq tab-width 2)
                ))
@@ -349,8 +368,9 @@ and source-file directory for your debugger." t nil)
 
   ;; JavaScript
   (setq js-indent-level 2)
+  (setq-default tab-width 2)
 
-  ;; neotree
+  ;; NeoTree with evil mode
   (add-hook 'neotree-mode-hook
             (lambda ()
               (define-key evil-normal-state-local-map (kbd "TAB") 'neotree-enter)
@@ -378,20 +398,25 @@ and source-file directory for your debugger." t nil)
                       :foreground "#000"
                       :background "#aeaeb6"
                       :inherit 'mode-line)
+  ;; http://ytsk.hatenablog.com/entry/2015/09/23/021856
+  (setq ns-use-srgb-colorspace nil)
   (powerline-center-evil-theme)
   ;; fix for 24.4
   ;; https://github.com/milkypostman/powerline/issues/58
-  (add-hook 'desktop-after-read-hook 'powerline-reset)
+;   (add-hook 'desktop-after-read-hook 'powerline-reset)
 
   ;; バッファ自動再読み込み
   ;; http://shibayu36.hatenablog.com/entry/2012/12/29/001418
   (global-auto-revert-mode 1)
 
-  ;;対応する括弧を光らせる
+  ;; 対応する括弧を光らせる
   (setq show-paren-delay 0)
   (setq show-paren-style 'single)
   (show-paren-mode t)
   
+  ;; 対応する括弧を自動的に挿入する
+  (electric-pair-mode 1)
+
   ;;行番号の表示
   (if (version<= "26.0.50" emacs-version)
       (global-display-line-numbers-mode)
@@ -422,7 +447,10 @@ and source-file directory for your debugger." t nil)
   (interactive)
   (when (one-window-p)
     (split-window-horizontally))
-  (other-window 1))
+  (other-window 1)
+  ;; IMEをオフにする
+  (when (fboundp 'mac-toggle-input-method)
+    (mac-toggle-input-method nil)))
 
 (global-set-key (kbd "C-;") 'other-window-or-split)
 (global-set-key (kbd "<f8>") 'other-window-or-split)
@@ -433,7 +461,8 @@ and source-file directory for your debugger." t nil)
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(hl-line ((t (:background "gray13"))))
+; '(hl-line ((t (:background "gray13"))))
+ '(hl-line ((t (:background "color-236"))))
  '(web-mode-comment-face ((t (:foreground "#98BF75"))))
  '(web-mode-css-at-rule-face ((t (:foreground "#DFCF44"))))
  '(web-mode-css-property-name-face ((t (:foreground "#87CEEB"))))
@@ -464,7 +493,10 @@ and source-file directory for your debugger." t nil)
   (global-hl-line-mode t)
 
   ;; ツールバーを非表示
-  (tool-bar-mode 0))
+  (tool-bar-mode 0)
+
+  ;; スクロールバーを表示
+  (scroll-bar-mode 1))
 
 ;; WSL2 on Windows/Ubuntu
 (when (memq window-system '(x))
@@ -548,7 +580,7 @@ and source-file directory for your debugger." t nil)
 ;(set-face-attribute 'default nil :family "Cica" :height 120)
 ;(set-face-attribute 'default nil :family "NotoSansMonoCJKjp" :height 120)
 ;(set-face-attribute 'default nil :family "HackGen" :height 120)
-(set-face-attribute 'default nil :family "HackGen35 Console")
+(set-face-attribute 'default nil :family "HackGen35Nerd Console"); :height 100)
 ;(set-face-attribute 'default nil :family "Osaka\-Mono")
 ;(set-face-attribute 'default nil :family "Noto Sans Mono") ; :height 95)
 ;(set-face-attribute 'default nil :family "Source Han Code JP" :height 105)
@@ -578,11 +610,17 @@ and source-file directory for your debugger." t nil)
 (setq default-process-coding-system '(undecided-dos . utf-8-unix))
 ;; ※ 設定値の car を "undecided-dos" にしておくと、Windows コマンドの出力にも柔軟に対応できます。関連して 29) の説明も参照してください。
 
+;; redo
+;; https://github.com/syl20bnr/spacemacs/issues/14036
+; (global-undo-tree-mode)
+; (evil-set-undo-system 'undo-tree)
+
 ;; save-buffer
 (global-set-key (kbd "<f5>") 'save-buffer)
 
-;; auto close bracket insertion
-(electric-pair-mode 1)
+;; tramp hanging
+;; https://gongo.hatenablog.com/entry/2011/11/14/195912
+(setq vc-handled-backends ())
 
 ;; smooth mouse scroll
 (setq mouse-wheel-scroll-amount '(1))
