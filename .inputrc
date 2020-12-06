@@ -1,0 +1,36 @@
+# https://www.trhrkmk.com/posts/setting-vi-mode-in-bash-comfortable/
+
+# Use Vi, not Emacs, style editing
+set editing-mode vi
+
+# Show all completions as soon as I press tab, even if there's more than one
+set show-all-if-ambiguous on
+# Ignore case
+set completion-ignore-case on
+# on menu-complete, first display the common prefix, then cycle through the 
+# options when hitting TAB
+set menu-complete-display-prefix on
+
+# Keymaps for when we're in command mode (e.g., after hitting ESC)
+set keymap vi-command
+
+# Keymaps for when we're in insert (i.e., typing stuff in) mode
+set keymap vi-insert
+
+# Pressing tab will list all completions & select the first one. Pressing it 
+# again will cycle through available completions.
+TAB: menu-complete
+# Shift-TAB cycles completions backward
+"\e[Z": menu-complete-backward
+
+# for vi mode
+set show-mode-in-prompt on
+set vi-ins-mode-string \1\e[34;1m\2(ins) \1\e[0m\2
+set vi-cmd-mode-string \1\e[31;1m\2(cmd) \1\e[0m\2
+
+# http://blog.digital-bot.com/blog/2013/08/30/more-useful-inputrc/
+# C-(n|p)でhistory-search
+"\C-p":history-search-backward
+"\C-n":history-search-forward
+"\e[A":history-search-backward
+"\e[B":history-search-forward

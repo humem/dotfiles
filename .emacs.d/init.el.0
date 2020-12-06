@@ -3,7 +3,7 @@
 (load "extra-autoloads" t)
 
 ;; load local setting e.g. PATH, http_proxy, ALL_PROXY
-(load "../local" t)
+;(load "../local" t)
 
 ;; Japanese language environment
 (set-language-environment "Japanese")
@@ -17,7 +17,7 @@
 
 ;;Dired
 (defvar suffix-for-open-list
-  '(app csv dmg doc jpg htm html pdf pkg ppg ppt rtf tif tiff xdw xls))
+  '(app csv dmg doc jpg htm html pdf pkg ppg ppt rtf svg tif tiff xdw xls))
 (let ((alist ()))
   (setq dired-guess-shell-alist-user
         (dolist (suffix suffix-for-open-list alist)
@@ -41,18 +41,25 @@
 
 ;; IPython: invoke with run-python
 ;; http://stackoverflow.com/questions/17817019/how-to-open-ipython-interpreter-in-emacs
-(when (executable-find "ipython")
-  (setq
-   python-shell-interpreter "ipython"
-   python-shell-interpreter-args "--pylab"
-   python-shell-prompt-regexp "In \\[[0-9]+\\]: "
-   python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: "
-   python-shell-completion-setup-code
-   "from IPython.core.completerlib import module_completion"
-   python-shell-completion-module-string-code
-   "';'.join(module_completion('''%s'''))\n"
-   python-shell-completion-string-code
-   "';'.join(get_ipython().Completer.all_completions('''%s'''))\n"))
+; (when (executable-find "ipython")
+;   (setq
+;    python-shell-interpreter "ipython"
+;    python-shell-interpreter-args "--pylab"
+;    python-shell-prompt-regexp "In \\[[0-9]+\\]: "
+;    python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: "
+;    python-shell-completion-setup-code
+;    "from IPython.core.completerlib import module_completion"
+;    python-shell-completion-module-string-code
+;    "';'.join(module_completion('''%s'''))\n"
+;    python-shell-completion-string-code
+;    "';'.join(get_ipython().Completer.all_completions('''%s'''))\n"))
+
+;; Python indent width
+(add-hook 'python-mode-hook
+    '(lambda ()
+        (setq python-indent 4)
+        (setq indent-tabs-mod nil)
+        ))
 
 ;; Ruby debugger (Rubydb)
 (autoload 'rubydb "rubydb3x"
@@ -76,16 +83,16 @@ and source-file directory for your debugger." t nil)
      (browse-url url))))
 
 ;; Subversion (svn): use patched version instead of HEAD trunk stored in packages to work with Subversion 1.7.
-(when (require 'psvn nil t)
-  (add-hook 'dired-mode-hook
-            '(lambda ()
-               (require 'dired-x)
-               (define-key dired-mode-map "V" 'svn-status)
-               (turn-on-font-lock)
-               ))
-  (setq svn-status-hide-unmodified t)
-  (setq process-coding-system-alist
-        (cons '("svn" . utf-8) process-coding-system-alist)))
+;(when (require 'psvn nil t)
+;  (add-hook 'dired-mode-hook
+;            '(lambda ()
+;               (require 'dired-x)
+;               (define-key dired-mode-map "V" 'svn-status)
+;               (turn-on-font-lock)
+;               ))
+;  (setq svn-status-hide-unmodified t)
+;  (setq process-coding-system-alist
+;        (cons '("svn" . utf-8) process-coding-system-alist)))
 
 ;; Word count
 (autoload 'word-count-mode "word-count"
@@ -97,16 +104,20 @@ and source-file directory for your debugger." t nil)
 (setq migemo-isearch-enable-p nil)
 (setq dabbrev-case-fold-search nil)
 (setq dired-dwim-target t)
-(setq dired-use-ls-dired t)
+;; https://qiita.com/maangie/items/5a80ae50c13d14368a72
+(let ((gls "/usr/local/bin/gls"))
+  (if (file-exists-p gls) (setq insert-directory-program gls)))
+;(setq dired-use-ls-dired t)
 (setq kill-whole-line t)
 (setq make-backup-files nil)
 (setq next-line-add-newlines nil)
 ;;; Work around for El Capitan
 ;(setq visible-bell t)
 (setq visible-bell nil)
-(setq ring-bell-function (lambda ()
-                           (invert-face 'mode-line)
-                           (run-with-timer 0.1 nil 'invert-face 'mode-line)))
+(setq ring-bell-function
+      (lambda ()
+        (invert-face 'mode-line)
+        (run-with-timer 0.1 nil 'invert-face 'mode-line)))
 
 (setq truncate-partial-width-windows nil)
 (custom-set-variables
@@ -118,7 +129,7 @@ and source-file directory for your debugger." t nil)
  '(indent-tabs-mode nil)
  '(package-selected-packages
    (quote
-    (neotree jsonnet-mode mozc mozc-im mozc-popup evil-surround csv-mode clojure-mode typescript typescript-mode evil-magit web-mode powerline popwin matlab-mode markdown-mode magit lua-mode helm exec-path-from-shell evil-leader ess dockerfile-mode cmake-mode auto-complete)))
+    (undo-tree mozc mozc-im mozc-popup neotree powerline-evil evil jsonl jsonnet-mode julia-mode csv-mode clojure-mode typescript typescript-mode evil-magit web-mode powerline popwin matlab-mode markdown-mode magit lua-mode helm exec-path-from-shell evil-surround evil-leader ess dockerfile-mode cmake-mode auto-complete)))
  '(safe-local-variable-values (quote ((checkdoc-minor-mode . t) (mangle-whitespace . t)))))
 (menu-bar-mode -1)
 (display-time)
@@ -143,6 +154,9 @@ and source-file directory for your debugger." t nil)
 ;; Switch the Command-Key and the Option-Key
 ;(setq ns-command-modifier   'meta)
 ;(setq ns-alternate-modifier 'super)
+
+;; Type backslash instead of yen mark
+(define-key global-map [165] [92]) ;; 165が¥（円マーク） , 92が\（バックスラッシュ）を表す
 
 ;; Magnify and demagnify texts.
 (setq text-scale-mode-step 1.05); 1.2
@@ -185,18 +199,15 @@ and source-file directory for your debugger." t nil)
 
   ;; package managenment; http://sakito.jp/emacs/emacs24.html
   (require 'package)
-  (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
-  (add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/") t)
-  (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/") t)
-  (add-to-list 'package-archives '("ELPA" . "http://tromey.com/elpa/") t)
-  (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
-  (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
+  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+  ;(add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
   (package-initialize)
   ;; http://qiita.com/hottestseason/items/1e8a46ad1ebcf7d0e11c
   (defvar installed-package-list
     '(
       auto-complete
       cmake-mode
+      csv-mode
       dockerfile-mode
       ess
       evil
@@ -204,7 +215,7 @@ and source-file directory for your debugger." t nil)
       evil-surround
       exec-path-from-shell
       helm
-      jsonnet-mode
+      julia-mode
       lua-mode
       magit
       markdown-mode
@@ -216,6 +227,7 @@ and source-file directory for your debugger." t nil)
       powerline
       popwin
       typescript-mode
+      undo-tree
       web-mode
       ))
   (let ((not-installed (loop for x in installed-package-list
@@ -299,17 +311,17 @@ and source-file directory for your debugger." t nil)
   (setq ac-use-menu-map t) ; C-n, C-p
 
   ;; http://d.hatena.ne.jp/eiel/20101106
-  (defun ruby-mode-hook-init ()
-    "encodingを自動挿入しないようにする"
-    (remove-hook 'before-save-hook 'ruby-mode-set-encoding))
-  (add-hook 'ruby-mode-hook 'ruby-mode-init)
+;;  (defun ruby-mode-hook-init ()
+;;    "encodingを自動挿入しないようにする"
+;;    (remove-hook 'before-save-hook 'ruby-mode-set-encoding))
+;;  (add-hook 'ruby-mode-hook 'ruby-mode-init)
 
-  (defun my-ruby-mode-set-encoding ()
-    "set-encoding ruby-mode"
-    (interactive)
-    (ruby-mode-set-encoding))
-  (require 'ruby-mode)
-  (define-key ruby-mode-map "\C-ce" 'my-ruby-mode-set-encoding)
+;;  (defun my-ruby-mode-set-encoding ()
+;;    "set-encoding ruby-mode"
+;;    (interactive)
+;;    (ruby-mode-set-encoding))
+;;  (require 'ruby-mode)
+;;  (define-key ruby-mode-map "\C-ce" 'my-ruby-mode-set-encoding)
 
   ;; typescript-mode
   (add-hook 'typescript-mode-hook (lambda () (setq typescript-indent-level 2)))
@@ -320,6 +332,7 @@ and source-file directory for your debugger." t nil)
   ;; http://qiita.com/kwappa/items/6bde1fe2bbeedc85023e
   (add-to-list 'auto-mode-alist '("\\.js[x]?$" . web-mode))
   (setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'")))
+  (add-to-list 'auto-mode-alist '("\\.vue$" . web-mode))
   (add-hook 'web-mode-hook
             '(lambda ()
                (setq web-mode-attr-indent-offset nil)
@@ -327,6 +340,8 @@ and source-file directory for your debugger." t nil)
                (setq web-mode-css-indent-offset 2)
                (setq web-mode-code-indent-offset 2)
                (setq web-mode-sql-indent-offset 2)
+               (setq web-mode-script-padding 0)
+               (setq web-mode-style-padding 0)
                (setq indent-tabs-mode nil)
                (setq tab-width 2)
                ))
@@ -349,20 +364,8 @@ and source-file directory for your debugger." t nil)
 
   ;; JavaScript
   (setq js-indent-level 2)
-
-  ;; neotree
-  (add-hook 'neotree-mode-hook
-            (lambda ()
-              (define-key evil-normal-state-local-map (kbd "TAB") 'neotree-enter)
-              (define-key evil-normal-state-local-map (kbd "SPC") 'neotree-quick-look)
-              (define-key evil-normal-state-local-map (kbd "q") 'neotree-hide)
-              (define-key evil-normal-state-local-map (kbd "RET") 'neotree-enter)
-              (define-key evil-normal-state-local-map (kbd "g") 'neotree-refresh)
-              (define-key evil-normal-state-local-map (kbd "n") 'neotree-next-line)
-              (define-key evil-normal-state-local-map (kbd "p") 'neotree-previous-line)
-              (define-key evil-normal-state-local-map (kbd "A") 'neotree-stretch-toggle)
-              (define-key evil-normal-state-local-map (kbd "H") 'neotree-hidden-file-toggle)))
-
+  (setq-default tab-width 2)
+  
   ;; powerline
   ;; http://shibayu36.hatenablog.com/entry/2014/02/11/160945
   (require 'powerline)
@@ -378,10 +381,12 @@ and source-file directory for your debugger." t nil)
                       :foreground "#000"
                       :background "#aeaeb6"
                       :inherit 'mode-line)
+  ;; http://ytsk.hatenablog.com/entry/2015/09/23/021856
+  (setq ns-use-srgb-colorspace nil)
   (powerline-center-evil-theme)
-  ;; fix for 24.4
-  ;; https://github.com/milkypostman/powerline/issues/58
-  (add-hook 'desktop-after-read-hook 'powerline-reset)
+  ;; ;; fix for 24.4
+  ;; ;; https://github.com/milkypostman/powerline/issues/58
+  ;; (add-hook 'desktop-after-read-hook 'powerline-reset)
 
   ;; バッファ自動再読み込み
   ;; http://shibayu36.hatenablog.com/entry/2012/12/29/001418
@@ -392,6 +397,9 @@ and source-file directory for your debugger." t nil)
   (setq show-paren-style 'single)
   (show-paren-mode t)
   
+  ;;対応する括弧を自動的に挿入する
+  (electric-pair-mode 1)
+
   ;;行番号の表示
   (if (version<= "26.0.50" emacs-version)
       (global-display-line-numbers-mode)
@@ -422,7 +430,10 @@ and source-file directory for your debugger." t nil)
   (interactive)
   (when (one-window-p)
     (split-window-horizontally))
-  (other-window 1))
+  (other-window 1)
+  ;; IMEをオフにする
+  (when (fboundp 'mac-toggle-input-method)
+    (mac-toggle-input-method nil)))
 
 (global-set-key (kbd "C-;") 'other-window-or-split)
 (global-set-key (kbd "<f8>") 'other-window-or-split)
@@ -433,7 +444,7 @@ and source-file directory for your debugger." t nil)
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(hl-line ((t (:background "gray13"))))
+ '(hl-line ((t (:background "color-236"))))
  '(web-mode-comment-face ((t (:foreground "#98BF75"))))
  '(web-mode-css-at-rule-face ((t (:foreground "#DFCF44"))))
  '(web-mode-css-property-name-face ((t (:foreground "#87CEEB"))))
@@ -464,15 +475,30 @@ and source-file directory for your debugger." t nil)
   (global-hl-line-mode t)
 
   ;; ツールバーを非表示
-  (tool-bar-mode 0))
+  (tool-bar-mode 0)
 
-;; WSL2 on Windows/Ubuntu
+  ;; スクロールバーを表示
+  (scroll-bar-mode 1))
+
+;; shellの設定
+;(setq shell-file-name "/bin/bash")
+;(setq shell-command-switch "-c")
+;(setq explicit-shell-file-name shell-file-name)
+
 (when (memq window-system '(x))
   ;; 現在行をハイライト: http://keisanbutsuriya.blog.fc2.com/blog-entry-91.html
   (global-hl-line-mode t)
 
   ;; ツールバーを非表示
   (tool-bar-mode 0))
+
+;; copy and paste with Windows clipboard
+(defun wsl-copy (start end)
+  (interactive "r")
+  (shell-command-on-region start end "clip.exe"))
+(global-set-key
+ (kbd "C-c C-c")
+ 'wsl-copy)
 
 ;; 日本語入力 emacs-mozc https://w.atwiki.jp/ntemacs/pages/48.html
 (require 'mozc-im)
@@ -501,10 +527,7 @@ and source-file directory for your debugger." t nil)
 (global-set-key (kbd "C-\\") 'toggle-input-method)
 (define-key isearch-mode-map (kbd "C-\\") 'isearch-toggle-input-method)
 (define-key wdired-mode-map (kbd "C-\\") 'toggle-input-method)
-;; C-SPC で IME をトグルする
-(global-set-key (kbd "C-SPC") 'toggle-input-method)
-(define-key isearch-mode-map (kbd "C-SPC") 'isearch-toggle-input-method)
-(define-key wdired-mode-map (kbd "C-SPC") 'toggle-input-method)
+
 ;; F1 で IME をトグルする
 (global-set-key (kbd "<f1>") 'toggle-input-method)
 (define-key isearch-mode-map (kbd "<f1>") 'isearch-toggle-input-method)
@@ -547,11 +570,8 @@ and source-file directory for your debugger." t nil)
 ;(set-face-attribute 'default nil :family "Ricty Diminished" :height 120)
 ;(set-face-attribute 'default nil :family "Cica" :height 120)
 ;(set-face-attribute 'default nil :family "NotoSansMonoCJKjp" :height 120)
-;(set-face-attribute 'default nil :family "HackGen" :height 120)
-(set-face-attribute 'default nil :family "HackGen35 Console")
-;(set-face-attribute 'default nil :family "Osaka\-Mono")
-;(set-face-attribute 'default nil :family "Noto Sans Mono") ; :height 95)
-;(set-face-attribute 'default nil :family "Source Han Code JP" :height 105)
+;;(set-face-attribute 'default nil :family "HackGen" :height 120)
+(set-face-attribute 'default nil :family "HackGen35Nerd Console" :height 100)
 ;; プロポーショナル フォント
 ;(set-face-attribute 'variable-pitch nil :family "Migu 1M" :height 120)
 ;; 等幅フォント
@@ -562,8 +582,6 @@ and source-file directory for your debugger." t nil)
 ;; 色を設定する
 ;(add-to-list 'default-frame-alist '(foreground-color . "white"))
 ;(add-to-list 'default-frame-alist '(background-color . "black"))
-;(add-to-list 'default-frame-alist '(foreground-color . "#ffffff"))
-;(add-to-list 'default-frame-alist '(background-color . "#000000"))
 
 ;; フレームの高さを補正する設定
 (defun reset-frame-parameter (frame)
@@ -578,11 +596,29 @@ and source-file directory for your debugger." t nil)
 (setq default-process-coding-system '(undecided-dos . utf-8-unix))
 ;; ※ 設定値の car を "undecided-dos" にしておくと、Windows コマンドの出力にも柔軟に対応できます。関連して 29) の説明も参照してください。
 
+;;(require 'jsonnet-mode)
+
+;; NeoTree with evil mode
+(add-hook 'neotree-mode-hook
+          (lambda ()
+            (define-key evil-normal-state-local-map (kbd "TAB") 'neotree-enter)
+            (define-key evil-normal-state-local-map (kbd "SPC") 'neotree-quick-look)
+            (define-key evil-normal-state-local-map (kbd "q") 'neotree-hide)
+            (define-key evil-normal-state-local-map (kbd "RET") 'neotree-enter)
+            (define-key evil-normal-state-local-map (kbd "g") 'neotree-refresh)
+            (define-key evil-normal-state-local-map (kbd "n") 'neotree-next-line)
+            (define-key evil-normal-state-local-map (kbd "p") 'neotree-previous-line)
+            (define-key evil-normal-state-local-map (kbd "A") 'neotree-stretch-toggle)
+            (define-key evil-normal-state-local-map (kbd "H") 'neotree-hidden-file-toggle)))
+
+;; redo 
+;; https://github.com/syl20bnr/spacemacs/issues/14036
+(global-undo-tree-mode)
+(evil-set-undo-system 'undo-tree)
+
 ;; save-buffer
 (global-set-key (kbd "<f5>") 'save-buffer)
 
-;; auto close bracket insertion
-(electric-pair-mode 1)
-
-;; smooth mouse scroll
-(setq mouse-wheel-scroll-amount '(1))
+;; tramp hanging
+;; https://gongo.hatenablog.com/entry/2011/11/14/195912
+(setq vc-handled-backends ())
