@@ -124,12 +124,11 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(custom-enabled-themes (quote (tango-dark)))
+ '(custom-enabled-themes '(tango-dark))
  '(indent-tabs-mode nil)
  '(package-selected-packages
-   (quote
-    (neotree jsonnet-mode undo-tree mozc mozc-im mozc-popup evil-surround csv-mode clojure-mode typescript typescript-mode evil-magit web-mode powerline popwin matlab-mode markdown-mode magit lua-mode helm exec-path-from-shell evil-leader ess dockerfile-mode cmake-mode auto-complete)))
- '(safe-local-variable-values (quote ((checkdoc-minor-mode . t) (mangle-whitespace . t)))))
+   '(embark-consult consult embark marginalia orderless vertico yaml-mode neotree jsonnet-mode undo-tree mozc mozc-im mozc-popup evil-surround csv-mode clojure-mode typescript typescript-mode evil-magit web-mode powerline popwin matlab-mode markdown-mode magit lua-mode helm exec-path-from-shell evil-leader ess dockerfile-mode cmake-mode auto-complete))
+ '(safe-local-variable-values '((checkdoc-minor-mode . t) (mangle-whitespace . t))))
 (menu-bar-mode -1)
 (display-time)
 (global-set-key "\C-cc" 'compile)
@@ -194,6 +193,9 @@
 
 
 (when (>= emacs-major-version 23)
+  ;; https://www.ncaq.net/2020/05/13/21/16/35/
+  ;; (require 'cl) を見逃す
+  (setq byte-compile-warnings '(not cl-functions obsolete))
   (require 'cl)
 
   ;; package managenment; http://sakito.jp/emacs/emacs24.html
@@ -233,6 +235,7 @@
       typescript-mode
       undo-tree
       web-mode
+      yaml-mode
       ))
   (let ((not-installed (loop for x in installed-package-list
                              when (not (package-installed-p x))
@@ -251,8 +254,8 @@
   (evil-leader/set-leader ",")
   (evil-leader/set-key
     "SPC" 'set-mark-command
-;    "x" 'execute-extended-command
-    "x" 'helm-M-x
+    "x" 'execute-extended-command
+;;    "x" 'helm-M-x
     "b" 'switch-to-buffer
     "f" 'find-file
     "d" 'dired
@@ -270,6 +273,13 @@
   (define-key evil-motion-state-map (kbd "S-SPC") 'evil-scroll-page-up)
   (define-key evil-motion-state-map "H" 'evil-first-non-blank)
   (define-key evil-motion-state-map "L" 'evil-end-of-line)
+  ;; 物理行移動
+  ;; g j: evil-next-visual-line
+  ;; g k: evil-previous-visual-line
+
+  ;; ミニバッファでEvilを有効化
+  (setq evil-want-minibuffer t)
+  (setq evil-want-fine-undo t)     ;操作を元に戻す単位を細かくする
 
   ;; ノーマルステートになったら IME をオフにする
   ;; http://ichiroc.hatenablog.com/entry/2013/09/06/075832
@@ -280,30 +290,37 @@
 
   ;; evil-surround
   (global-evil-surround-mode 1)
+  ;; https://blog.3qe.us/entry/2020/05/12/012958
+  ;; b B r a: ) } ] >
+  ;; yswb: 単語を丸括弧で囲む
+  ;; csbB: 丸括弧を大括弧に書き換える
+  ;; dsb: 丸括弧を削除する
+  ;; v Sb: 選択文字列を丸括弧で囲む
+  ;; v Sf: 選択文字列を関数形式で囲む
 
   ;; exec-path-from-shell
   (when (memq window-system '(mac ns))
     (exec-path-from-shell-initialize))
 
-  ;; helm (anything); https://github.com/emacs-helm/helm
-  ;; http://d.hatena.ne.jp/a_bicky/20140104/1388822688
-  (when (require 'helm-config nil t)
-    (helm-mode 1)
-    ;; Key bindings
-    (define-key global-map (kbd "M-x")     'helm-M-x)
-    (define-key global-map (kbd "C-x C-f") 'helm-find-files)
-    (define-key global-map (kbd "C-x C-r") 'helm-recentf)
-    (define-key global-map (kbd "M-y")     'helm-show-kill-ring)
-    (define-key global-map (kbd "C-c i")   'helm-imenu)
-    (define-key global-map (kbd "C-x b")   'helm-buffers-list)
-    ;; Delete with C-h
-    (define-key helm-map (kbd "C-h") 'delete-backward-char)
-    (define-key helm-find-files-map (kbd "C-h") 'delete-backward-char)
-    ;; Emulate `kill-line' in helm minibuffer
-    (setq helm-delete-minibuffer-contents-from-point t)
-    (defadvice helm-delete-minibuffer-contents (before helm-emulate-kill-line activate)
-      "Emulate `kill-line' in helm minibuffer"
-      (kill-new (buffer-substring (point) (field-end)))))
+;;  ;; helm (anything); https://github.com/emacs-helm/helm
+;;  ;; http://d.hatena.ne.jp/a_bicky/20140104/1388822688
+;;  (when (require 'helm-config nil t)
+;;    (helm-mode 1)
+;;    ;; Key bindings
+;;    (define-key global-map (kbd "M-x")     'helm-M-x)
+;;    (define-key global-map (kbd "C-x C-f") 'helm-find-files)
+;;    (define-key global-map (kbd "C-x C-r") 'helm-recentf)
+;;    (define-key global-map (kbd "M-y")     'helm-show-kill-ring)
+;;    (define-key global-map (kbd "C-c i")   'helm-imenu)
+;;    (define-key global-map (kbd "C-x b")   'helm-buffers-list)
+;;    ;; Delete with C-h
+;;    (define-key helm-map (kbd "C-h") 'delete-backward-char)
+;;    (define-key helm-find-files-map (kbd "C-h") 'delete-backward-char)
+;;    ;; Emulate `kill-line' in helm minibuffer
+;;    (setq helm-delete-minibuffer-contents-from-point t)
+;;    (defadvice helm-delete-minibuffer-contents (before helm-emulate-kill-line activate)
+;;      "Emulate `kill-line' in helm minibuffer"
+;;      (kill-new (buffer-substring (point) (field-end)))))
 
   ;; markdown-mode
   (add-to-list 'auto-mode-alist '("\\.md" . markdown-mode))
@@ -413,9 +430,9 @@
   (setq show-paren-delay 0)
   (setq show-paren-style 'single)
   (show-paren-mode t)
-  
+
   ;; 対応する括弧を自動的に挿入する
-  (electric-pair-mode 1)
+  ;(electric-pair-mode 1)
 
   ;;行番号の表示
   (if (version<= "26.0.50" emacs-version)
@@ -442,7 +459,7 @@
 ;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Saving-Emacs-Sessions.html
 (desktop-save-mode 1)
 
-;; http://d.hatena.ne.jp/rubikitch/20100210/emacs 
+;; http://d.hatena.ne.jp/rubikitch/20100210/emacs
 (defun other-window-or-split ()
   (interactive)
   (when (one-window-p)
@@ -461,7 +478,6 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
-; '(hl-line ((t (:background "gray13"))))
  '(hl-line ((t (:background "color-236"))))
  '(web-mode-comment-face ((t (:foreground "#98BF75"))))
  '(web-mode-css-at-rule-face ((t (:foreground "#DFCF44"))))
@@ -537,10 +553,10 @@
 (global-set-key (kbd "C-SPC") 'toggle-input-method)
 (define-key isearch-mode-map (kbd "C-SPC") 'isearch-toggle-input-method)
 (define-key wdired-mode-map (kbd "C-SPC") 'toggle-input-method)
-;; F1 で IME をトグルする
-(global-set-key (kbd "<f1>") 'toggle-input-method)
-(define-key isearch-mode-map (kbd "<f1>") 'isearch-toggle-input-method)
-(define-key wdired-mode-map (kbd "<f1>") 'toggle-input-method)
+;; F2 で IME をトグルする
+(global-set-key (kbd "<f2>") 'toggle-input-method)
+(define-key isearch-mode-map (kbd "<f2>") 'isearch-toggle-input-method)
+(define-key wdired-mode-map (kbd "<f2>") 'toggle-input-method)
 
 ;; mozc-cursor-color を利用するための対策
 ;; (defvar mozc-im-mode nil)
@@ -618,9 +634,97 @@
 ;; save-buffer
 (global-set-key (kbd "<f5>") 'save-buffer)
 
+;; 行末の空白を自動的に削除して保存
+;; https://tototoshi.hatenablog.com/entry/20101202/1291289625
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
+
+;; M-x whitespace-mode: 空白や改行を表示する
+
 ;; tramp hanging
 ;; https://gongo.hatenablog.com/entry/2011/11/14/195912
 (setq vc-handled-backends ())
 
 ;; smooth mouse scroll
 (setq mouse-wheel-scroll-amount '(1))
+
+
+;; GNU Emacs 27.1
+;; https://ubuntuhandbook.org/index.php/2020/09/install-emacs-27-1-ppa-ubuntu-20-04/
+;; sudo add-apt-repository ppa:kelleyk/emacs
+;; sudo apt update
+;; sudo apt upgrade
+;; sudo apt remove --autoremove emacs-common # remove Emacs 26.3 first
+;; sudo apt install emacs27
+
+;; https://blog.tomoya.dev/posts/a-new-wave-has-arrived-at-emacs/
+(when (>= emacs-major-version 27)
+  ;; vertico
+  ;; consult
+  ;; marginalia
+  ;; orderless
+  ;; embark
+  ;; embark-consult
+  ;; 補完スタイルにorderlessを利用する
+  (with-eval-after-load 'orderless
+    (setq completion-styles '(orderless)))
+
+  ;; 補完候補を最大20行まで表示する
+  (setq vertico-count 20)
+
+  ;; vertico-modeとmarginalia-modeを有効化する
+  (defun minibuffer-after-init-hook ()
+    (vertico-mode)
+    ;; evil-want-minibuffer対応
+    ;; 選択中にC-n/pを有効化
+    (define-key vertico-map [remap next-window-line] #'vertico-next)
+    (define-key vertico-map [remap previous-window-line] #'vertico-previous)
+    (define-key vertico-map [remap evil-complete-next] #'vertico-next)
+    (define-key vertico-map [remap evil-complete-previous] #'vertico-previous)
+    (define-key vertico-map [remap evil-paste-pop] #'vertico-previous)
+    ;; 選択中にjkを有効化
+    (define-key vertico-map [remap evil-next-line] #'vertico-next)
+    (define-key vertico-map [remap evil-previous-line] #'vertico-previous)
+    ;; C-i: TAB補完
+    ;; C-f/bでページ送りを有効化
+    (define-key vertico-map [remap forward-char] #'vertico-scroll-up)
+    (define-key vertico-map [remap backward-char] #'vertico-scroll-down)
+    (define-key vertico-map [remap evil-jump-forward] #'vertico-scroll-up)
+    (define-key vertico-map [remap evil-jump-backward] #'vertico-scroll-down)
+    (define-key vertico-map [remap evil-scroll-page-down] #'vertico-scroll-up)
+    (define-key vertico-map [remap evil-scroll-page-up] #'vertico-scroll-down)
+    ;; RETを有効化
+    (define-key vertico-map [remap evil-ret] #'vertico-exit)
+
+    (marginalia-mode)
+    ;; savehist-modeを使ってVerticoの順番を永続化する
+    (savehist-mode))
+  (add-hook 'after-init-hook #'minibuffer-after-init-hook)
+
+  ;; 標準コマンドをconsultコマンドに差し替える
+  (global-set-key [remap switch-to-buffer] 'consult-buffer)
+  (global-set-key [remap goto-line] 'consult-goto-line)
+
+  ;; C-uを付けるとカーソル位置の文字列を使うmy-consult-lineコマンドを定義する
+  (defun my-consult-line (&optional at-point)
+    "Consult-line uses things-at-point if set C-u prefix."
+    (interactive "P")
+    (if at-point
+        (consult-line (thing-at-point 'symbol))
+      (consult-line)))
+  ;; C-s（isearch-forward）をmy-consult-lineコマンドに割り当てる
+  (global-set-key (kbd "C-s") 'my-consult-line)
+  ;; C-s/C-rで行を移動できるようにする
+  (with-eval-after-load 'vertico
+    (define-key vertico-map (kbd "C-r") 'vertico-previous)
+    (define-key vertico-map (kbd "C-s") 'vertico-next))
+
+  ;; embark-consultを読み込む
+  (with-eval-after-load 'consult
+    (with-eval-after-load 'embark
+      (require 'embark-consult))))
+
+;; https://www.ncaq.net/2020/05/13/21/16/35/
+;; init.el閲覧時にPackage cl is deprecatedを表示されないようにする
+;; Local Variables:
+;; byte-compile-warnings: (not cl-functions obsolete)
+;; End:
