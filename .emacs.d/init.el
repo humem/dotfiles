@@ -55,11 +55,11 @@
 ;    "';'.join(get_ipython().Completer.all_completions('''%s'''))\n"))
 
 ;; Python indent width
-(add-hook 'python-mode-hook
-    '(lambda ()
-        (setq python-indent 4)
-        (setq indent-tabs-mod nil)
-        ))
+;; (add-hook 'python-mode-hook
+;;     '(lambda ()
+;;         (setq python-indent 4)
+;;         (setq indent-tabs-mod nil)
+;;         ))
 
 ;; Ruby debugger (Rubydb)
 ; (autoload 'rubydb "rubydb3x"
@@ -127,7 +127,7 @@
  '(custom-enabled-themes '(tango-dark))
  '(indent-tabs-mode nil)
  '(package-selected-packages
-   '(embark-consult consult embark marginalia orderless vertico yaml-mode neotree jsonnet-mode undo-tree mozc mozc-im mozc-popup evil-surround csv-mode clojure-mode typescript typescript-mode evil-magit web-mode powerline popwin matlab-mode markdown-mode magit lua-mode helm exec-path-from-shell evil-leader ess dockerfile-mode cmake-mode auto-complete))
+   '(evil-collection embark-consult consult embark marginalia orderless vertico yaml-mode neotree jsonnet-mode undo-tree mozc mozc-im mozc-popup evil-surround csv-mode clojure-mode typescript typescript-mode evil-magit web-mode powerline popwin matlab-mode markdown-mode magit lua-mode helm exec-path-from-shell evil-leader ess dockerfile-mode cmake-mode auto-complete))
  '(safe-local-variable-values '((checkdoc-minor-mode . t) (mangle-whitespace . t))))
 (menu-bar-mode -1)
 (display-time)
@@ -244,6 +244,18 @@
       (package-refresh-contents)
       (dolist (pkg not-installed)
         (package-install pkg))))
+
+  ;; evil-collection
+  (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
+  (setq evil-want-keybinding nil)
+  (require 'evil)
+  (when (require 'evil-collection nil t)
+    (setq evil-collection-setup-minibuffer t)
+    (evil-collection-init))
+  ;; Use "a" instead of "v" in dired
+  (define-key dired-mode-map [remap dired-find-alternate-file] 'dired-view-file)
+  ;; dired: "go": dired-view-file, not "v"
+  ;; magit: "gr": magit-refresh, not "g"
 
   ;; evil-leader
   ;; http://stackoverflow.com/questions/8483182/evil-mode-best-practice
@@ -478,7 +490,8 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(hl-line ((t (:background "color-236"))))
+ ;'(hl-line ((t (:background "color-236"))))
+ '(hl-line ((t (:background "#3F3F3F"))))
  '(web-mode-comment-face ((t (:foreground "#98BF75"))))
  '(web-mode-css-at-rule-face ((t (:foreground "#DFCF44"))))
  '(web-mode-css-property-name-face ((t (:foreground "#87CEEB"))))
