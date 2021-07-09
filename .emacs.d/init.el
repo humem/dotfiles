@@ -298,10 +298,14 @@
   "d" 'dired
   "j" 'dired-jump
   "k" 'kill-buffer
-  "q" 'View-quit
+  "q" 'quit-windows
   "w" 'evil-window-prev
-  "p" 'comint-previous-input
-  "n" 'comint-next-input)
+  "0" 'delete-window
+  "1" 'delete-other-windows
+  "2" 'split-window-vertically
+  "3" 'split-window-horizontally
+  "4" 'switch-to-buffer-other-window
+  )
 
 ;; evil-mode
 ;; https://lists.ourproject.org/pipermail/implementations-list/2011-September/001140.html
