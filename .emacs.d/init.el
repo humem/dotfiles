@@ -409,6 +409,16 @@
 ;; dired: "go": dired-view-file, not "v"
 ;; magit: "gr": magit-refresh, not "g"
 
+;; fix evil-collection-dired-setup
+(evil-collection-define-key 'normal 'dired-mode-map
+    ;; open
+    "e" 'dired-find-file
+    "o" 'dired-find-file-other-window
+    "v" 'dired-view-file
+    ;; sort
+    "s" 'dired-sort-toggle-or-edit
+    )
+
 ;; evil-leader
 ;; http://stackoverflow.com/questions/8483182/evil-mode-best-practice
 (global-evil-leader-mode)
@@ -422,7 +432,7 @@
   "f" 'find-file
   "j" 'dired-jump
   "k" 'kill-buffer
-  "q" 'quit-windows
+  "q" 'quit-window
   "s" 'save-buffer
   "x" 'execute-extended-command
   "w" 'evil-window-prev
