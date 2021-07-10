@@ -148,6 +148,23 @@
 
 (leaf use-package :ensure t :require t)
 
+;; ein (Emacs in Notebook)
+;; https://tam5917.hatenablog.com/entry/2021/03/28/204747
+(eval-when-compile
+  (require 'ein)
+  (require 'ein-notebook)
+  (require 'ein-notebooklist))
+  ;(require 'ein-markdown-mode)
+  ;(require 'smartrep))
+;; (add-hook 'ein:notebook-mode-hook 'electric-pair-mode) ;; お好みで
+;; (add-hook 'ein:notebook-mode-hook 'undo-tree-mode) ;; お好みで
+;; undoを有効化 (customizeから設定しておいたほうが良さげ)
+(setq ein:worksheet-enable-undo t)
+;; 画像をインライン表示 (customizeから設定しておいたほうが良さげ)
+(setq ein:output-area-inlined-images t)
+;; Start jupyter notebook
+;; M-x ein:login
+
 ;; 日本語入力 emacs-mozc https://w.atwiki.jp/ntemacs/pages/48.html
 (require 'mozc-im)
 (require 'mozc-popup)
