@@ -1,3 +1,9 @@
+;;; init.el --- My init.el  -*- lexical-binding: t; -*-
+
+;;; Commentary:
+
+;;; Code:
+
 ;; Local emacs-lisp repository
 ;; https://qiita.com/tadsan/items/431899f76f3765892abd
 (let ((default-directory (locate-user-emacs-file "./lisp")))
@@ -12,6 +18,135 @@
 ;; プロセスが出力する文字コードを判定して、process-coding-system の DECODING の設定値を決定する
 (setq default-process-coding-system '(undecided-dos . utf-8-unix))
 ;; ※ 設定値の car を "undecided-dos" にしておくと、Windows コマンドの出力にも柔軟に対応できます。関連して 29) の説明も参照してください。
+
+;; https://github.com/conao3/leaf.el
+(eval-and-compile
+  (customize-set-variable
+   'package-archives '(("org" . "https://orgmode.org/elpa/")
+                       ("melpa" . "https://melpa.org/packages/")
+                       ("gnu" . "https://elpa.gnu.org/packages/")))
+  (package-initialize)
+  (unless (package-installed-p 'leaf)
+    (package-refresh-contents)
+    (package-install 'leaf))
+
+  (leaf leaf-keywords
+    :ensure t
+    :init
+    (leaf hydra :ensure t)
+    (leaf el-get :ensure t)
+    (leaf blackout :ensure t)
+    :config
+    (leaf-keywords-init)))
+
+(leaf leaf
+  :config
+  (leaf leaf-convert :ensure t)
+  (leaf leaf-tree
+    :ensure t
+    :custom ((imenu-list-size . 30)
+             (imenu-list-position . 'left))))
+
+(leaf macrostep
+  :ensure t
+  :bind (("C-c e" . macrostep-expand)))
+
+(leaf transient-dwim
+  :ensure t
+  :bind (("M-=" . transient-dwim-dispatch)))
+
+(leaf cus-edit
+  :doc "tools for customizing Emacs and Lisp packages"
+  :tag "builtin" "faces" "help"
+  :custom `((custom-file . ,(locate-user-emacs-file "custom.el"))))
+
+(leaf cus-start
+  :doc "define customization properties of builtins"
+  :tag "builtin" "internal"
+  :custom ((dabbrev-case-fold-search . nil)
+           (indent-tabs-mode . nil)
+           (kill-whole-line . t)
+           (menu-bar-mode . nil)
+           (next-line-add-newlines . nil)
+           (make-backup-files . nil)
+           (tool-bar-mode . nil)
+           ;; Disable to color the selected region
+           (transient-mark-mode . nil)
+           (visible-bell . nil))
+  :config
+  (defalias 'yes-or-no-p 'y-or-n-p))
+
+(leaf autorevert
+  :doc "revert buffers when files on disk change"
+  :tag "builtin"
+  :global-minor-mode global-auto-revert-mode)
+
+(leaf company
+  :doc "Modular text completion framework"
+  :req "emacs-24.3"
+  :tag "matching" "convenience" "abbrev" "emacs>=24.3"
+  :url "http://company-mode.github.io/"
+  :emacs>= 24.3
+  :ensure t
+  :blackout t
+  :leaf-defer nil
+  :bind ((company-active-map
+          ("M-n" . nil)
+          ("M-p" . nil)
+          ("C-s" . company-filter-candidates)
+          ("C-n" . company-select-next)
+          ("C-p" . company-select-previous)
+          ("<tab>" . company-complete-selection))
+         (company-search-map
+          ("C-n" . company-select-next)
+          ("C-p" . company-select-previous)))
+  :custom ((company-idle-delay . 0)
+           (company-minimum-prefix-length . 1)
+           (company-transformers . '(company-sort-by-occurrence)))
+  :global-minor-mode global-company-mode)
+
+(leaf eglot
+  :ensure t
+  :hook ((python-mode-hook . eglot-ensure))
+  :require t
+  :custom ((eldoc-echo-area-use-multiline-p . nil))
+  :config
+  (add-to-list 'eglot-server-programs '(python-mode "pyls")))
+
+(leaf flycheck
+  :doc "On-the-fly syntax checking"
+  :emacs>= 24.3
+  :ensure t
+  :bind (("M-n" . flycheck-next-error)
+         ("M-p" . flycheck-previous-error))
+  :custom ((flycheck-emacs-lisp-initialize-packages . t))
+  :hook (emacs-lisp-mode-hook lisp-interaction-mode-hook)
+  :config
+  (leaf flycheck-package
+    :doc "A Flycheck checker for elisp package authors"
+    :ensure t
+    :config
+    (flycheck-package-setup))
+
+  (leaf flycheck-elsa
+    :doc "Flycheck for Elsa."
+    :emacs>= 25
+    :ensure t
+    :config
+    (flycheck-elsa-setup)))
+
+(leaf flymake-diagnostic-at-point
+  :after flymake
+  :hook (flymake-mode-hook)
+  :require t)
+
+(leaf paren
+  :doc "highlight matching paren"
+  :tag "builtin"
+  :custom ((show-paren-delay . 0))
+  :global-minor-mode show-paren-mode)
+
+(leaf use-package :ensure t :require t)
 
 ;; 日本語入力 emacs-mozc https://w.atwiki.jp/ntemacs/pages/48.html
 (require 'mozc-im)
@@ -76,17 +211,7 @@
 ;; カーソルの点滅を OFF にする
 ;; (blink-cursor-mode 0)
 (if (fboundp 'blink-cursor-mode) (blink-cursor-mode 0))
-(menu-bar-mode -1)
 (display-time)
-(setq ring-bell-function
-      (lambda ()
-        (invert-face 'mode-line)
-        (run-with-timer 0.1 nil 'invert-face 'mode-line)))
-(setq visible-bell nil)
-;; 対応する括弧を光らせる
-(setq show-paren-delay 0)
-(setq show-paren-style 'single)
-(show-paren-mode t)
 ;; 対応する括弧を自動的に挿入する
 ;; (electric-pair-mode 1)
 ;;行番号の表示
@@ -98,8 +223,6 @@
     ))
 ;; 現在行をハイライト: http://keisanbutsuriya.blog.fc2.com/blog-entry-91.html
 (global-hl-line-mode t)
-;; ツールバーを非表示
-(tool-bar-mode 0)
 ;; フレームの高さを補正する設定
 (defun reset-frame-parameter (frame)
   (sleep-for 0.1)
@@ -109,21 +232,6 @@
 (setq mouse-wheel-scroll-amount '(1))
 ;; M-x whitespace-mode: 空白や改行を表示する
 
-;; Personal preferences
-(setq dabbrev-case-fold-search nil)
-(setq kill-whole-line t)
-(setq next-line-add-newlines nil)
-(setq truncate-partial-width-windows nil)
-;; Set tab width
-(setq default-tab-width 4)
-(add-hook 'c-mode-common-hook '(lambda () (setq tab-width 4)))
-;; Disable to color the selected region
-(setq transient-mark-mode nil)
-;; "y or n" instead of "yes or no"
-(fset 'yes-or-no-p 'y-or-n-p)
-;; バッファ自動再読み込み
-;; http://shibayu36.hatenablog.com/entry/2012/12/29/001418
-(global-auto-revert-mode 1)
 ;; Saving Emacs Sessions
 ;; https://www.gnu.org/software/emacs/manual/html_node/emacs/Saving-Emacs-Sessions.html
 (desktop-save-mode 1)
@@ -144,7 +252,6 @@
 (setq vc-handled-backends ())
 
 ;; Save files
-(setq make-backup-files nil)
 ;; 行末の空白を自動的に削除して保存
 ;; https://tototoshi.hatenablog.com/entry/20101202/1291289625
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
@@ -172,10 +279,19 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-enabled-themes '(tango-dark))
+ '(flycheck-emacs-lisp-initialize-packages t t)
+ '(imenu-list-position 'left t)
+ '(imenu-list-size 30 t)
  '(indent-tabs-mode nil)
+ '(menu-bar-mode nil)
+ '(package-archives
+   '(("org" . "https://orgmode.org/elpa/")
+     ("melpa" . "https://melpa.org/packages/")
+     ("gnu" . "https://elpa.gnu.org/packages/")))
  '(package-selected-packages
-   '(evil-collection embark-consult consult embark marginalia orderless vertico yaml-mode neotree jsonnet-mode undo-tree mozc mozc-im mozc-popup evil-surround csv-mode clojure-mode typescript typescript-mode evil-magit web-mode powerline popwin matlab-mode markdown-mode magit lua-mode helm exec-path-from-shell evil-leader ess dockerfile-mode cmake-mode auto-complete))
- '(safe-local-variable-values '((checkdoc-minor-mode . t) (mangle-whitespace . t))))
+   '(flycheck-elsa flycheck-package evil-collection embark-consult consult embark marginalia orderless vertico yaml-mode neotree jsonnet-mode undo-tree mozc mozc-im mozc-popup evil-surround csv-mode clojure-mode typescript typescript-mode evil-magit web-mode powerline popwin matlab-mode markdown-mode magit lua-mode helm exec-path-from-shell evil-leader ess dockerfile-mode cmake-mode auto-complete))
+ '(safe-local-variable-values '((checkdoc-minor-mode . t) (mangle-whitespace . t)))
+ '(tool-bar-mode nil))
 
 ;; Key settings
 ;; Shortcuts
@@ -227,16 +343,9 @@
 ;; (require 'cl)
 (require 'cl-lib)
 
-;; Package managenment; http://sakito.jp/emacs/emacs24.html
-(require 'package)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-(add-to-list 'package-archives '("org"   . "https://orgmode.org/elpa/") t)
-(add-to-list 'package-archives '("gnu"   . "https://elpa.gnu.org/packages/") t)
-(package-initialize)
 ;; http://qiita.com/hottestseason/items/1e8a46ad1ebcf7d0e11c
 (defvar installed-package-list
   '(
-    auto-complete
     cmake-mode
     csv-mode
     dockerfile-mode
@@ -291,15 +400,16 @@
 ;;       buffers (*scratch*, *Messages*, ...).
 (evil-leader/set-leader ",")
 (evil-leader/set-key
-  "SPC" 'set-mark-command
-  "x" 'execute-extended-command
   "b" 'switch-to-buffer
-  "f" 'find-file
   "d" 'dired
+  "f" 'find-file
   "j" 'dired-jump
   "k" 'kill-buffer
   "q" 'quit-windows
+  "s" 'save-buffer
+  "x" 'execute-extended-command
   "w" 'evil-window-prev
+  "SPC" 'set-mark-command
   "0" 'delete-window
   "1" 'delete-other-windows
   "2" 'split-window-vertically
@@ -314,6 +424,8 @@
 (define-key evil-motion-state-map (kbd "S-SPC") 'evil-scroll-page-up)
 (define-key evil-motion-state-map "H" 'evil-first-non-blank)
 (define-key evil-motion-state-map "L" 'evil-end-of-line)
+;; https://teratail.com/questions/126355
+(define-key evil-insert-state-map (kbd "C-h") 'delete-backward-char)
 ;; 物理行移動
 ;; g j: evil-next-visual-line
 ;; g k: evil-previous-visual-line
@@ -340,9 +452,9 @@
 ;; v Sf: 選択文字列を関数形式で囲む
 
 ;; auto-complete; http://cx4a.org/software/auto-complete/manual.ja.html
-(require 'auto-complete-config)
-(ac-config-default)
-(setq ac-use-menu-map t) ; C-n, C-p
+;; (require 'auto-complete-config)
+;; (ac-config-default)
+;; (setq ac-use-menu-map t) ; C-n, C-p
 
 ;; ediff
 ;; http://qiita.com/l3msh0@github/items/97909d6e2c92af3acc00
@@ -419,28 +531,10 @@
              (setq tab-width 2)
              ))
 (custom-set-faces
- '(web-mode-doctype-face           ((t (:foreground "#4A8ACA"))))
- ;;   '(web-mode-html-tag-face          ((t (:foreground "#4A8ACA"))))
- '(web-mode-html-tag-face          ((t (:foreground "#6AAAEA"))))
- '(web-mode-html-attr-name-face    ((t (:foreground "#87CEEB"))))
- '(web-mode-html-attr-equal-face   ((t (:foreground "#FFFFFF"))))
- '(web-mode-html-attr-value-face   ((t (:foreground "#D78181"))))
- ;;   '(web-mode-comment-face           ((t (:foreground "#587F35"))))
- '(web-mode-comment-face           ((t (:foreground "#98BF75"))))
- '(web-mode-server-comment-face    ((t (:foreground "#98BF75"))))
- '(web-mode-css-at-rule-face       ((t (:foreground "#DFCF44"))))
- '(web-mode-css-selector-face      ((t (:foreground "#DFCF44"))))
- '(web-mode-css-pseudo-class       ((t (:foreground "#DFCF44"))))
- '(web-mode-css-property-name-face ((t (:foreground "#87CEEB"))))
- '(web-mode-css-string-face        ((t (:foreground "#D78181"))))
- )
-
-(custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- ;'(hl-line ((t (:background "color-236"))))
  '(hl-line ((t (:background "#3F3F3F"))))
  '(web-mode-comment-face ((t (:foreground "#98BF75"))))
  '(web-mode-css-at-rule-face ((t (:foreground "#DFCF44"))))
@@ -511,6 +605,9 @@
 (global-set-key [remap switch-to-buffer] 'consult-buffer)
 (global-set-key [remap goto-line] 'consult-goto-line)
 
+(setq xref-show-xrefs-function #'consult-xref
+      xref-show-definitions-function #'consult-xref)
+
 ;; C-uを付けるとカーソル位置の文字列を使うmy-consult-lineコマンドを定義する
 (defun my-consult-line (&optional at-point)
   "Consult-line uses things-at-point if set C-u prefix."
@@ -530,7 +627,11 @@
   (with-eval-after-load 'embark
     (require 'embark-consult)))
 
-;; init.el閲覧時にPackage cl is deprecatedを表示されないようにする
+(provide 'init)
+
+;;; init.el ends here
+
 ;; Local Variables:
 ;; byte-compile-warnings: (not cl-functions obsolete)
+;; indent-tabs-mode: nil
 ;; End:
