@@ -104,16 +104,16 @@
           ("C-p" . company-select-previous)))
   :custom ((company-idle-delay . 0)
            (company-minimum-prefix-length . 1)
-           (company-transformers . '(company-sort-by-occurrence)))
-  :global-minor-mode global-company-mode)
+           (company-transformers . '(company-sort-by-occurrence))))
+;  :global-minor-mode global-company-mode)
 
-(leaf eglot
-  :ensure t
-  :hook ((python-mode-hook . eglot-ensure))
-  :require t
-  :custom ((eldoc-echo-area-use-multiline-p . nil))
-  :config
-  (add-to-list 'eglot-server-programs '(python-mode "pyls")))
+;; (leaf eglot
+;;  :ensure t
+;;  :hook ((python-mode-hook . eglot-ensure))
+;;  :require t
+;;  :custom ((eldoc-echo-area-use-multiline-p . nil))
+;;  :config
+;;  (add-to-list 'eglot-server-programs '(python-mode "pyls")))
 
 (leaf flycheck
   :doc "On-the-fly syntax checking"
@@ -138,6 +138,7 @@
     (flycheck-elsa-setup)))
 
 (leaf flymake-diagnostic-at-point
+  :ensure t
   :after flymake
   :hook (flymake-mode-hook)
   :require t)
@@ -163,20 +164,20 @@
 
 ;; ein (Emacs IPython Notebook)
 ;; https://tam5917.hatenablog.com/entry/2021/03/28/204747
-(eval-when-compile
-  (require 'ein)
-  (require 'ein-notebook)
-  (require 'ein-notebooklist))
-  ;(require 'ein-markdown-mode)
-  ;(require 'smartrep))
-;; (add-hook 'ein:notebook-mode-hook 'electric-pair-mode) ;; お好みで
-;; (add-hook 'ein:notebook-mode-hook 'undo-tree-mode) ;; お好みで
-;; undoを有効化 (customizeから設定しておいたほうが良さげ)
-(setq ein:worksheet-enable-undo t)
-;; 画像をインライン表示 (customizeから設定しておいたほうが良さげ)
-(setq ein:output-area-inlined-images t)
-;; Start jupyter notebook
-;; M-x ein:login
+;; (eval-when-compile
+;;   (require 'ein)
+;;   (require 'ein-notebook)
+;;   (require 'ein-notebooklist))
+;;   ;(require 'ein-markdown-mode)
+;;   ;(require 'smartrep))
+;; ;; (add-hook 'ein:notebook-mode-hook 'electric-pair-mode) ;; お好みで
+;; ;; (add-hook 'ein:notebook-mode-hook 'undo-tree-mode) ;; お好みで
+;; ;; undoを有効化 (customizeから設定しておいたほうが良さげ)
+;; (setq ein:worksheet-enable-undo t)
+;; ;; 画像をインライン表示 (customizeから設定しておいたほうが良さげ)
+;; (setq ein:output-area-inlined-images t)
+;; ;; Start jupyter notebook
+;; ;; M-x ein:login
 
 ;; 日本語入力 emacs-mozc https://w.atwiki.jp/ntemacs/pages/48.html
 (require 'mozc-im)
@@ -377,28 +378,37 @@
 (defvar installed-package-list
   '(
     cmake-mode
+    consult
+    embark-consult
     csv-mode
     dockerfile-mode
     ess
     evil
+    evil-collection
     evil-leader
     evil-surround
     exec-path-from-shell
+    flycheck
+    flymake
+    flymake-diagnostic-at-point
     helm
     julia-mode
     jsonnet-mode
     lua-mode
     magit
+    marginalia
     markdown-mode
     matlab-mode
     mozc
     mozc-im
     mozc-popup
     neotree
+    orderless
     powerline
     popwin
     typescript-mode
     undo-tree
+    vertico
     web-mode
     yaml-mode
     ))
@@ -652,11 +662,17 @@
                  ;; TAB, C-i, C-j: 補完
                  ("C-j" . vertico-insert)
                  ))
-  ;; vertico-modeとmarginalia-modeを有効化する
   :hook ((after-init-hook . vertico-mode)
-         (after-init-hook . marginalia-mode)
          ;; savehist-modeを使ってVerticoの順番を永続化する
          (after-init-hook . savehist-mode)))
+
+(leaf marginalia
+  :ensure t
+  :hook ((after-init-hook . marginalia-mode)))
+
+(leaf consult
+  :ensure t
+  )
 
 ;; 標準コマンドをconsultコマンドに差し替える
 (global-set-key [remap switch-to-buffer] 'consult-buffer)
