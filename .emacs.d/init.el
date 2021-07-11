@@ -90,6 +90,8 @@
   :ensure t
   :blackout t
   :leaf-defer nil
+  :config
+  ;; (add-to-list 'company-backends 'company-yasnippet)
   :bind ((company-active-map
           ("M-n" . nil)
           ("M-p" . nil)
@@ -146,9 +148,20 @@
   :custom ((show-paren-delay . 0))
   :global-minor-mode show-paren-mode)
 
+(leaf uniquify
+  :custom
+  ((uniquify-buffer-name-style . 'post-forward-angle-brackets)))
+
 (leaf use-package :ensure t :require t)
 
-;; ein (Emacs in Notebook)
+;; https://takeokunn.xyz/blog/post/emacs-yasnippet-setup
+;; (leaf yasnippet
+;;   :ensure t
+;;   :init (yas-global-mode 1)
+;;   :custom
+;;   ((yas-snippet-dirs . '("`/.emacs.d/yasnippets"))))
+
+;; ein (Emacs IPython Notebook)
 ;; https://tam5917.hatenablog.com/entry/2021/03/28/204747
 (eval-when-compile
   (require 'ein)
@@ -411,6 +424,7 @@
 
 ;; fix evil-collection-dired-setup
 (evil-collection-define-key 'normal 'dired-mode-map
+    "g" 'revert-buffer
     ;; open
     "e" 'dired-find-file
     "o" 'dired-find-file-other-window
@@ -430,6 +444,7 @@
   "b" 'switch-to-buffer
   "d" 'dired
   "f" 'find-file
+  "g" 'magit-status
   "j" 'dired-jump
   "k" 'kill-buffer
   "q" 'quit-window
@@ -459,7 +474,7 @@
 
 ;; ミニバッファでEvilを有効化
 (setq evil-want-minibuffer t)
-(setq evil-want-fine-undo t)     ;操作を元に戻す単位を細かくする
+;(setq evil-want-fine-undo t)     ;操作を元に戻す単位を細かくする
 
 ;; ノーマルステートになったら IME をオフにする
 ;; http://ichiroc.hatenablog.com/entry/2013/09/06/075832
@@ -532,12 +547,6 @@
 ;; typescript-mode
 (add-hook 'typescript-mode-hook (lambda () (setq typescript-indent-level 2)))
 
-;; uniquify
-;; http://www.clear-code.com/blog/2012/3/20.html
-;;; ファイル名が重複していたらディレクトリ名を追加する。
-(require 'uniquify)
-(setq uniquify-buffer-name-style 'post-forward-angle-brackets)
-
 ;; web-mode
 (add-to-list 'auto-mode-alist '("\\.?html$" . web-mode))
 (setq web-mode-engines-alist '(("\\.xhtml$" . "smarty")))
@@ -592,46 +601,66 @@
 ;; orderless
 ;; embark
 ;; embark-consult
+
+;; https://github.com/uwabami/emacs
 ;; 補完スタイルにorderlessを利用する
-(with-eval-after-load 'orderless
-  (setq completion-styles '(orderless)))
+(leaf orderless
+  :ensure t
+  :custom
+  ((completion-styles . '(orderless))))
 
-;; 補完候補を最大20行まで表示する
-(setq vertico-count 20)
+(defun filename-upto-parent ()
+  "Move to parent directory like \"cd ..\" in find-file."
+  (interactive)
+  (let ((sep (eval-when-compile (regexp-opt '("/" "\\")))))
+    (save-excursion
+      (left-char 1)
+      (when (looking-at-p sep)
+        (delete-char 1)))
+    (save-match-data
+      (when (search-backward-regexp sep nil t)
+        (right-char 1)
+        (filter-buffer-substring (point)
+                                 (save-excursion (end-of-line) (point))
+                                 #'delete)))))
 
-;; vertico-modeとmarginalia-modeを有効化する
-(defun minibuffer-after-init-hook ()
-  (vertico-mode)
-  ;; evil-want-minibuffer対応
-  ;; 選択中にC-n/pを有効化
-  (define-key vertico-map [remap next-window-line] #'vertico-next)
-  (define-key vertico-map [remap previous-window-line] #'vertico-previous)
-  (define-key vertico-map [remap evil-complete-next] #'vertico-next)
-  (define-key vertico-map [remap evil-complete-previous] #'vertico-previous)
-  (define-key vertico-map [remap evil-paste-pop] #'vertico-previous)
-  ;; 選択中にjkを有効化
-  (define-key vertico-map [remap evil-next-line] #'vertico-next)
-  (define-key vertico-map [remap evil-previous-line] #'vertico-previous)
-  ;; C-i: TAB補完
-  ;; C-f/bでページ送りを有効化
-  (define-key vertico-map [remap forward-char] #'vertico-scroll-up)
-  (define-key vertico-map [remap backward-char] #'vertico-scroll-down)
-  (define-key vertico-map [remap evil-jump-forward] #'vertico-scroll-up)
-  (define-key vertico-map [remap evil-jump-backward] #'vertico-scroll-down)
-  (define-key vertico-map [remap evil-scroll-page-down] #'vertico-scroll-up)
-  (define-key vertico-map [remap evil-scroll-page-up] #'vertico-scroll-down)
-  ;; RETを有効化
-  (define-key vertico-map [remap evil-ret] #'vertico-exit)
-
-  (marginalia-mode)
-  ;; savehist-modeを使ってVerticoの順番を永続化する
-  (savehist-mode))
-(add-hook 'after-init-hook #'minibuffer-after-init-hook)
+(leaf vertico
+  :ensure t
+  :custom
+  ;; 補完候補を最大20行まで表示する
+  ((vertico-count . 20))
+  :bind
+  (:vertico-map (("C-l" . filename-upto-parent)
+                 ;; evil-want-minibuffer対応
+                 ;; C-n/p, jkで選択移動を有効化
+                 ([remap next-window-line] . vertico-next)
+                 ([remap previous-window-line] . vertico-previous)
+                 ([remap evil-complete-next] . vertico-next)
+                 ([remap evil-complete-previous] . vertico-previous)
+                 ([remap evil-paste-pop] . vertico-previous)
+                 ([remap evil-next-line] . vertico-next)
+                 ([remap evil-previous-line] . vertico-previous)
+                 ;; C-f/bで選択ページ送りを有効化
+                 ([remap forward-char] . vertico-scroll-up)
+                 ([remap backward-char] . vertico-scroll-down)
+                 ([remap evil-jump-forward] . vertico-scroll-up)
+                 ([remap evil-jump-backward] . vertico-scroll-down)
+                 ([remap evil-scroll-page-down] . vertico-scroll-up)
+                 ([remap evil-scroll-page-up] . vertico-scroll-down)
+                 ;; RETで選択確定を有効化
+                 ([remap evil-ret] . vertico-exit)
+                 ;; TAB, C-i, C-j: 補完
+                 ("C-j" . vertico-insert)
+                 ))
+  ;; vertico-modeとmarginalia-modeを有効化する
+  :hook ((after-init-hook . vertico-mode)
+         (after-init-hook . marginalia-mode)
+         ;; savehist-modeを使ってVerticoの順番を永続化する
+         (after-init-hook . savehist-mode)))
 
 ;; 標準コマンドをconsultコマンドに差し替える
 (global-set-key [remap switch-to-buffer] 'consult-buffer)
 (global-set-key [remap goto-line] 'consult-goto-line)
-
 (setq xref-show-xrefs-function #'consult-xref
       xref-show-definitions-function #'consult-xref)
 
