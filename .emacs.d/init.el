@@ -107,13 +107,13 @@
            (company-transformers . '(company-sort-by-occurrence))))
 ;  :global-minor-mode global-company-mode)
 
-;; (leaf eglot
-;;  :ensure t
-;;  :hook ((python-mode-hook . eglot-ensure))
-;;  :require t
-;;  :custom ((eldoc-echo-area-use-multiline-p . nil))
-;;  :config
-;;  (add-to-list 'eglot-server-programs '(python-mode "pyls")))
+(leaf eglot
+ :ensure t
+ :hook ((python-mode-hook . eglot-ensure))
+ :require t
+ :custom ((eldoc-echo-area-use-multiline-p . nil))
+ :config
+ (add-to-list 'eglot-server-programs '(python-mode "pyls")))
 
 (leaf flycheck
   :doc "On-the-fly syntax checking"
