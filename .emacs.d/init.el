@@ -379,6 +379,7 @@
   '(
     cmake-mode
     consult
+    consult-flycheck
     embark-consult
     csv-mode
     dockerfile-mode
@@ -426,14 +427,9 @@
 (require 'evil)
 (when (require 'evil-collection nil t)
   (setq evil-collection-setup-minibuffer t)
-  (evil-collection-init))
-;; Use "a" instead of "v" in dired
-(define-key dired-mode-map [remap dired-find-alternate-file] 'dired-view-file)
-;; dired: "go": dired-view-file, not "v"
-;; magit: "gr": magit-refresh, not "g"
-
-;; fix evil-collection-dired-setup
-(evil-collection-define-key 'normal 'dired-mode-map
+  (evil-collection-init)
+  ;; fix evil-collection-dired-setup
+  (evil-collection-define-key 'normal 'dired-mode-map
     "g" 'revert-buffer
     ;; open
     "e" 'dired-find-file
@@ -441,7 +437,7 @@
     "v" 'dired-view-file
     ;; sort
     "s" 'dired-sort-toggle-or-edit
-    )
+    ))
 
 ;; evil-leader
 ;; http://stackoverflow.com/questions/8483182/evil-mode-best-practice
@@ -481,17 +477,9 @@
 ;; 物理行移動
 ;; g j: evil-next-visual-line
 ;; g k: evil-previous-visual-line
-
 ;; ミニバッファでEvilを有効化
 (setq evil-want-minibuffer t)
 ;(setq evil-want-fine-undo t)     ;操作を元に戻す単位を細かくする
-
-;; ノーマルステートになったら IME をオフにする
-;; http://ichiroc.hatenablog.com/entry/2013/09/06/075832
-(when (fboundp 'mac-toggle-input-method)
-  (add-hook 'evil-normal-state-entry-hook
-            '(lambda ()
-               (mac-toggle-input-method nil))))
 
 ;; evil-surround
 (global-evil-surround-mode 1)
@@ -502,11 +490,6 @@
 ;; dsb: 丸括弧を削除する
 ;; v Sb: 選択文字列を丸括弧で囲む
 ;; v Sf: 選択文字列を関数形式で囲む
-
-;; auto-complete; http://cx4a.org/software/auto-complete/manual.ja.html
-;; (require 'auto-complete-config)
-;; (ac-config-default)
-;; (setq ac-use-menu-map t) ; C-n, C-p
 
 ;; ediff
 ;; http://qiita.com/l3msh0@github/items/97909d6e2c92af3acc00
