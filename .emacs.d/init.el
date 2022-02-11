@@ -4,6 +4,12 @@
 
 ;;; Code:
 
+(unless (display-graphic-p)
+  ;; shut up, emacs!
+  (setq display-warning-minimum-level :error)
+  ;; Disable C-i to jump forward to restore TAB functionality in Org mode.
+  (setq evil-want-C-i-jump nil))
+
 ;; Local emacs-lisp repository
 ;; https://qiita.com/tadsan/items/431899f76f3765892abd
 (let ((default-directory (locate-user-emacs-file "./lisp")))
@@ -107,15 +113,15 @@
            (company-transformers . '(company-sort-by-occurrence))))
 ;  :global-minor-mode global-company-mode)
 
-(leaf eglot
- :ensure t
- :hook ((python-mode-hook . eglot-ensure))
- :require t
- :custom ((eldoc-echo-area-use-multiline-p . nil)))
-; :config
-; (add-to-list 'eglot-server-programs
-;              '(python-mode "pyls")))
-;                "pyls" "-v" "--tcp" "--host" "localhost" "--port" :autoport)))
+;; (leaf eglot
+;;  :ensure t
+;;  :hook ((python-mode-hook . eglot-ensure))
+;;  :require t
+;;  :custom ((eldoc-echo-area-use-multiline-p . nil)))
+;; ; :config
+;; ; (add-to-list 'eglot-server-programs
+;; ;              '(python-mode "pyls")))
+;; ;                "pyls" "-v" "--tcp" "--host" "localhost" "--port" :autoport)))
 
 (leaf flycheck
   :doc "On-the-fly syntax checking"
@@ -238,6 +244,7 @@
     vertico
     web-mode
     yaml-mode
+    yascroll
     ))
 (let ((not-installed (cl-loop for x in installed-package-list
                            when (not (package-installed-p x))
@@ -246,6 +253,16 @@
     (package-refresh-contents)
     (dolist (pkg not-installed)
       (package-install pkg))))
+
+(unless (display-graphic-p)
+  ;; Mouse scrolling in terminal emacs
+  ;; activate mouse-based scrolling
+  (xterm-mouse-mode 1)
+  (global-set-key (kbd "<mouse-4>") 'scroll-down-line)
+  (global-set-key (kbd "<mouse-5>") 'scroll-up-line)
+  ;; scroll bar
+  (global-yascroll-bar-mode 1)
+  (setq yascroll:delay-to-hide nil))
 
 ;; 日本語入力 emacs-mozc https://w.atwiki.jp/ntemacs/pages/48.html
 (require 'mozc-im)
@@ -469,6 +486,7 @@
   "g" 'magit-status
   "j" 'dired-jump
   "k" 'kill-buffer
+  "o" 'other-window-or-split
   "q" 'quit-window
   "s" 'save-buffer
   "x" 'execute-extended-command
