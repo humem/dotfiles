@@ -111,9 +111,11 @@
  :ensure t
  :hook ((python-mode-hook . eglot-ensure))
  :require t
- :custom ((eldoc-echo-area-use-multiline-p . nil))
- :config
- (add-to-list 'eglot-server-programs '(python-mode "pyls")))
+ :custom ((eldoc-echo-area-use-multiline-p . nil)))
+; :config
+; (add-to-list 'eglot-server-programs
+;              '(python-mode "pyls")))
+;                "pyls" "-v" "--tcp" "--host" "localhost" "--port" :autoport)))
 
 (leaf flycheck
   :doc "On-the-fly syntax checking"
@@ -142,6 +144,18 @@
   :after flymake
   :hook (flymake-mode-hook)
   :require t)
+
+;; (leaf modus-themes
+;;   :ensure t
+;;   :bind (("<f5>" . modus-themes-toggle))
+;;   :setq ((modus-themes-italic-constructs . t)
+;;          (modus-themes-bold-constructs)
+;;          (modus-themes-region quote
+;;                               (bg-only no-extend)))
+;;   :config
+;;   (modus-themes-load-themes)
+;;   (with-eval-after-load 'modus-themes
+;;     (modus-themes-load-vivendi)))
 
 (leaf paren
   :doc "highlight matching paren"
@@ -178,6 +192,60 @@
 ;; (setq ein:output-area-inlined-images t)
 ;; ;; Start jupyter notebook
 ;; ;; M-x ein:login
+
+;; https://www.ncaq.net/2020/05/13/21/16/35/
+;; (require 'cl) を見逃す
+(setq byte-compile-warnings '(not cl-functions obsolete))
+;; (require 'cl)
+(require 'cl-lib)
+
+;; http://qiita.com/hottestseason/items/1e8a46ad1ebcf7d0e11c
+(defvar installed-package-list
+  '(
+    cmake-mode
+    consult
+    consult-flycheck
+    embark-consult
+    csv-mode
+    dockerfile-mode
+    ess
+    evil
+    evil-collection
+    evil-leader
+    evil-surround
+    exec-path-from-shell
+    flycheck
+    flymake
+    flymake-diagnostic-at-point
+    helm
+    julia-mode
+    jsonnet-mode
+    lua-mode
+    magit
+    marginalia
+    markdown-mode
+    matlab-mode
+    modus-themes
+    mozc
+    mozc-im
+    mozc-popup
+    neotree
+    orderless
+    powerline
+    popwin
+    typescript-mode
+    undo-tree
+    vertico
+    web-mode
+    yaml-mode
+    ))
+(let ((not-installed (cl-loop for x in installed-package-list
+                           when (not (package-installed-p x))
+                           collect x)))
+  (when not-installed
+    (package-refresh-contents)
+    (dolist (pkg not-installed)
+      (package-install pkg))))
 
 ;; 日本語入力 emacs-mozc https://w.atwiki.jp/ntemacs/pages/48.html
 (require 'mozc-im)
@@ -236,6 +304,7 @@
                        ;; (mozc-session-sendkey '(hiragana)))))
                        (mozc-session-sendkey '(Hankaku/Zenkaku)))))
 ;; デフォルト フォント
+;(set-face-attribute 'default nil :family "PlemolJP35Console")
 (set-face-attribute 'default nil :family "HackGen35Nerd Console")
 
 ;; Appearances
@@ -367,59 +436,6 @@
     (vertical-motion n)
     (move-to-column (+ (current-column) cur-col)))
   (run-hooks 'auto-line-hook))
-
-;; https://www.ncaq.net/2020/05/13/21/16/35/
-;; (require 'cl) を見逃す
-(setq byte-compile-warnings '(not cl-functions obsolete))
-;; (require 'cl)
-(require 'cl-lib)
-
-;; http://qiita.com/hottestseason/items/1e8a46ad1ebcf7d0e11c
-(defvar installed-package-list
-  '(
-    cmake-mode
-    consult
-    consult-flycheck
-    embark-consult
-    csv-mode
-    dockerfile-mode
-    ess
-    evil
-    evil-collection
-    evil-leader
-    evil-surround
-    exec-path-from-shell
-    flycheck
-    flymake
-    flymake-diagnostic-at-point
-    helm
-    julia-mode
-    jsonnet-mode
-    lua-mode
-    magit
-    marginalia
-    markdown-mode
-    matlab-mode
-    mozc
-    mozc-im
-    mozc-popup
-    neotree
-    orderless
-    powerline
-    popwin
-    typescript-mode
-    undo-tree
-    vertico
-    web-mode
-    yaml-mode
-    ))
-(let ((not-installed (cl-loop for x in installed-package-list
-                           when (not (package-installed-p x))
-                           collect x)))
-  (when not-installed
-    (package-refresh-contents)
-    (dolist (pkg not-installed)
-      (package-install pkg))))
 
 ;; evil-collection
 (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
