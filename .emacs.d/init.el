@@ -5,8 +5,8 @@
 ;;; Code:
 
 (unless (display-graphic-p)
-  ;; shut up, emacs!
-  (setq display-warning-minimum-level :error)
+  ;; ;; shut up, emacs!
+  ;; (setq display-warning-minimum-level :error)
   ;; Disable C-i to jump forward to restore TAB functionality in Org mode.
   (setq evil-want-C-i-jump nil))
 
@@ -113,11 +113,11 @@
            (company-transformers . '(company-sort-by-occurrence))))
 ;  :global-minor-mode global-company-mode)
 
-;; (leaf eglot
-;;  :ensure t
-;;  :hook ((python-mode-hook . eglot-ensure))
-;;  :require t
-;;  :custom ((eldoc-echo-area-use-multiline-p . nil)))
+(leaf eglot
+ :ensure t
+ :hook ((python-mode-hook . eglot-ensure))
+ :require t
+ :custom ((eldoc-echo-area-use-multiline-p . nil)))
 ;; ; :config
 ;; ; (add-to-list 'eglot-server-programs
 ;; ;              '(python-mode "pyls")))
