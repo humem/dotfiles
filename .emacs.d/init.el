@@ -262,7 +262,22 @@
   (global-set-key (kbd "<mouse-5>") 'scroll-up-line)
   ;; scroll bar
   (global-yascroll-bar-mode 1)
-  (setq yascroll:delay-to-hide nil))
+  (setq yascroll:delay-to-hide nil)
+  ;; sync with x clipboard
+  (when (file-exists-p "/usr/bin/xsel")
+    (if (getenv "TMUX")
+        (setq env-display "env $(tmux showenv DISPLAY) ")
+      (setq env-display ""))
+    (defun xsel-cut-function (text &optional push)
+      (with-temp-buffer
+        (insert text)
+        (call-shell-region (point-min) (point-max) (concat env-display "xsel -bi"))))
+    (defun xsel-paste-function()
+      (let ((xsel-output (shell-command-to-string (concat env-display "xsel --clipboard --output"))))
+        (unless (string= (car kill-ring) xsel-output)
+          xsel-output )))
+    (setq interprogram-cut-function 'xsel-cut-function)
+    (setq interprogram-paste-function 'xsel-paste-function)))
 
 ;; 日本語入力 emacs-mozc https://w.atwiki.jp/ntemacs/pages/48.html
 (require 'mozc-im)
@@ -364,6 +379,7 @@
     (mac-toggle-input-method nil)))
 (global-set-key (kbd "C-;") 'other-window-or-split)
 (global-set-key (kbd "<f8>") 'other-window-or-split)
+(global-set-key (kbd "C-<f8>") 'other-window-or-split)
 ;; tramp hanging
 ;; https://gongo.hatenablog.com/entry/2011/11/14/195912
 (setq vc-handled-backends ())
