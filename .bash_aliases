@@ -40,9 +40,16 @@ alias t='tmux a'
 alias tb='tensorboard --logdir'
 
 # pyenv for Visual Studio Code (VSCode)
-if [ ! "`echo $PATH | grep '.pyenv'`" ]; then
-    export PYENV_ROOT="$HOME/.pyenv"
-    export PATH="$PYENV_ROOT/bin:$PATH"
-    eval "$(pyenv init --path)"
-fi
-eval "$(pyenv init -)"
+#if [ ! "`echo $PATH | grep '.pyenv'`" ]; then
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init --path)"
+#fi
+#eval "$(pyenv init -)"
+
+# CUDA Toolkit
+export CUDA_VERSION=cuda-11.1
+export PATH="/usr/local/$CUDA_VERSION/bin:$PATH"
+export LD_LIBRARY_PATH="/usr/local/$CUDA_VERSION/lib64:$LD_LIBRARY_PATH"
+# or, add /usr/local/cuda-11.1/lib64 to /etc/ld.so.conf and run ldconfig as root
+# To uninstall the CUDA Toolkit, run cuda-uninstaller in /usr/local/cuda-11.1/bin

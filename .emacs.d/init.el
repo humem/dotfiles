@@ -4,12 +4,6 @@
 
 ;;; Code:
 
-(unless (display-graphic-p)
-  ;; ;; shut up, emacs!
-  ;; (setq display-warning-minimum-level :error)
-  ;; Disable C-i to jump forward to restore TAB functionality in Org mode.
-  (setq evil-want-C-i-jump nil))
-
 ;; Local emacs-lisp repository
 ;; https://qiita.com/tadsan/items/431899f76f3765892abd
 (let ((default-directory (locate-user-emacs-file "./lisp")))
@@ -219,6 +213,7 @@
     evil-collection
     evil-leader
     evil-surround
+    evil-terminal-cursor-changer
     exec-path-from-shell
     flycheck
     flymake
@@ -255,6 +250,11 @@
       (package-install pkg))))
 
 (unless (display-graphic-p)
+  ;; Disable C-i to jump forward to restore TAB functionality in Org mode.
+  (setq evil-want-C-i-jump nil)
+  ;; Change cursor shape and color by evil state in terminal
+  (require 'evil-terminal-cursor-changer)
+  (evil-terminal-cursor-changer-activate)
   ;; Mouse scrolling in terminal emacs
   ;; activate mouse-based scrolling
   (xterm-mouse-mode 1)
@@ -380,6 +380,7 @@
 (global-set-key (kbd "C-;") 'other-window-or-split)
 (global-set-key (kbd "<f8>") 'other-window-or-split)
 (global-set-key (kbd "C-<f8>") 'other-window-or-split)
+(global-set-key (kbd "C-_") 'other-window-or-split)
 ;; tramp hanging
 ;; https://gongo.hatenablog.com/entry/2011/11/14/195912
 (setq vc-handled-backends ())
