@@ -251,33 +251,42 @@
 
 (unless (display-graphic-p)
   ;; Disable C-i to jump forward to restore TAB functionality in Org mode.
-  (setq evil-want-C-i-jump nil)
-  ;; Change cursor shape and color by evil state in terminal
-  (require 'evil-terminal-cursor-changer)
-  (evil-terminal-cursor-changer-activate)
+  (defvar evil-want-C-i-jump nil)
   ;; Mouse scrolling in terminal emacs
   ;; activate mouse-based scrolling
   (xterm-mouse-mode 1)
   (global-set-key (kbd "<mouse-4>") 'scroll-down-line)
   (global-set-key (kbd "<mouse-5>") 'scroll-up-line)
   ;; scroll bar
-  (global-yascroll-bar-mode 1)
-  (setq yascroll:delay-to-hide nil)
+  ;(global-yascroll-bar-mode 1)
+  ;(setq yascroll:delay-to-hide nil)
   ;; sync with x clipboard
   (when (file-exists-p "/usr/bin/xsel")
-    (if (getenv "TMUX")
-        (setq env-display "env $(tmux showenv DISPLAY) ")
-      (setq env-display ""))
-    (defun xsel-cut-function (text &optional push)
+    (defvar env-display "")
+    (when (getenv "TMUX")
+      (setq env-display "env $(tmux showenv DISPLAY) "))
+    (defun xsel-cut-function (text &optional _push)
       (with-temp-buffer
         (insert text)
         (call-shell-region (point-min) (point-max) (concat env-display "xsel -bi"))))
-    (defun xsel-paste-function()
+    (defun xsel-paste-function ()
       (let ((xsel-output (shell-command-to-string (concat env-display "xsel --clipboard --output"))))
         (unless (string= (car kill-ring) xsel-output)
           xsel-output )))
-    (setq interprogram-cut-function 'xsel-cut-function)
-    (setq interprogram-paste-function 'xsel-paste-function)))
+    (defun toggle-cut-function ()
+      (interactive)
+      (if (eq interprogram-cut-function 'xsel-cut-function)
+          (setq interprogram-cut-function 'gui-select-text)
+        (setq interprogram-cut-function 'xsel-cut-function)))
+    ;(setq interprogram-cut-function 'xsel-cut-function)
+    (defun toggle-paste-function ()
+      (interactive)
+      (if (eq interprogram-paste-function 'xsel-paste-function)
+          (setq interprogram-paste-function 'gui-selection-value)
+        (setq interprogram-paste-function 'xsel-paste-function)))
+    ;; use Ctrl+Shift+V to paste with system clipboard
+    ;(setq interprogram-paste-function 'xsel-paste-function)))
+    ))
 
 ;; 日本語入力 emacs-mozc https://w.atwiki.jp/ntemacs/pages/48.html
 (require 'mozc-im)
@@ -380,7 +389,7 @@
 (global-set-key (kbd "C-;") 'other-window-or-split)
 (global-set-key (kbd "<f8>") 'other-window-or-split)
 (global-set-key (kbd "C-<f8>") 'other-window-or-split)
-(global-set-key (kbd "C-_") 'other-window-or-split)
+(global-set-key (kbd "C-]") 'other-window-or-split)
 ;; tramp hanging
 ;; https://gongo.hatenablog.com/entry/2011/11/14/195912
 (setq vc-handled-backends ())
@@ -480,7 +489,7 @@
   (evil-collection-init)
   ;; fix evil-collection-dired-setup
   (evil-collection-define-key 'normal 'dired-mode-map
-    "g" 'revert-buffer
+    "gg" 'evil-goto-first-line
     ;; open
     "e" 'dired-find-file
     "o" 'dired-find-file-other-window
@@ -523,6 +532,7 @@
 (define-key evil-motion-state-map (kbd "S-SPC") 'evil-scroll-page-up)
 (define-key evil-motion-state-map "H" 'evil-first-non-blank)
 (define-key evil-motion-state-map "L" 'evil-end-of-line)
+(define-key evil-motion-state-map (kbd "C-]") 'other-window-or-split)
 ;; https://teratail.com/questions/126355
 (define-key evil-insert-state-map (kbd "C-h") 'delete-backward-char)
 ;; 物理行移動
@@ -531,6 +541,9 @@
 ;; ミニバッファでEvilを有効化
 (setq evil-want-minibuffer t)
 ;(setq evil-want-fine-undo t)     ;操作を元に戻す単位を細かくする
+
+(global-undo-tree-mode)
+(evil-set-undo-system 'undo-tree)
 
 ;; evil-surround
 (global-evil-surround-mode 1)
@@ -732,6 +745,11 @@
 (with-eval-after-load 'consult
   (with-eval-after-load 'embark
     (require 'embark-consult)))
+
+(unless (display-graphic-p)
+  ;; Change cursor shape and color by evil state in terminal
+  (require 'evil-terminal-cursor-changer)
+  (evil-terminal-cursor-changer-activate))
 
 (provide 'init)
 
