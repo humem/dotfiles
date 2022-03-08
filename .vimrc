@@ -36,6 +36,10 @@ set wildmode=list:longest
 " 折り返し時に表示行単位での移動できるようにする
 nnoremap j gj
 nnoremap k gk
+
+" vim-tiny
+if !1 | finish | endif
+
 " シンタックスハイライトの有効化
 syntax enable
 

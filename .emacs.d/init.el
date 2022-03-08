@@ -237,6 +237,7 @@
     typescript-mode
     undo-tree
     vertico
+    vimrc-mode
     web-mode
     yaml-mode
     yascroll
@@ -249,6 +250,7 @@
     (dolist (pkg not-installed)
       (package-install pkg))))
 
+;; Terminal
 (unless (display-graphic-p)
   ;; Disable C-i to jump forward to restore TAB functionality in Org mode.
   (defvar evil-want-C-i-jump nil)
@@ -338,15 +340,18 @@
 (advice-add 'wdired-finish-edit
             :after (lambda (&rest args)
                      (deactivate-input-method)))
-;; Windows の mozc では、セッション接続直後 directモード になるので hiraganaモード にする
-(advice-add 'mozc-session-execute-command
-            :after (lambda (&rest args)
-                     (when (eq (nth 0 args) 'CreateSession)
-                       ;; (mozc-session-sendkey '(hiragana)))))
-                       (mozc-session-sendkey '(Hankaku/Zenkaku)))))
+
 ;; デフォルト フォント
 ;(set-face-attribute 'default nil :family "PlemolJP35Console")
 (set-face-attribute 'default nil :family "HackGen35Nerd Console")
+
+(when (/= (length (getenv "WSL_DISTRO_NAME")) 0)
+  ;; Windows の mozc では、セッション接続直後 directモード になるので hiraganaモード にする
+  (advice-add 'mozc-session-execute-command
+              :after (lambda (&rest args)
+                       (when (eq (nth 0 args) 'CreateSession)
+                         ;; (mozc-session-sendkey '(hiragana)))))
+                         (mozc-session-sendkey '(Hankaku/Zenkaku))))))
 
 ;; Appearances
 ;; カーソルの点滅を OFF にする
@@ -746,6 +751,7 @@
   (with-eval-after-load 'embark
     (require 'embark-consult)))
 
+;; Terminal
 (unless (display-graphic-p)
   ;; Change cursor shape and color by evil state in terminal
   (require 'evil-terminal-cursor-changer)
