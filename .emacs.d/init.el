@@ -533,11 +533,15 @@
 ;; evil-mode
 ;; https://lists.ourproject.org/pipermail/implementations-list/2011-September/001140.html
 (evil-mode 1)
-(define-key evil-motion-state-map " " 'evil-scroll-page-down)
+(define-key evil-motion-state-map (kbd " ") 'evil-scroll-page-down)
 (define-key evil-motion-state-map (kbd "S-SPC") 'evil-scroll-page-up)
-(define-key evil-motion-state-map "H" 'evil-first-non-blank)
-(define-key evil-motion-state-map "L" 'evil-end-of-line)
+(define-key evil-motion-state-map (kbd "H") 'evil-first-non-blank)
+(define-key evil-motion-state-map (kbd "L") 'evil-end-of-line)
 (define-key evil-motion-state-map (kbd "C-]") 'other-window-or-split)
+(define-key evil-motion-state-map (kbd "C-b") 'evil-backward-char)
+(define-key evil-motion-state-map (kbd "C-d") 'evil-forward-char)
+(define-key evil-normal-state-map (kbd "C-p") 'evil-previous-line)
+(define-key evil-normal-state-map (kbd "C-n") 'evil-next-line)
 ;; https://teratail.com/questions/126355
 (define-key evil-insert-state-map (kbd "C-h") 'delete-backward-char)
 ;; 物理行移動
