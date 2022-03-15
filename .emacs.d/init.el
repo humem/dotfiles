@@ -537,7 +537,7 @@
 ;; evil-mode
 ;; https://lists.ourproject.org/pipermail/implementations-list/2011-September/001140.html
 (evil-mode 1)
-(define-key evil-motion-state-map (kbd " ") 'evil-scroll-page-down)
+(define-key evil-motion-state-map (kbd "SPC") 'evil-scroll-page-down)
 (define-key evil-motion-state-map (kbd "S-SPC") 'evil-scroll-page-up)
 (define-key evil-motion-state-map (kbd "H") 'evil-first-non-blank)
 (define-key evil-motion-state-map (kbd "L") 'evil-end-of-line)
