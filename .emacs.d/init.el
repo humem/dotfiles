@@ -501,6 +501,10 @@
     "v" 'dired-view-file
     ;; sort
     "s" 'dired-sort-toggle-or-edit
+    )
+  (evil-collection-view-setup)
+  (evil-collection-define-key 'normal 'view-mode-map
+    "0" 'evil-beginning-of-line ; 'text-scale-adjust
     ))
 
 ;; evil-leader
