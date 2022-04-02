@@ -1,48 +1,46 @@
 # PyTorch LTS 1.8.2 + CUDA 11.1 + Python 3.9.11 + pyenv
 # https://download.pytorch.org/whl/lts/1.8/torch_lts.html
 
-# pyenv
-# https://github.com/pyenv/pyenv-installer
-curl https://pyenv.run | bash
+echo "CUDA Toolkit 11.5.2"
+wget https://developer.download.nvidia.com/compute/cuda/11.5.2/local_installers/cuda_11.5.2_495.29.05_linux.run
+export TERM=xterm
+sudo sh cuda_11.5.2_495.29.05_linux.run --silent --toolkit
 
-# .bash_aliases:
-# pyenv
-if [ -d "$HOME/.pyenv" ]; then
-    export PYENV_ROOT="$HOME/.pyenv"
-    export PATH="$PYENV_ROOT/bin:$PATH"
-    eval "$(pyenv init --path)"
-    eval "$(pyenv virtualenv-init -)"
-fi
-# CUDA Toolkit
-export MY_CUDA_VERSION=11.1
-if [ -d "/usr/local/cuda-$MY_CUDA_VERSION" ]; then
-    export PATH="/usr/local/cuda-$MY_CUDA_VERSION/bin:$PATH"
-    export LD_LIBRARY_PATH="/usr/local/cuda-$MY_CUDA_VERSION/lib64:$LD_LIBRARY_PATH"
-
-exec $SHELL
-
-# Python source
-wget https://www.python.org/ftp/python/3.9.11/Python-3.9.11.tar.xz
-mkdir ~/.pyenv/cache
-ln -s Python-3.9.11.tar.xz ~/.pyenv/cache/
-pyenv install 3.9.11
-pyenv global 3.9.11
-pyenv virtualenv 3.9.11 torch182
-pyenv global torch182
-
-# PyTorch + torchvision
-wget https://download.pytorch.org/whl/lts/1.8/cu111/torch-1.8.2%2Bcu111-cp39-cp39-linux_x86_64.whl
-wget https://download.pytorch.org/whl/lts/1.8/cu111/torchvision-0.9.2%2Bcu111-cp39-cp39-linux_x86_64.whl
-pip install torch-1.8.2+cu111-cp39-cp39-linux_x86_64.whl torchvision-0.9.2+cu111-cp39-cp39-linux_x86_64.whl
-
-# CUDA
-wget https://developer.download.nvidia.com/compute/cuda/11.1.1/local_installers/cuda_11.1.1_455.32.00_linux.run
-sudo sh cuda_11.1.1_455.32.00_linux.run
-# install Toolkit only
-
-# cuDNN
-wget https://developer.nvidia.com/compute/machine-learning/cudnn/secure/8.2.1.32/11.3_06072021/cudnn-11.3-linux-x64-v8.2.1.32.tgz
-tar -xzvf cudnn-11.3-linux-x64-v8.2.1.32.tgz
-sudo cp cuda/include/cudnn*.h /usr/local/cuda/include
-sudo cp -P cuda/lib64/libcudnn* /usr/local/cuda/lib64
+echo "cuDNN 8.3.3"
+wget https://developer.nvidia.com/compute/cudnn/secure/8.3.3/local_installers/11.5/cudnn-linux-x86_64-8.3.3.40_cuda11.5-archive.tar.xz
+tar -xvf cudnn-linux-x86_64-8.3.3.40_cuda11.5-archive.tar.xz
+sudo cp cudnn-*-archive/include/cudnn*.h /usr/local/cuda/include
+sudo cp -P cudnn-*-archive/lib/libcudnn* /usr/local/cuda/lib64
 sudo chmod a+r /usr/local/cuda/include/cudnn*.h /usr/local/cuda/lib64/libcudnn*
+
+echo ".bash_aliases"
+cat <<'EOF' >>$HOME/.bash_aliases
+
+# CUDA Toolkit
+export CUDA_VERSION=11.5
+if [ -d "/usr/local/cuda-$CUDA_VERSION" ]; then
+    export PATH="/usr/local/cuda-$CUDA_VERSION/bin:$PATH"
+    export LD_LIBRARY_PATH="/usr/local/cuda-$CUDA_VERSION/lib64:$LD_LIBRARY_PATH"
+fi
+
+# Python venv
+if [ -d "$HOME/.venv" ]; then
+    source $HOME/.venv/bin/activate
+fi
+EOF
+
+# Python 3.8.10
+sudo apt update
+sudo apt install -y python3 python3-pip python3-venv
+
+# mv ~/.pyenv ~/.pyenv.bak
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -U pip
+pip install wheel
+
+echo "Tensorflow 2.8.0"
+pip install tensorflow tensorflow-addons tqdm opencv-contrib-python
+
+echo "Check CUDA devices"
+python -c "from tensorflow.python.client import device_lib; device_lib.list_local_devices()"

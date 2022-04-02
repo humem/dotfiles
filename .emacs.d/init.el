@@ -343,7 +343,9 @@
 
 ;; デフォルト フォント
 ;(set-face-attribute 'default nil :family "PlemolJP35Console")
-(set-face-attribute 'default nil :family "HackGen35Nerd Console")
+;(set-face-attribute 'default nil :family "HackGen35Nerd Console")
+;(set-face-attribute 'default nil :family "HackGenNerd Console")
+(set-face-attribute 'default nil :family "UDEV Gothic" :height 125)
 
 (when (/= (length (getenv "WSL_DISTRO_NAME")) 0)
   ;; Windows の mozc では、セッション接続直後 directモード になるので hiraganaモード にする
@@ -546,6 +548,7 @@
 (define-key evil-motion-state-map (kbd "C-d") 'evil-forward-char)
 (define-key evil-normal-state-map (kbd "C-p") 'evil-previous-line)
 (define-key evil-normal-state-map (kbd "C-n") 'evil-next-line)
+(define-key evil-normal-state-map (kbd "C-S-v") 'evil-paste-after)
 ;; https://teratail.com/questions/126355
 (define-key evil-insert-state-map (kbd "C-h") 'delete-backward-char)
 ;; 物理行移動
