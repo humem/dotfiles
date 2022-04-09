@@ -1,0 +1,6 @@
+#!/bin/bash
+
+/usr/bin/python3 -m venv .venv --prompt $1
+source .venv/bin/activate
+pip install -U pip
+pip install wheel
