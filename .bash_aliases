@@ -4,6 +4,7 @@
 alias a='alias'
 alias ch='google-chrome >/dev/null 2>&1 &'
 alias d='docker'
+alias docker_start='sudo service docker start'
 alias e='emacs &'
 alias en='emacs -nw'
 alias g='grep'
@@ -13,6 +14,9 @@ alias m='more'
 alias nv='nvidia-smi -l'
 alias t='tmux a'
 alias tb='tensorboard --bind_all --logdir'
+alias upd='sudo apt update'
+alias upg='sudo apt upgrade'
+alias v='source .venv/bin/activate'
 
 # CUDA Toolkit
 export CUDA_VERSION=11.5

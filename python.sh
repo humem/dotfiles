@@ -34,7 +34,7 @@ sudo apt update
 sudo apt install -y python3 python3-pip python3-venv
 
 # mv ~/.pyenv ~/.pyenv.bak
-python3 -m venv .venv
+python3 -m venv .venv --prompt venv
 source .venv/bin/activate
 pip install -U pip
 pip install wheel

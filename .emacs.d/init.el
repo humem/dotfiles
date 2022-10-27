@@ -344,8 +344,8 @@
 ;; デフォルト フォント
 ;(set-face-attribute 'default nil :family "PlemolJP35Console")
 ;(set-face-attribute 'default nil :family "HackGen35Nerd Console")
-;(set-face-attribute 'default nil :family "HackGenNerd Console")
-(set-face-attribute 'default nil :family "UDEV Gothic" :height 125)
+(set-face-attribute 'default nil :family "HackGenNerd Console" :height 125)
+;(set-face-attribute 'default nil :family "UDEV Gothic" :height 125)
 
 (when (/= (length (getenv "WSL_DISTRO_NAME")) 0)
   ;; Windows の mozc では、セッション接続直後 directモード になるので hiraganaモード にする
@@ -411,6 +411,7 @@
 
 ;; Dired
 (setq dired-dwim-target t)
+(setq dired-listing-switches "-alh")
 (setq dired-use-ls-dired t)
 (defvar suffix-for-open-list
   '(app csv dmg doc docx jpg htm html pdf pkg ppg ppt pptx rtf svg tif tiff xdw xls xlsx))
@@ -767,6 +768,18 @@
   ;; Change cursor shape and color by evil state in terminal
   (require 'evil-terminal-cursor-changer)
   (evil-terminal-cursor-changer-activate))
+
+;; fix window position in WSLg on local zeft machine
+(when (equal (getenv "NAME") "zeft")
+  (defun wsl-set-frame-right ()
+    (interactive)
+    (set-frame-position (selected-frame) 1286 28)
+    (set-frame-size (selected-frame) 136 70)) ; 67 for UDEV Gothic
+  (defun wsl-set-frame-top-right ()
+    (interactive)
+    (set-frame-position (selected-frame) 1286 28)
+    (set-frame-size (selected-frame) 136 34))
+  (wsl-set-frame-right))
 
 (provide 'init)
 
