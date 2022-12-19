@@ -81,31 +81,31 @@
   :tag "builtin"
   :global-minor-mode global-auto-revert-mode)
 
-(leaf company
-  :doc "Modular text completion framework"
-  :req "emacs-24.3"
-  :tag "matching" "convenience" "abbrev" "emacs>=24.3"
-  :url "http://company-mode.github.io/"
-  :emacs>= 24.3
-  :ensure t
-  :blackout t
-  :leaf-defer nil
-  :config
-  ;; (add-to-list 'company-backends 'company-yasnippet)
-  :bind ((company-active-map
-          ("M-n" . nil)
-          ("M-p" . nil)
-          ("C-s" . company-filter-candidates)
-          ("C-n" . company-select-next)
-          ("C-p" . company-select-previous)
-          ("<tab>" . company-complete-selection))
-         (company-search-map
-          ("C-n" . company-select-next)
-          ("C-p" . company-select-previous)))
-  :custom ((company-idle-delay . 0)
-           (company-minimum-prefix-length . 1)
-           (company-transformers . '(company-sort-by-occurrence))))
-;  :global-minor-mode global-company-mode)
+;(leaf company
+;  :doc "Modular text completion framework"
+;  :req "emacs-24.3"
+;  :tag "matching" "convenience" "abbrev" "emacs>=24.3"
+;  :url "http://company-mode.github.io/"
+;  :emacs>= 24.3
+;  :ensure t
+;  :blackout t
+;  :leaf-defer nil
+;  :config
+;  ;; (add-to-list 'company-backends 'company-yasnippet)
+;  :bind ((company-active-map
+;          ("M-n" . nil)
+;          ("M-p" . nil)
+;          ("C-s" . company-filter-candidates)
+;          ("C-n" . company-select-next)
+;          ("C-p" . company-select-previous)
+;          ("<tab>" . company-complete-selection))
+;         (company-search-map
+;          ("C-n" . company-select-next)
+;          ("C-p" . company-select-previous)))
+;  :custom ((company-idle-delay . 0)
+;           (company-minimum-prefix-length . 1)
+;           (company-transformers . '(company-sort-by-occurrence))))
+;;  :global-minor-mode global-company-mode)
 
 ;; (leaf eglot
 ;;  :ensure t
@@ -299,7 +299,7 @@
 ;; popupスタイル を使用する
 (setq mozc-candidate-style 'popup)
 ;; カーソルカラーを設定する
-(setq mozc-cursor-color-alist '((direct        . "white")
+(setq mozc-cursor-color-alist '((direct        . "black") ;"white")
                                 (read-only     . "yellow")
                                 (hiragana      . "light green")
                                 (full-katakana . "goldenrod")
@@ -359,7 +359,14 @@
 ;; カーソルの点滅を OFF にする
 ;; (blink-cursor-mode 0)
 (if (fboundp 'blink-cursor-mode) (blink-cursor-mode 0))
+
+;; Display date and time
+;(setq display-time-day-and-date t)
+;(setq display-time-default-load-average nil)
+(setq display-time-string-forms
+      '(year "-" month "-" day " " dayname " " 24-hours ":" minutes))
 (display-time)
+
 ;; 対応する括弧を自動的に挿入する
 ;; (electric-pair-mode 1)
 ;;行番号の表示
@@ -370,7 +377,7 @@
     (setq linum-format "%4d ")
     ))
 ;; 現在行をハイライト: http://keisanbutsuriya.blog.fc2.com/blog-entry-91.html
-(global-hl-line-mode t)
+;(global-hl-line-mode t)
 ;; フレームの高さを補正する設定
 (defun reset-frame-parameter (frame)
   (sleep-for 0.1)
@@ -399,7 +406,7 @@
 (global-set-key (kbd "C-]") 'other-window-or-split)
 ;; tramp hanging
 ;; https://gongo.hatenablog.com/entry/2011/11/14/195912
-(setq vc-handled-backends ())
+;(setq vc-handled-backends ())
 
 ;; Save files
 ;; 行末の空白を自動的に削除して保存
@@ -429,7 +436,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(custom-enabled-themes '(tango-dark))
+ ;'(custom-enabled-themes '(tango-dark))
  '(flycheck-emacs-lisp-initialize-packages t t)
  '(imenu-list-position 'left t)
  '(imenu-list-size 30 t)
@@ -545,8 +552,8 @@
 (define-key evil-motion-state-map (kbd "H") 'evil-first-non-blank)
 (define-key evil-motion-state-map (kbd "L") 'evil-end-of-line)
 (define-key evil-motion-state-map (kbd "C-]") 'other-window-or-split)
-(define-key evil-motion-state-map (kbd "C-b") 'evil-backward-char)
-(define-key evil-motion-state-map (kbd "C-d") 'evil-forward-char)
+;(define-key evil-motion-state-map (kbd "C-b") 'evil-backward-char)
+;(define-key evil-motion-state-map (kbd "C-d") 'evil-forward-char)
 (define-key evil-normal-state-map (kbd "C-p") 'evil-previous-line)
 (define-key evil-normal-state-map (kbd "C-n") 'evil-next-line)
 (define-key evil-normal-state-map (kbd "C-S-v") 'evil-paste-after)
@@ -557,10 +564,13 @@
 ;; g k: evil-previous-visual-line
 ;; ミニバッファでEvilを有効化
 (setq evil-want-minibuffer t)
-;(setq evil-want-fine-undo t)     ;操作を元に戻す単位を細かくする
+(setq evil-want-fine-undo t)     ;操作を元に戻す単位を細かくする
 
 (global-undo-tree-mode)
 (evil-set-undo-system 'undo-tree)
+
+(with-eval-after-load 'magit
+  (define-key magit-status-mode-map (kbd "SPC") 'evil-scroll-page-down))
 
 ;; evil-surround
 (global-evil-surround-mode 1)
@@ -769,6 +779,62 @@
   (require 'evil-terminal-cursor-changer)
   (evil-terminal-cursor-changer-activate))
 
+;; topsy
+(require 'topsy)
+(add-hook 'prog-mode-hook #'topsy-mode)
+
+;; https://zenn.dev/lambdagonbei/articles/0bf693abee6e71
+;; moody
+;; (require 'moody)
+;; (setq x-underline-at-descent-line t)
+;; (moody-replace-mode-line-buffer-identification)
+;; (moody-replace-vc-mode)
+
+;; minions
+(require 'minions)
+(minions-mode)
+(setq minions-mode-line-lighter "[+]")
+;(column-number-mode)
+
+(defpowerline powerline-major-mode "")
+(defpowerline powerline-process "")
+(defpowerline powerline-minor-modes minions-mode-line-modes)
+
+;; tree-sitter
+;(require 'tree-sitter)
+;(require 'tree-sitter-langs)
+;(global-tree-sitter-mode)
+;(add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+;; https://zenn.dev/hyakt/articles/6ff892c2edbabb
+(leaf tree-sitter
+  :ensure (t tree-sitter-langs)
+  :require tree-sitter-langs
+  :config
+  (global-tree-sitter-mode)
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+  ;; TSXの対応
+  (tree-sitter-require 'tsx)
+  (add-to-list 'tree-sitter-major-mode-language-alist '(typescript-tsx-mode . tsx))
+  ;; ハイライトの追加
+  (tree-sitter-hl-add-patterns 'tsx
+    [
+     ;; styled.div``
+     (call_expression
+      function: (member_expression
+                 object: (identifier) @function.call
+                 (.eq? @function.call "styled"))
+      arguments: ((template_string) @property.definition
+                  (.offset! @property.definition 0 1 0 -1)))
+     ;; styled(Component)``
+     (call_expression
+      function: (call_expression
+                 function: (identifier) @function.call
+                 (.eq? @function.call "styled"))
+      arguments: ((template_string) @property.definition
+                  (.offset! @property.definition 0 1 0 -1)))
+     ])
+  )
+
 ;; fix window position in WSLg on local zeft machine
 (when (equal (getenv "NAME") "zeft")
   (defun wsl-set-frame-right ()
@@ -779,7 +845,38 @@
     (interactive)
     (set-frame-position (selected-frame) 1286 28)
     (set-frame-size (selected-frame) 136 34))
+  (defun boox-set-frame ()
+    (interactive)
+    (setq redisplay-dont-pause nil)
+    (set-frame-position (selected-frame) 0 0)
+    (set-frame-size (selected-frame) 108 36))
   (wsl-set-frame-right))
+  ;(set-background-color "black"))
+
+;; Disable double-buffering on boox
+(modify-all-frames-parameters '((inhibit-double-buffering . t)))
+;(setq inhibit-redisplay t)
+(setq redisplay-dont-pause nil)
+
+;; Emacs28
+
+;;; lsp-bridge
+(add-to-list 'load-path "/home/umemoto/distfiles/lsp-bridge")
+(require 'yasnippet)
+(yas-global-mode 1)
+(require 'lsp-bridge)
+(global-lsp-bridge-mode)
+;(add-hook 'python-mode-hook 'lsp-bridge-mode)
+;(setq lsp-bridge-enable-mode-line nil)
+
+;(define-key acm-mode-map [remap evil-complete-next] 'acm-select-next)
+;(define-key acm-mode-map [remap evil-complete-previous] 'acm-select-prev)
+;(setq acm-candidate-match-function 'orderless-flex)
+;(setq lsp-bridge-complete-manually t)
+
+;(add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-next")
+;(add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-previous")
+;(add-to-list 'lsp-bridge-completion-stop-commands "dabbrev-expand")
 
 (provide 'init)
 
