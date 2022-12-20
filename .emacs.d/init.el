@@ -81,31 +81,31 @@
   :tag "builtin"
   :global-minor-mode global-auto-revert-mode)
 
-;(leaf company
-;  :doc "Modular text completion framework"
-;  :req "emacs-24.3"
-;  :tag "matching" "convenience" "abbrev" "emacs>=24.3"
-;  :url "http://company-mode.github.io/"
-;  :emacs>= 24.3
-;  :ensure t
-;  :blackout t
-;  :leaf-defer nil
-;  :config
-;  ;; (add-to-list 'company-backends 'company-yasnippet)
-;  :bind ((company-active-map
-;          ("M-n" . nil)
-;          ("M-p" . nil)
-;          ("C-s" . company-filter-candidates)
-;          ("C-n" . company-select-next)
-;          ("C-p" . company-select-previous)
-;          ("<tab>" . company-complete-selection))
-;         (company-search-map
-;          ("C-n" . company-select-next)
-;          ("C-p" . company-select-previous)))
-;  :custom ((company-idle-delay . 0)
-;           (company-minimum-prefix-length . 1)
-;           (company-transformers . '(company-sort-by-occurrence))))
-;;  :global-minor-mode global-company-mode)
+;; (leaf company
+;;   :doc "Modular text completion framework"
+;;   :req "emacs-24.3"
+;;   :tag "matching" "convenience" "abbrev" "emacs>=24.3"
+;;   :url "http://company-mode.github.io/"
+;;   :emacs>= 24.3
+;;   :ensure t
+;;   :blackout t
+;;   :leaf-defer nil
+;;   :config
+;;   ;; (add-to-list 'company-backends 'company-yasnippet)
+;;   :bind ((company-active-map
+;;           ("M-n" . nil)
+;;           ("M-p" . nil)
+;;           ("C-s" . company-filter-candidates)
+;;           ("C-n" . company-select-next)
+;;           ("C-p" . company-select-previous)
+;;           ("<tab>" . company-complete-selection))
+;;          (company-search-map
+;;           ("C-n" . company-select-next)
+;;           ("C-p" . company-select-previous)))
+;;   :custom ((company-idle-delay . 0)
+;;            (company-minimum-prefix-length . 1)
+;;            (company-transformers . '(company-sort-by-occurrence))))
+;; ; :global-minor-mode global-company-mode)
 
 ;; (leaf eglot
 ;;  :ensure t
@@ -226,14 +226,19 @@
     marginalia
     markdown-mode
     matlab-mode
+    minions
     modus-themes
     mozc
     mozc-im
     mozc-popup
     neotree
     orderless
-    powerline
     popwin
+    posframe
+    powerline
+    topsy
+    tree-sitter
+    tree-sitter-langs
     typescript-mode
     undo-tree
     vertico
@@ -420,12 +425,8 @@
 (setq dired-dwim-target t)
 (setq dired-listing-switches "-alh")
 (setq dired-use-ls-dired t)
-(defvar suffix-for-open-list
-  '(app csv dmg doc docx jpg htm html pdf pkg ppg ppt pptx rtf svg tif tiff xdw xls xlsx))
-(let ((alist ()))
-  (setq dired-guess-shell-alist-user
-        (dolist (suffix suffix-for-open-list alist)
-          (push (list (concat "\\." (symbol-name suffix)) "open") alist))))
+(setq dired-guess-shell-alist-user '(("\\.*" "open")))
+
 ;;; wdired.el
 (require 'dired-x)
 (define-key dired-mode-map "r" 'wdired-change-to-wdired-mode)
@@ -474,8 +475,8 @@
 	minibuffer-local-must-match-filename-map minibuffer-local-must-match-map
 	))
 ;; Move to the virtually same column by next or previous line commands
-(global-set-key "\C-p" 'previous-window-line)
-(global-set-key "\C-n" 'next-window-line)
+;(global-set-key "\C-p" 'previous-window-line)
+;(global-set-key "\C-n" 'next-window-line)
 (global-set-key [up] 'previous-window-line)
 (global-set-key [down] 'next-window-line)
 (defun previous-window-line (n)
@@ -542,7 +543,16 @@
   "2" 'split-window-vertically
   "3" 'split-window-horizontally
   "4" 'switch-to-buffer-other-window
+  "5" 'split-side-window
   )
+
+(defun split-side-window ()
+  "Split side window."
+  (interactive)
+  (split-window-horizontally)
+  (split-window-horizontally)
+  (other-window 2)
+  (delete-window))
 
 ;; evil-mode
 ;; https://lists.ourproject.org/pipermail/implementations-list/2011-September/001140.html
@@ -566,11 +576,14 @@
 (setq evil-want-minibuffer t)
 (setq evil-want-fine-undo t)     ;操作を元に戻す単位を細かくする
 
+(setq undo-tree-auto-save-history nil)
 (global-undo-tree-mode)
 (evil-set-undo-system 'undo-tree)
 
 (with-eval-after-load 'magit
-  (define-key magit-status-mode-map (kbd "SPC") 'evil-scroll-page-down))
+  (define-key magit-status-mode-map (kbd "SPC") 'evil-scroll-page-down)
+  (define-key magit-status-mode-map [remap magit-diff-show-or-scroll-up]
+    'evil-scroll-page-up))
 
 ;; evil-surround
 (global-evil-surround-mode 1)
@@ -627,6 +640,16 @@
 ;; fix for 24.4
 ;; https://github.com/milkypostman/powerline/issues/58
 ;; (add-hook 'desktop-after-read-hook 'powerline-reset)
+
+;; powerline + minions
+(require 'minions)
+(minions-mode)
+(setq minions-mode-line-lighter "[+]")
+;(column-number-mode)
+
+(defpowerline powerline-major-mode "")
+(defpowerline powerline-process "")
+(defpowerline powerline-minor-modes minions-mode-line-modes)
 
 ;; typescript-mode
 (add-hook 'typescript-mode-hook (lambda () (setq typescript-indent-level 2)))
@@ -790,21 +813,11 @@
 ;; (moody-replace-mode-line-buffer-identification)
 ;; (moody-replace-vc-mode)
 
-;; minions
-(require 'minions)
-(minions-mode)
-(setq minions-mode-line-lighter "[+]")
-;(column-number-mode)
-
-(defpowerline powerline-major-mode "")
-(defpowerline powerline-process "")
-(defpowerline powerline-minor-modes minions-mode-line-modes)
-
 ;; tree-sitter
-;(require 'tree-sitter)
-;(require 'tree-sitter-langs)
-;(global-tree-sitter-mode)
-;(add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+;; (require 'tree-sitter)
+;; (require 'tree-sitter-langs)
+;; (global-tree-sitter-mode)
+;; (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
 ;; https://zenn.dev/hyakt/articles/6ff892c2edbabb
 (leaf tree-sitter
   :ensure (t tree-sitter-langs)
@@ -861,22 +874,31 @@
 ;; Emacs28
 
 ;;; lsp-bridge
-(add-to-list 'load-path "/home/umemoto/distfiles/lsp-bridge")
-(require 'yasnippet)
-(yas-global-mode 1)
-(require 'lsp-bridge)
-(global-lsp-bridge-mode)
-;(add-hook 'python-mode-hook 'lsp-bridge-mode)
-;(setq lsp-bridge-enable-mode-line nil)
+(defvar-local root_dir "/home/umemoto/distfiles")
+(defvar-local lsp-bridge-path (file-name-concat root_dir "lsp-bridge"))
+(when (file-directory-p lsp-bridge-path)
+  (add-to-list 'load-path lsp-bridge-path)
+  (require 'yasnippet)
+  (yas-global-mode 1)
+  (require 'lsp-bridge)
+  (global-lsp-bridge-mode)
 
-;(define-key acm-mode-map [remap evil-complete-next] 'acm-select-next)
-;(define-key acm-mode-map [remap evil-complete-previous] 'acm-select-prev)
-;(setq acm-candidate-match-function 'orderless-flex)
-;(setq lsp-bridge-complete-manually t)
-
-;(add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-next")
-;(add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-previous")
-;(add-to-list 'lsp-bridge-completion-stop-commands "dabbrev-expand")
+  (unless (display-graphic-p)
+    (defvar-local acm-terminal-path (file-name-concat root_dir, "acm-terminal"))
+    (when (file-directory-p lsp-bridge-path)
+      (add-to-list 'load-path acm-terminal-path)
+      (with-eval-after-load 'acm
+        (require 'acm-terminal))))
+  ;(add-hook 'python-mode-hook 'lsp-bridge-mode)
+  ;(setq lsp-bridge-enable-mode-line nil)
+  ;(define-key acm-mode-map [remap evil-complete-next] 'acm-select-next)
+  ;(define-key acm-mode-map [remap evil-complete-previous] 'acm-select-prev)
+  ;(setq acm-candidate-match-function 'orderless-flex)
+  ;(setq lsp-bridge-complete-manually t)
+  ;(add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-next")
+  ;(add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-previous")
+  ;(add-to-list 'lsp-bridge-completion-stop-commands "dabbrev-expand")
+  )
 
 (provide 'init)
 
