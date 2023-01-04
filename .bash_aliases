@@ -49,6 +49,11 @@ fi
 # Python
 export PYTHONDONTWRITEBYTECODE=1
 
+# Rust
+if [ -d "$HOME/.cargo" ]; then
+    source $HOME/.cargo/env
+fi
+
 # Terminal
 export TERM=xterm-24bit
 

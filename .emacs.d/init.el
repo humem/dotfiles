@@ -65,10 +65,12 @@
   :tag "builtin" "internal"
   :custom ((dabbrev-case-fold-search . nil)
            (indent-tabs-mode . nil)
+           (js-indent-level . 2)
            (kill-whole-line . t)
            (menu-bar-mode . nil)
            (next-line-add-newlines . nil)
            (make-backup-files . nil)
+           (tab-width . 2)
            (tool-bar-mode . nil)
            ;; Disable to color the selected region
            (transient-mark-mode . nil)
@@ -236,6 +238,7 @@
     popwin
     posframe
     powerline
+    super-save
     topsy
     tree-sitter
     tree-sitter-langs
@@ -244,6 +247,7 @@
     vertico
     vimrc-mode
     web-mode
+    which-key
     yaml-mode
     yascroll
     ))
@@ -497,6 +501,7 @@
   (run-hooks 'auto-line-hook))
 
 ;; evil-collection
+(setq evil-want-C-i-jump nil)
 (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
 (setq evil-want-keybinding nil)
 (require 'evil)
@@ -505,6 +510,8 @@
   (evil-collection-init)
   ;; fix evil-collection-dired-setup
   (evil-collection-define-key 'normal 'dired-mode-map
+    (kbd "SPC") 'evil-scroll-page-down
+    (kbd "S-SPC") 'evil-scroll-page-up
     "gg" 'evil-goto-first-line
     ;; open
     "e" 'dired-find-file
@@ -535,6 +542,7 @@
   "o" 'other-window-or-split
   "q" 'quit-window
   "s" 'save-buffer
+  "u" 'undo-tree-visualize
   "x" 'execute-extended-command
   "w" 'evil-window-prev
   "SPC" 'set-mark-command
@@ -602,10 +610,6 @@
 ;; diffのバッファを上下ではなく左右に並べる
 (setq ediff-split-window-function 'split-window-horizontally)
 
-;; JavaScript
-(setq js-indent-level 2)
-(setq-default tab-width 2)
-
 ;; NeoTree with evil mode
 (add-hook 'neotree-mode-hook
           (lambda ()
@@ -651,46 +655,51 @@
 (defpowerline powerline-process "")
 (defpowerline powerline-minor-modes minions-mode-line-modes)
 
-;; typescript-mode
-(add-hook 'typescript-mode-hook (lambda () (setq typescript-indent-level 2)))
+(leaf typescript-mode
+  :ensure t
+  :init
+  (define-derived-mode typescript-tsx-mode typescript-mode "tsx")
+  :config
+  (add-hook 'typescript-mode-hook (lambda () (setq typescript-indent-level 2)))
+  :mode (("\\.tsx\\'" . typescript-tsx-mode)))
 
-;; web-mode
-(add-to-list 'auto-mode-alist '("\\.?html$" . web-mode))
-(setq web-mode-engines-alist '(("\\.xhtml$" . "smarty")))
-;; http://qiita.com/kwappa/items/6bde1fe2bbeedc85023e
-(add-to-list 'auto-mode-alist '("\\.js[x]?$" . web-mode))
-(setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'")))
-(add-to-list 'auto-mode-alist '("\\.vue$" . web-mode))
-(add-hook 'web-mode-hook
-          '(lambda ()
-             (setq web-mode-attr-indent-offset nil)
-             (setq web-mode-markup-indent-offset 2)
-             (setq web-mode-css-indent-offset 2)
-             (setq web-mode-code-indent-offset 2)
-             (setq web-mode-sql-indent-offset 2)
-             (setq web-mode-script-padding 0)
-             (setq web-mode-style-padding 0)
-             (setq indent-tabs-mode nil)
-             (setq tab-width 2)
-             ))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(hl-line ((t (:background "#3F3F3F"))))
- '(web-mode-comment-face ((t (:foreground "#98BF75"))))
- '(web-mode-css-at-rule-face ((t (:foreground "#DFCF44"))))
- '(web-mode-css-property-name-face ((t (:foreground "#87CEEB"))))
- '(web-mode-css-pseudo-class ((t (:foreground "#DFCF44"))))
- '(web-mode-css-selector-face ((t (:foreground "#DFCF44"))))
- '(web-mode-css-string-face ((t (:foreground "#D78181"))))
- '(web-mode-doctype-face ((t (:foreground "#4A8ACA"))))
- '(web-mode-html-attr-equal-face ((t (:foreground "#FFFFFF"))))
- '(web-mode-html-attr-name-face ((t (:foreground "#87CEEB"))))
- '(web-mode-html-attr-value-face ((t (:foreground "#D78181"))))
- '(web-mode-html-tag-face ((t (:foreground "#6AAAEA"))))
- '(web-mode-server-comment-face ((t (:foreground "#98BF75")))))
+;; ;; web-mode
+;; (add-to-list 'auto-mode-alist '("\\.?html$" . web-mode))
+;; (setq web-mode-engines-alist '(("\\.xhtml$" . "smarty")))
+;; ;; http://qiita.com/kwappa/items/6bde1fe2bbeedc85023e
+;; (add-to-list 'auto-mode-alist '("\\.js[x]?$" . web-mode))
+;; (setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'")))
+;; (add-to-list 'auto-mode-alist '("\\.vue$" . web-mode))
+;; (add-hook 'web-mode-hook
+;;           '(lambda ()
+;;              (setq web-mode-attr-indent-offset nil)
+;;              (setq web-mode-markup-indent-offset 2)
+;;              (setq web-mode-css-indent-offset 2)
+;;              (setq web-mode-code-indent-offset 2)
+;;              (setq web-mode-sql-indent-offset 2)
+;;              (setq web-mode-script-padding 0)
+;;              (setq web-mode-style-padding 0)
+;;              (setq indent-tabs-mode nil)
+;;              (setq tab-width 2)
+;;              ))
+;; (custom-set-faces
+;;  ;; custom-set-faces was added by Custom.
+;;  ;; If you edit it by hand, you could mess it up, so be careful.
+;;  ;; Your init file should contain only one such instance.
+;;  ;; If there is more than one, they won't work right.
+;;  '(hl-line ((t (:background "#3F3F3F"))))
+;;  '(web-mode-comment-face ((t (:foreground "#98BF75"))))
+;;  '(web-mode-css-at-rule-face ((t (:foreground "#DFCF44"))))
+;;  '(web-mode-css-property-name-face ((t (:foreground "#87CEEB"))))
+;;  '(web-mode-css-pseudo-class ((t (:foreground "#DFCF44"))))
+;;  '(web-mode-css-selector-face ((t (:foreground "#DFCF44"))))
+;;  '(web-mode-css-string-face ((t (:foreground "#D78181"))))
+;;  '(web-mode-doctype-face ((t (:foreground "#4A8ACA"))))
+;;  '(web-mode-html-attr-equal-face ((t (:foreground "#FFFFFF"))))
+;;  '(web-mode-html-attr-name-face ((t (:foreground "#87CEEB"))))
+;;  '(web-mode-html-attr-value-face ((t (:foreground "#D78181"))))
+;;  '(web-mode-html-tag-face ((t (:foreground "#6AAAEA"))))
+;;  '(web-mode-server-comment-face ((t (:foreground "#98BF75")))))
 
 
 ;; GNU Emacs 27.1
@@ -873,32 +882,69 @@
 
 ;; Emacs28
 
-;;; lsp-bridge
-(defvar-local root_dir "/home/umemoto/distfiles")
-(defvar-local lsp-bridge-path (file-name-concat root_dir "lsp-bridge"))
-(when (file-directory-p lsp-bridge-path)
-  (add-to-list 'load-path lsp-bridge-path)
-  (require 'yasnippet)
-  (yas-global-mode 1)
-  (require 'lsp-bridge)
-  (global-lsp-bridge-mode)
+;; ;;; lsp-bridge
+;; (defvar-local root_dir "/home/umemoto/distfiles")
+;; (defvar-local lsp-bridge-path (file-name-concat root_dir "lsp-bridge"))
+;; (when (file-directory-p lsp-bridge-path)
+;;   (add-to-list 'load-path lsp-bridge-path)
+;;   (require 'yasnippet)
+;;   (yas-global-mode 1)
+;;   (require 'lsp-bridge)
+;;   (global-lsp-bridge-mode)
+;;   (define-key acm-mode-map (kbd "RET") 'newline)
 
-  (unless (display-graphic-p)
-    (defvar-local acm-terminal-path (file-name-concat root_dir, "acm-terminal"))
-    (when (file-directory-p lsp-bridge-path)
-      (add-to-list 'load-path acm-terminal-path)
-      (with-eval-after-load 'acm
-        (require 'acm-terminal))))
-  ;(add-hook 'python-mode-hook 'lsp-bridge-mode)
-  ;(setq lsp-bridge-enable-mode-line nil)
-  ;(define-key acm-mode-map [remap evil-complete-next] 'acm-select-next)
-  ;(define-key acm-mode-map [remap evil-complete-previous] 'acm-select-prev)
-  ;(setq acm-candidate-match-function 'orderless-flex)
-  ;(setq lsp-bridge-complete-manually t)
-  ;(add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-next")
-  ;(add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-previous")
-  ;(add-to-list 'lsp-bridge-completion-stop-commands "dabbrev-expand")
-  )
+;;   (unless (display-graphic-p)
+;;     (defvar-local acm-terminal-path (file-name-concat root_dir, "acm-terminal"))
+;;     (when (file-directory-p lsp-bridge-path)
+;;       (add-to-list 'load-path acm-terminal-path)
+;;       (with-eval-after-load 'acm
+;;         (require 'acm-terminal))))
+;;   ;(add-hook 'python-mode-hook 'lsp-bridge-mode)
+;;   ;(setq lsp-bridge-enable-mode-line nil)
+;;   ;(define-key acm-mode-map [remap evil-complete-next] 'acm-select-next)
+;;   ;(define-key acm-mode-map [remap evil-complete-previous] 'acm-select-prev)
+;;   ;(setq acm-candidate-match-function 'orderless-flex)
+;;   ;(setq lsp-bridge-complete-manually t)
+;;   ;(add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-next")
+;;   ;(add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-previous")
+;;   ;(add-to-list 'lsp-bridge-completion-stop-commands "dabbrev-expand")
+;;   )
+
+(require 'lang)   ;; base extensions
+(require 'lang-python)
+
+;; rsync after save-buffer
+(defun execute-rsync () ;&optional _PRED _ARG)
+  "Execute .rsync script file in the current directory if exists."
+  (interactive)
+  (let ((rsync-file (file-name-concat default-directory ".rsync")))
+    (when (file-exists-p rsync-file)
+      (async-shell-command rsync-file))))
+(advice-add #'save-buffer :after #'execute-rsync)
+(add-to-list 'display-buffer-alist
+             '("*Async Shell Command*" display-buffer-no-window))
+;;             '(shell-command-buffer-name-async display-buffer-no-window))
+
+(leaf rust-mode
+  :ensure t
+  :custom ((rust-format-on-save . t)))
+
+(leaf cargo
+  :ensure t
+  :commands cargo-minor-mode
+  :hook ((rust-mode-hook . cargo-minor-mode)))
+
+(leaf super-save
+  :ensure t
+  :require t
+  :config
+  (super-save-mode 1))
+
+(leaf which-key
+  :ensure t
+  :require t
+  :config
+  (which-key-mode))
 
 (provide 'init)
 
