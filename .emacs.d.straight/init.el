@@ -60,9 +60,9 @@
     )
   )
 
-;;;
-;;; Blackout
-;;;
+
+;; Blackout
+
 (leaf blackout
   :leaf-defer nil
   :straight t
@@ -71,9 +71,9 @@
   (leaf eldoc :blackout t)
   )
 
-;;;
-;;; Defer loading several libraries (for speeding up)
-;;;
+
+;; Defer loading several libraries (for speeding up)
+
 (leaf Libraries
   :config
   (leaf cl-lib
@@ -85,9 +85,9 @@
     )
   )
 
-;;;
-;;; Garbage Collector Magic Hack
-;;;
+
+;; Garbage Collector Magic Hack
+
 (leaf gcmh
   :leaf-defer nil
   :straight t
@@ -95,9 +95,9 @@
   :global-minor-mode gcmh-mode
   )
 
-;;;
-;;; Language settings
-;;;
+
+;; Language settings
+
 (leaf Settings
   :config
   (leaf Language
@@ -121,15 +121,15 @@
       (set-fontset-font 'nil 'japanese-jisx0208
      			(font-spec :family "Yu Gothic UI"))) ;; CHANGEME
     (when (eq system-type 'gnu/linux)
-      ;; Install e.g. fonts-inconsolata & fonts-ipaexfont packages on Debian/Ubuntu
-      (set-frame-font "Inconsolata-14") ;; CHANGEME
-      (set-fontset-font t 'japanese-jisx0208 (font-spec :family "IPAExGothic"))) ;; CHANGEME
-    )
+      (set-face-attribute 'default nil :family "HackGenNerd Console" :height 125)
+      (set-fontset-font t 'japanese-jisx0208 (font-spec :family "HackGenNerd Console"))
+    ))
 
   (leaf Misc
     :config
-    (define-key key-translation-map [?\C-h] [?\C-?])
+    ;;(define-key key-translation-map [?\C-h] [?\C-?])
     (column-number-mode t)
+    (global-display-line-numbers-mode t)
     :custom
     '((user-full-name . "Your Name") ;; CHANGEME
       (user-login-name . "yourlogin") ;; CHANGEME
@@ -137,10 +137,177 @@
       (inhibit-startup-message . t)
       (delete-by-moving-to-trash . t)
       (kinsoku-limit . 10)
+      (display-line-numbers-width-start . t)
       ;; For text-only web browsing
       ;; (browse-url-browser-function . 'eww-browse-url)
       )
     )
+  )
+
+(leaf cus-edit
+  :doc "tools for customizing Emacs and Lisp packages"
+  :tag "builtin" "faces" "help"
+  :custom `((custom-file . ,(locate-user-emacs-file "custom.el"))))
+
+(leaf cus-start
+  :doc "define customization properties of builtins"
+  :tag "builtin" "internal"
+  :custom
+  (
+   (dabbrev-case-fold-search     . nil)
+   (debug-on-error               . t)
+   (dired-dwim-target            . t)
+   (dired-guess-shell-alist-user . '(("\\.*" "open")))
+   (dired-listing-switches       . "-alh")
+   (dired-use-ls-dired           . t)
+   (init-file-debug              . t)
+   (indent-tabs-mode             . nil)
+   (js-indent-level              . 2)
+   (kill-whole-line              . t)
+   (menu-bar-mode                . nil)
+   (next-line-add-newlines       . nil)
+   (make-backup-files            . nil)
+   (tab-width                    . 2)
+   (tool-bar-mode                . nil)
+   (transient-mark-mode          . nil) ;; Disable to color the selected region
+   (visible-bell                 . nil)
+   )
+  :config
+  (defalias 'yes-or-no-p 'y-or-n-p)
+  (if (fboundp 'blink-cursor-mode) (blink-cursor-mode 0))
+  (desktop-save-mode 1)
+  )
+
+;; Magnify and demagnify texts.
+(setq text-scale-mode-step 1.05); 1.2
+(global-set-key [(control ?+)] (lambda () (interactive) (text-scale-increase 1)))
+(global-set-key [(control ?=)] (lambda () (interactive) (text-scale-increase 1)))
+(global-set-key [(control ?-)] (lambda () (interactive) (text-scale-decrease 1)))
+(global-set-key [(control ?0)] (lambda () (interactive) (text-scale-increase 0)))
+
+;; Let SPC complete path names
+(when (boundp 'minibuffer-local-filename-completion-map)
+  (setq minibuffer-local-filename-completion-map minibuffer-local-completion-map
+	minibuffer-local-must-match-filename-map minibuffer-local-must-match-map
+	))
+
+(leaf autorevert
+  :doc "revert buffers when files on disk change"
+  :tag "builtin"
+  :global-minor-mode global-auto-revert-mode)
+
+;; Make ESC quit prompts
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+
+(leaf evil
+  :straight t
+  :init
+  (setq evil-want-keybinding nil)
+	(setq evil-want-C-i-jump nil)
+  :config
+  (evil-mode 1)
+  (define-key evil-motion-state-map (kbd "SPC")   'evil-scroll-page-down)
+  (define-key evil-motion-state-map (kbd "S-SPC") 'evil-scroll-page-up)
+  (define-key evil-insert-state-map (kbd "C-g")   'evil-normal-state)
+  (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+  (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+  )
+
+;;   (evil-set-initial-state 'messages-buffer-mode 'normal)
+;;   (evil-set-initial-state 'dashboard-mode 'normal))
+
+(leaf evil-collection
+  :straight t
+  :after evil
+  :config
+  (setq evil-collection-setup-minibuffer t)
+  (evil-collection-init)
+  ;; fix evil-collection-dired-setup
+  (evil-collection-define-key 'normal 'dired-mode-map
+    ;; Move
+    (kbd "SPC")   'evil-scroll-page-down
+    (kbd "S-SPC") 'evil-scroll-page-up
+    "gg" 'evil-goto-first-line
+    "G" 'evil-goto-line
+    ;; File
+    "e" 'dired-find-file
+    "o" 'dired-find-file-other-window
+    "v" 'dired-view-file
+    ;; Sort
+    "s" 'dired-sort-toggle-or-edit
+    )
+  (evil-collection-view-setup)
+  (evil-collection-define-key 'normal 'view-mode-map
+    "0" 'evil-beginning-of-line ; 'text-scale-adjust
+    ))
+
+(leaf general
+  :straight t
+  :after evil
+  :config
+  (general-create-definer my/leader-keys
+    :keymaps '(normal insert visual emacs)
+    :prefix ","
+    :global-prefix "C-,")
+
+  (my/leader-keys
+    ;; "t"  '(:ignore t :which-key "toggles")
+    ;; "tt" '(counsel-load-theme :which-key "choose theme")
+    ;; "fde" '(lambda () (interactive) (find-file (expand-file-name "~/.emacs.d/Emacs.org")))))
+    "b" 'switch-to-buffer
+    "e" 'eval-region
+    "d" 'dired
+    "f" 'find-file
+    "g" 'magit-status
+    "j" 'dired-jump
+    "k" 'kill-buffer
+    "n" 'display-line-numbers-mode
+    "o" 'other-window-or-split
+    "q" 'quit-window
+    "s" 'save-buffer
+    "u" 'undo-tree-visualize
+    "x" 'execute-extended-command
+    "w" 'evil-window-prev
+    "SPC" 'set-mark-command
+    "0" 'delete-window
+    "1" 'delete-other-windows
+    "2" 'split-window-vertically
+    "3" 'split-window-horizontally
+    "4" 'switch-to-buffer-other-window
+    "5" 'split-side-window
+    )
+  )
+
+(global-set-key (kbd "C-;")    'other-window-or-split)
+(global-set-key (kbd "<f8>")   'other-window-or-split)
+(global-set-key (kbd "C-<f8>") 'other-window-or-split)
+(global-set-key (kbd "C-]")    'other-window-or-split)
+
+(defun other-window-or-split ()
+  "Select other window or split window horizontally."
+  (interactive)
+  (when (one-window-p)
+    (split-window-horizontally))
+  (other-window 1)
+  ;; IMEをオフにする
+  (when (fboundp 'mac-toggle-input-method)
+    (mac-toggle-input-method nil)))
+
+(defun split-side-window ()
+  "Split side window."
+  (interactive)
+  (split-window-horizontally)
+  (split-window-horizontally)
+  (other-window 2)
+  (delete-window))
+
+(leaf undo-tree
+  :straight t
+  :after evil
+  :config
+  (setq undo-tree-auto-save-history nil)
+  (global-undo-tree-mode)
+  (evil-set-undo-system 'undo-tree)
   )
 
 ;;;
@@ -187,7 +354,7 @@
       (setq mozc-candidate-style 'posframe)
       )
     )
-
+  
   ;; ddskk
   (leaf ddskk
     :straight t
@@ -214,7 +381,8 @@
           modus-themes-region '(bg-only no-extend))
     :config
     ;; Load the theme of your widget-choice-match
-    (load-theme 'modus-vivendi :no-confirm) ;; OR modus-operandi
+    ;; (load-theme 'modus-vivendi :no-confirm) ;; OR modus-operandi
+    (load-theme 'modus-operandi :no-confirm)
     :bind ("<f5>" . modus-themes-toggle)
     )
 
@@ -452,7 +620,7 @@
     :straight t
     :bind
     (("C-." . embark-act)
-     ("C-;" . embark-dwim)
+     ;;("C-;" . embark-dwim)
      ("C-h B" . embark-bindings))
     :init
     ;; Optionally replace the key help with a completing-read interface
@@ -982,6 +1150,10 @@ See `org-capture-templates' for more information."
     :straight t
     :bind
     ("C-x g" . magit-status)
+    :config
+    (define-key magit-status-mode-map (kbd "SPC") 'evil-scroll-page-down)
+    (define-key magit-status-mode-map [remap magit-diff-show-or-scroll-up]
+      'evil-scroll-page-up)
     )
 
   ;; easy-hugo
@@ -1120,4 +1292,3 @@ See `org-capture-templates' for more information."
 ;;(profiler-stop)
 
 ;;; init.el ends here
-

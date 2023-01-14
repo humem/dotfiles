@@ -18,8 +18,8 @@
 (setq package-enable-at-startup nil)
 
 ;; Debugging
-;;(setq debug-on-error t)
-(setq warning-minimum-level :error)
+(setq debug-on-error t)
+;;(setq warning-minimum-level :error)
 
 ;; Suppress cl warning
 (setq byte-compile-warnings '(cl-functions))
