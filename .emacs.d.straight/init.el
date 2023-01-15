@@ -60,6 +60,12 @@
     )
   )
 
+(leaf use-package :ensure t :straight t)
+
+(leaf macrostep
+  :straight t
+  :ensure t
+  :bind (("C-c e" . macrostep-expand)))
 
 ;; Blackout
 
@@ -158,7 +164,7 @@
    (debug-on-error               . t)
    (dired-dwim-target            . t)
    (dired-guess-shell-alist-user . '(("\\.*" "open")))
-   (dired-listing-switches       . "-alh")
+   (dired-listing-switches       . "-agho")
    (dired-use-ls-dired           . t)
    (init-file-debug              . t)
    (indent-tabs-mode             . nil)
@@ -177,6 +183,33 @@
   (if (fboundp 'blink-cursor-mode) (blink-cursor-mode 0))
   (desktop-save-mode 1)
   )
+
+;; (leaf all-the-icons-dired
+;;   :straight t
+;;   :hook (dired-mode-hook . all-the-icons-dired-mode))
+
+(leaf avy
+  :straight t
+  :ensure t
+  :bind
+  (("C-:" . avy-goto-char-timer)
+   ("C-*" . avy-resume)
+   ("M-g M-g" . avy-goto-line))
+  :config
+  (leaf avy-zap
+    :ensure t
+    :bind
+    ([remap zap-to-char] . avy-zap-to-char)))
+
+(leaf ace-window
+  :straight t
+  :ensure t
+  :bind
+  (("C-x o" . ace-window))
+  :config
+  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+  :custom-face
+  (aw-leading-char-face . '((t (:height 2.0)))))
 
 ;; Magnify and demagnify texts.
 (setq text-scale-mode-step 1.05); 1.2
@@ -1042,6 +1075,55 @@ See `org-capture-templates' for more information."
     )
   )
 
+(leaf lsp-mode
+  :straight t
+  :ensure t
+  :require t
+  :commands lsp
+  :hook
+  (python-mode-hook . lsp)
+  (typescript-mode-hook . lsp)
+  :config
+  (leaf lsp-ui
+    :straight t
+    :ensure t
+    :require t
+    :hook
+    (lsp-mode-hook . lsp-ui-mode)
+    :custom
+    (lsp-ui-sideline-enable . nil)
+    (lsp-prefer-flymake . nil)
+    (lsp-print-performance . t)
+    :config
+    (define-key lsp-ui-mode-map [remap xref-find-definitions] 'lsp-ui-peek-find-definitions)
+    (define-key lsp-ui-mode-map [remap xref-find-references] 'lsp-ui-peek-find-references)
+    (define-key lsp-ui-mode-map (kbd "C-c i") 'lsp-ui-imenu)
+    (define-key lsp-ui-mode-map (kbd "s-l") 'hydra-lsp/body)
+    (setq lsp-ui-doc-position 'bottom)
+    :hydra (hydra-lsp (:exit t :hint nil)
+                      "
+ Buffer^^               Server^^                   Symbol
+-------------------------------------------------------------------------------------
+ [_f_] format           [_M-r_] restart            [_d_] declaration  [_i_] implementation  [_o_] documentation
+ [_m_] imenu            [_S_]   shutdown           [_D_] definition   [_t_] type            [_r_] rename
+ [_x_] execute action   [_M-s_] describe session   [_R_] references   [_s_] signature"
+                      ("d" lsp-find-declaration)
+                      ("D" lsp-ui-peek-find-definitions)
+                      ("R" lsp-ui-peek-find-references)
+                      ("i" lsp-ui-peek-find-implementation)
+                      ("t" lsp-find-type-definition)
+                      ("s" lsp-signature-help)
+                      ("o" lsp-describe-thing-at-point)
+                      ("r" lsp-rename)
+
+                      ("f" lsp-format-buffer)
+                      ("m" lsp-ui-imenu)
+                      ("x" lsp-execute-code-action)
+
+                      ("M-s" lsp-describe-session)
+                      ("M-r" lsp-restart-workspace)
+                      ("S" lsp-shutdown-workspace))))
+
 ;;;
 ;;; Misc Tools
 ;;;
@@ -1064,12 +1146,12 @@ See `org-capture-templates' for more information."
     (prog-mode-hook . rainbow-delimiters-mode)
     )
 
-  ;; beacon
-  (leaf beacon
-    :straight t
-    :blackout t
-    :global-minor-mode beacon-mode
-    )
+  ;; ;; beacon
+  ;; (leaf beacon
+  ;;   :straight t
+  ;;   :blackout t
+  ;;   :global-minor-mode beacon-mode
+  ;;   )
 
   ;; google-this
   (leaf google-this
