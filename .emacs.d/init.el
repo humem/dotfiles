@@ -4,27 +4,23 @@
 
 ;;; Code:
 
-;; Local emacs-lisp repository
+;; Initialize local emacs-lisp repository
 ;; https://qiita.com/tadsan/items/431899f76f3765892abd
 (let ((default-directory (locate-user-emacs-file "./lisp")))
   (add-to-list 'load-path default-directory)
   (normal-top-level-add-subdirs-to-load-path))
 
-;; Japanese language environment
-(set-language-environment "Japanese")
-(set-default-coding-systems 'utf-8-unix)
-(prefer-coding-system 'utf-8-unix)
-(setenv "LANG" "C.UTF-8")
-;; プロセスが出力する文字コードを判定して、process-coding-system の DECODING の設定値を決定する
-(setq default-process-coding-system '(undecided-dos . utf-8-unix))
-;; ※ 設定値の car を "undecided-dos" にしておくと、Windows コマンドの出力にも柔軟に対応できます。関連して 29) の説明も参照してください。
-
+;;
+;; Initialize leaf package manager
 ;; https://github.com/conao3/leaf.el
+;;
+
 (eval-and-compile
   (customize-set-variable
-   'package-archives '(("org" . "https://orgmode.org/elpa/")
-                       ("melpa" . "https://melpa.org/packages/")
-                       ("gnu" . "https://elpa.gnu.org/packages/")))
+   'package-archives
+   '(("org"   . "https://orgmode.org/elpa/")
+     ("melpa" . "https://melpa.org/packages/")
+     ("gnu"   . "https://elpa.gnu.org/packages/")))
   (package-initialize)
   (unless (package-installed-p 'leaf)
     (package-refresh-contents)
@@ -33,8 +29,8 @@
   (leaf leaf-keywords
     :ensure t
     :init
-    (leaf hydra :ensure t)
-    (leaf el-get :ensure t)
+    (leaf hydra    :ensure t)
+    (leaf el-get   :ensure t)
     (leaf blackout :ensure t)
     :config
     (leaf-keywords-init)))
@@ -44,163 +40,12 @@
   (leaf leaf-convert :ensure t)
   (leaf leaf-tree
     :ensure t
-    :custom ((imenu-list-size . 30)
+    :custom ((imenu-list-size     . 30)
              (imenu-list-position . 'left))))
-
-(leaf macrostep
-  :ensure t
-  :bind (("C-c e" . macrostep-expand)))
-
-(leaf transient-dwim
-  :ensure t
-  :bind (("M-=" . transient-dwim-dispatch)))
-
-(leaf cus-edit
-  :doc "tools for customizing Emacs and Lisp packages"
-  :tag "builtin" "faces" "help"
-  :custom `((custom-file . ,(locate-user-emacs-file "custom.el"))))
-
-(leaf cus-start
-  :doc "define customization properties of builtins"
-  :tag "builtin" "internal"
-  :custom ((dabbrev-case-fold-search . nil)
-           (indent-tabs-mode . nil)
-           (js-indent-level . 2)
-           (kill-whole-line . t)
-           (menu-bar-mode . nil)
-           (next-line-add-newlines . nil)
-           (make-backup-files . nil)
-           (tab-width . 2)
-           (tool-bar-mode . nil)
-           ;; Disable to color the selected region
-           (transient-mark-mode . nil)
-           (visible-bell . nil))
-  :config
-  (defalias 'yes-or-no-p 'y-or-n-p))
-
-(leaf autorevert
-  :doc "revert buffers when files on disk change"
-  :tag "builtin"
-  :global-minor-mode global-auto-revert-mode)
-
-;; (leaf company
-;;   :doc "Modular text completion framework"
-;;   :req "emacs-24.3"
-;;   :tag "matching" "convenience" "abbrev" "emacs>=24.3"
-;;   :url "http://company-mode.github.io/"
-;;   :emacs>= 24.3
-;;   :ensure t
-;;   :blackout t
-;;   :leaf-defer nil
-;;   :config
-;;   ;; (add-to-list 'company-backends 'company-yasnippet)
-;;   :bind ((company-active-map
-;;           ("M-n" . nil)
-;;           ("M-p" . nil)
-;;           ("C-s" . company-filter-candidates)
-;;           ("C-n" . company-select-next)
-;;           ("C-p" . company-select-previous)
-;;           ("<tab>" . company-complete-selection))
-;;          (company-search-map
-;;           ("C-n" . company-select-next)
-;;           ("C-p" . company-select-previous)))
-;;   :custom ((company-idle-delay . 0)
-;;            (company-minimum-prefix-length . 1)
-;;            (company-transformers . '(company-sort-by-occurrence))))
-;; ; :global-minor-mode global-company-mode)
-
-;; (leaf eglot
-;;  :ensure t
-;;  :hook ((python-mode-hook . eglot-ensure))
-;;  :require t
-;;  :custom ((eldoc-echo-area-use-multiline-p . nil)))
-;; ; :config
-;; ; (add-to-list 'eglot-server-programs
-;; ;              '(python-mode "pyls")))
-;; ;                "pyls" "-v" "--tcp" "--host" "localhost" "--port" :autoport)))
-
-(leaf flycheck
-  :doc "On-the-fly syntax checking"
-  :emacs>= 24.3
-  :ensure t
-  :bind (("M-n" . flycheck-next-error)
-         ("M-p" . flycheck-previous-error))
-  :custom ((flycheck-emacs-lisp-initialize-packages . t))
-  :hook (emacs-lisp-mode-hook lisp-interaction-mode-hook)
-  :config
-  (leaf flycheck-package
-    :doc "A Flycheck checker for elisp package authors"
-    :ensure t
-    :config
-    (flycheck-package-setup))
-
-  (leaf flycheck-elsa
-    :doc "Flycheck for Elsa."
-    :emacs>= 25
-    :ensure t
-    :config
-    (flycheck-elsa-setup)))
-
-(leaf flymake-diagnostic-at-point
-  :ensure t
-  :after flymake
-  :hook (flymake-mode-hook)
-  :require t)
-
-;; (leaf modus-themes
-;;   :ensure t
-;;   :bind (("<f5>" . modus-themes-toggle))
-;;   :setq ((modus-themes-italic-constructs . t)
-;;          (modus-themes-bold-constructs)
-;;          (modus-themes-region quote
-;;                               (bg-only no-extend)))
-;;   :config
-;;   (modus-themes-load-themes)
-;;   (with-eval-after-load 'modus-themes
-;;     (modus-themes-load-vivendi)))
-
-(leaf paren
-  :doc "highlight matching paren"
-  :tag "builtin"
-  :custom ((show-paren-delay . 0))
-  :global-minor-mode show-paren-mode)
-
-(leaf uniquify
-  :custom
-  ((uniquify-buffer-name-style . 'post-forward-angle-brackets)))
 
 (leaf use-package :ensure t :require t)
 
-;; https://takeokunn.xyz/blog/post/emacs-yasnippet-setup
-;; (leaf yasnippet
-;;   :ensure t
-;;   :init (yas-global-mode 1)
-;;   :custom
-;;   ((yas-snippet-dirs . '("`/.emacs.d/yasnippets"))))
-
-;; ein (Emacs IPython Notebook)
-;; https://tam5917.hatenablog.com/entry/2021/03/28/204747
-;; (eval-when-compile
-;;   (require 'ein)
-;;   (require 'ein-notebook)
-;;   (require 'ein-notebooklist))
-;;   ;(require 'ein-markdown-mode)
-;;   ;(require 'smartrep))
-;; ;; (add-hook 'ein:notebook-mode-hook 'electric-pair-mode) ;; お好みで
-;; ;; (add-hook 'ein:notebook-mode-hook 'undo-tree-mode) ;; お好みで
-;; ;; undoを有効化 (customizeから設定しておいたほうが良さげ)
-;; (setq ein:worksheet-enable-undo t)
-;; ;; 画像をインライン表示 (customizeから設定しておいたほうが良さげ)
-;; (setq ein:output-area-inlined-images t)
-;; ;; Start jupyter notebook
-;; ;; M-x ein:login
-
-;; https://www.ncaq.net/2020/05/13/21/16/35/
-;; (require 'cl) を見逃す
-(setq byte-compile-warnings '(not cl-functions obsolete))
-;; (require 'cl)
-(require 'cl-lib)
-
+;; Fetch external packages if not installed
 ;; http://qiita.com/hottestseason/items/1e8a46ad1ebcf7d0e11c
 (defvar installed-package-list
   '(
@@ -251,13 +96,60 @@
     yaml-mode
     yascroll
     ))
-(let ((not-installed (cl-loop for x in installed-package-list
-                           when (not (package-installed-p x))
-                           collect x)))
+(let ((not-installed
+       (cl-loop for x in installed-package-list
+                when (not (package-installed-p x)) collect x)))
   (when not-installed
     (package-refresh-contents)
     (dolist (pkg not-installed)
       (package-install pkg))))
+
+;;
+;; Settings for builtins
+;;
+
+(leaf custom-ignored
+  :doc "ignore custom-file"
+  :tag "builtin" "faces" "help"
+  :custom
+  `((custom-file . ,(locate-user-emacs-file "custom.el"))))
+
+(leaf custom-builtins
+  :doc "define customization properties of builtins"
+  :tag "builtin" "internal"
+  :custom
+  ((dabbrev-case-fold-search . nil)
+   (indent-tabs-mode         . nil)
+   (js-indent-level          . 2)
+   (kill-whole-line          . t)
+   (menu-bar-mode            . nil)
+   (next-line-add-newlines   . nil)
+   (make-backup-files        . nil)
+   (tab-width                . 2)
+   (tool-bar-mode            . nil)
+   ;; Disable to color the selected region
+   (transient-mark-mode      . nil)
+   (visible-bell             . nil))
+  :config
+  (defalias 'yes-or-no-p 'y-or-n-p))
+
+;; https://www.ncaq.net/2020/05/13/21/16/35/
+;; (require 'cl) を見逃す
+(setq byte-compile-warnings '(not cl-functions obsolete))
+;; (require 'cl)
+(require 'cl-lib)
+
+(leaf language
+  :doc "setting for Japanese language environment"
+  :config
+  (set-language-environment "Japanese")
+  (set-default-coding-systems 'utf-8-unix)
+  (prefer-coding-system       'utf-8-unix)
+  (setenv "LANG" "C.UTF-8")
+  (setq default-process-coding-system '(undecided-dos . utf-8-unix))
+  ;; プロセスが出力する文字コードを判定して、process-coding-system の DECODING の設定値を決定する
+  ;; ※ 設定値の car を "undecided-dos" にしておくと、Windows コマンドの出力にも柔軟に対応できます。
+)
 
 ;; Terminal
 (unless (display-graphic-p)
@@ -299,6 +191,13 @@
     ;(setq interprogram-paste-function 'xsel-paste-function)))
     ))
 
+;; Terminal
+(unless (display-graphic-p)
+  ;; Change cursor shape and color by evil state in terminal
+  (require 'evil-terminal-cursor-changer)
+  (evil-terminal-cursor-changer-activate))
+
+
 ;; 日本語入力 emacs-mozc https://w.atwiki.jp/ntemacs/pages/48.html
 (require 'mozc-im)
 (require 'mozc-popup)
@@ -309,7 +208,7 @@
 (setq mozc-candidate-style 'popup)
 ;; カーソルカラーを設定する
 (setq mozc-cursor-color-alist '((direct        . "black") ;"white")
-                                (read-only     . "yellow")
+                                (read-only     . "dim gray") ;"yellow")
                                 (hiragana      . "light green")
                                 (full-katakana . "goldenrod")
                                 (half-ascii    . "dark orchid")
@@ -363,6 +262,44 @@
                        (when (eq (nth 0 args) 'CreateSession)
                          ;; (mozc-session-sendkey '(hiragana)))))
                          (mozc-session-sendkey '(Hankaku/Zenkaku))))))
+
+;; fix window position in WSLg on local zeft machine
+(when (equal (getenv "NAME") "zeft")
+  (defun wsl-set-frame-right ()
+    (interactive)
+    (set-frame-position (selected-frame) 1286 28)
+    (set-frame-size (selected-frame) 136 70)) ; 67 for UDEV Gothic
+  (defun wsl-set-frame-top-right ()
+    (interactive)
+    (set-frame-position (selected-frame) 1286 28)
+    (set-frame-size (selected-frame) 136 34))
+  (defun boox-set-frame ()
+    (interactive)
+    (setq redisplay-dont-pause nil)
+    (set-frame-position (selected-frame) 0 0)
+    (set-frame-size (selected-frame) 108 36))
+  (wsl-set-frame-right))
+  ;(set-background-color "black"))
+
+;; Disable double-buffering on boox
+(modify-all-frames-parameters '((inhibit-double-buffering . t)))
+;(setq inhibit-redisplay t)
+(setq redisplay-dont-pause nil)
+
+(require 'lang)   ;; base extensions
+(require 'lang-python)
+
+;; rsync after save-buffer
+(defun execute-rsync () ;&optional _PRED _ARG)
+  "Execute .rsync script file in the current directory if exists."
+  (interactive)
+  (let ((rsync-file (file-name-concat default-directory ".rsync")))
+    (when (file-exists-p rsync-file)
+      (async-shell-command rsync-file))))
+(advice-add #'save-buffer :after #'execute-rsync)
+(add-to-list 'display-buffer-alist
+             '("*Async Shell Command*" display-buffer-no-window))
+;;             '(shell-command-buffer-name-async display-buffer-no-window))
 
 ;; Appearances
 ;; カーソルの点滅を OFF にする
@@ -500,6 +437,39 @@
     (move-to-column (+ (current-column) cur-col)))
   (run-hooks 'auto-line-hook))
 
+(leaf autorevert
+  :doc "revert buffers when files on disk change"
+  :tag "builtin"
+  :global-minor-mode global-auto-revert-mode)
+
+(leaf modus-themes-emacs
+  :doc "highly accessible and customizable themes"
+  :emacs>= 28
+  :bind (("<f5>" . modus-themes-toggle))
+  :custom
+  ((modus-themes-bold-constructs   . nil)
+   (modus-themes-italic-constructs . t)
+   (modus-themes-region            . '(bg-only no-extend)))
+  :config
+  (require-theme 'modus-themes)
+  (load-theme 'modus-operandi))
+
+(leaf paren
+  :doc "highlight matching paren"
+  :tag "builtin"
+  :custom ((show-paren-delay . 0))
+  :global-minor-mode show-paren-mode)
+
+(leaf uniquify
+  :doc "construct unique buffer names for files with the same base name"
+  :tag "builtin"
+  :custom
+  ((uniquify-buffer-name-style . 'post-forward-angle-brackets)))
+
+;;
+;; Initialize Evil
+;;
+
 ;; evil-collection
 (setq evil-want-C-i-jump nil)
 (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
@@ -623,6 +593,226 @@
             (define-key evil-normal-state-local-map (kbd "A") 'neotree-stretch-toggle)
             (define-key evil-normal-state-local-map (kbd "H") 'neotree-hidden-file-toggle)))
 
+;;
+;; Initialize completions
+;;
+
+;; https://github.com/uwabami/emacs
+;; 補完スタイルにorderlessを利用する
+(leaf orderless
+  :ensure t
+  :custom
+  ((completion-styles . '(orderless))))
+
+(leaf vertico
+  :ensure t
+  :custom
+  ;; 補完候補を最大20行まで表示する
+  ((vertico-count . 20))
+  :bind
+  (:vertico-map (("C-l" . filename-upto-parent)
+                 ;; evil-want-minibuffer対応
+                 ;; C-n/p, jkで選択移動を有効化
+                 ([remap next-window-line] . vertico-next)
+                 ([remap previous-window-line] . vertico-previous)
+                 ([remap evil-complete-next] . vertico-next)
+                 ([remap evil-complete-previous] . vertico-previous)
+                 ([remap evil-paste-pop] . vertico-previous)
+                 ([remap evil-next-line] . vertico-next)
+                 ([remap evil-previous-line] . vertico-previous)
+                 ;; C-f/bで選択ページ送りを有効化
+                 ([remap forward-char] . vertico-scroll-up)
+                 ([remap backward-char] . vertico-scroll-down)
+                 ([remap evil-jump-forward] . vertico-scroll-up)
+                 ([remap evil-jump-backward] . vertico-scroll-down)
+                 ([remap evil-scroll-page-down] . vertico-scroll-up)
+                 ([remap evil-scroll-page-up] . vertico-scroll-down)
+                 ;; RETで選択確定を有効化
+                 ([remap evil-ret] . vertico-exit)
+                 ;; TAB, C-i, C-j: 補完
+                 ("C-j" . vertico-insert)
+                 ))
+  :hook ((after-init-hook . vertico-mode)
+         ;; savehist-modeを使ってVerticoの順番を永続化する
+         (after-init-hook . savehist-mode)))
+
+(defun filename-upto-parent ()
+  "Move to parent directory like \"cd ..\" in find-file."
+  (interactive)
+  (let ((sep (eval-when-compile (regexp-opt '("/" "\\")))))
+    (save-excursion
+      (left-char 1)
+      (when (looking-at-p sep)
+        (delete-char 1)))
+    (save-match-data
+      (when (search-backward-regexp sep nil t)
+        (right-char 1)
+        (filter-buffer-substring (point)
+                                 (save-excursion (end-of-line) (point))
+                                 #'delete)))))
+
+(leaf marginalia
+  :ensure t
+  :hook ((after-init-hook . marginalia-mode)))
+
+(leaf consult :ensure t)
+
+;; 標準コマンドをconsultコマンドに差し替える
+(global-set-key [remap switch-to-buffer] 'consult-buffer)
+(global-set-key [remap goto-line] 'consult-goto-line)
+(setq xref-show-xrefs-function #'consult-xref
+      xref-show-definitions-function #'consult-xref)
+
+;; C-uを付けるとカーソル位置の文字列を使うmy-consult-lineコマンドを定義する
+(defun my-consult-line (&optional at-point)
+  "Consult-line uses things-at-point if set C-u prefix."
+  (interactive "P")
+  (if at-point
+      (consult-line (thing-at-point 'symbol))
+    (consult-line)))
+
+;; C-s（isearch-forward）をmy-consult-lineコマンドに割り当てる
+(global-set-key (kbd "C-s") 'my-consult-line)
+
+;; C-s/C-rで行を移動できるようにする
+(with-eval-after-load 'vertico
+  (define-key vertico-map (kbd "C-r") 'vertico-previous)
+  (define-key vertico-map (kbd "C-s") 'vertico-next))
+
+;; embark-consultを読み込む
+(with-eval-after-load 'consult
+  (with-eval-after-load 'embark
+    (require 'embark-consult)))
+
+;;
+;; Settings for external packages
+;;
+
+;; (leaf company
+;;   :doc "Modular text completion framework"
+;;   :req "emacs-24.3"
+;;   :tag "matching" "convenience" "abbrev" "emacs>=24.3"
+;;   :url "http://company-mode.github.io/"
+;;   :emacs>= 24.3
+;;   :ensure t
+;;   :blackout t
+;;   :leaf-defer nil
+;;   :config
+;;   ;; (add-to-list 'company-backends 'company-yasnippet)
+;;   :bind ((company-active-map
+;;           ("M-n" . nil)
+;;           ("M-p" . nil)
+;;           ("C-s" . company-filter-candidates)
+;;           ("C-n" . company-select-next)
+;;           ("C-p" . company-select-previous)
+;;           ("<tab>" . company-complete-selection))
+;;          (company-search-map
+;;           ("C-n" . company-select-next)
+;;           ("C-p" . company-select-previous)))
+;;   :custom ((company-idle-delay . 0)
+;;            (company-minimum-prefix-length . 1)
+;;            (company-transformers . '(company-sort-by-occurrence))))
+;; ; :global-minor-mode global-company-mode)
+
+;; (leaf eglot
+;;  :ensure t
+;;  :hook ((python-mode-hook . eglot-ensure))
+;;  :require t
+;;  :custom ((eldoc-echo-area-use-multiline-p . nil)))
+;; ; :config
+;; ; (add-to-list 'eglot-server-programs
+;; ;              '(python-mode "pyls")))
+;; ;                "pyls" "-v" "--tcp" "--host" "localhost" "--port" :autoport)))
+
+(leaf flycheck
+  :doc "On-the-fly syntax checking"
+  :emacs>= 24.3
+  :ensure t
+  :bind (("M-n" . flycheck-next-error)
+         ("M-p" . flycheck-previous-error))
+  :custom ((flycheck-emacs-lisp-initialize-packages . t))
+  :hook (emacs-lisp-mode-hook lisp-interaction-mode-hook)
+  :config
+  (leaf flycheck-package
+    :doc "A Flycheck checker for elisp package authors"
+    :ensure t
+    :config
+    (flycheck-package-setup))
+
+  (leaf flycheck-elsa
+    :doc "Flycheck for Elsa."
+    :emacs>= 25
+    :ensure t
+    :config
+    (flycheck-elsa-setup))
+
+  (leaf flymake-diagnostic-at-point
+    :ensure t
+    :after flymake
+    :hook (flymake-mode-hook)
+    :require t)
+  )
+
+(leaf highlight-indent-guides
+  :ensure t
+  :blackout t
+  :hook (((prog-mode-hook yaml-mode-hook) . highlight-indent-guides-mode))
+  :custom ((highlight-indent-guides-method . 'character)
+           (highlight-indent-guides-auto-enabled . t)
+           (highlight-indent-guides-responsive . t)
+           (highlight-indent-guides-character . ?\|)))
+
+(leaf macrostep
+  :ensure t
+  :bind (("C-c e" . macrostep-expand)))
+
+(leaf modus-themes
+  :emacs< 28
+  :ensure t
+  :bind (("<f5>" . modus-themes-toggle))
+  :custom
+  ((modus-themes-bold-constructs   . nil)
+   (modus-themes-italic-constructs . t)
+   (modus-themes-region            . '(bg-only no-extend)))
+  :config
+  (modus-themes-load-themes)
+  (modus-themes-load-operandi))
+
+;; https://zenn.dev/lambdagonbei/articles/0bf693abee6e71
+;; moody
+;; (require 'moody)
+;; (setq x-underline-at-descent-line t)
+;; (moody-replace-mode-line-buffer-identification)
+;; (moody-replace-vc-mode)
+
+;; ;;; lsp-bridge
+;; (defvar-local root_dir "/home/umemoto/distfiles")
+;; (defvar-local lsp-bridge-path (file-name-concat root_dir "lsp-bridge"))
+;; (when (file-directory-p lsp-bridge-path)
+;;   (add-to-list 'load-path lsp-bridge-path)
+;;   (require 'yasnippet)
+;;   (yas-global-mode 1)
+;;   (require 'lsp-bridge)
+;;   (global-lsp-bridge-mode)
+;;   (define-key acm-mode-map (kbd "RET") 'newline)
+
+;;   (unless (display-graphic-p)
+;;     (defvar-local acm-terminal-path (file-name-concat root_dir, "acm-terminal"))
+;;     (when (file-directory-p lsp-bridge-path)
+;;       (add-to-list 'load-path acm-terminal-path)
+;;       (with-eval-after-load 'acm
+;;         (require 'acm-terminal))))
+;;   ;(add-hook 'python-mode-hook 'lsp-bridge-mode)
+;;   ;(setq lsp-bridge-enable-mode-line nil)
+;;   ;(define-key acm-mode-map [remap evil-complete-next] 'acm-select-next)
+;;   ;(define-key acm-mode-map [remap evil-complete-previous] 'acm-select-prev)
+;;   ;(setq acm-candidate-match-function 'orderless-flex)
+;;   ;(setq lsp-bridge-complete-manually t)
+;;   ;(add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-next")
+;;   ;(add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-previous")
+;;   ;(add-to-list 'lsp-bridge-completion-stop-commands "dabbrev-expand")
+;;   )
+
 ;; powerline
 ;; http://shibayu36.hatenablog.com/entry/2014/02/11/160945
 (require 'powerline)
@@ -655,6 +845,70 @@
 (defpowerline powerline-process "")
 (defpowerline powerline-minor-modes minions-mode-line-modes)
 
+(leaf rainbow-delimiters
+  :ensure t
+  :hook
+  ((prog-mode-hook       . rainbow-delimiters-mode)))
+
+(leaf rust-mode
+  :ensure t
+  :custom ((rust-format-on-save . t))
+  :config
+  (leaf cargo
+    :ensure t
+    :commands cargo-minor-mode
+    :hook ((rust-mode-hook . cargo-minor-mode))))
+
+;; (leaf smartparens
+;;   :ensure t
+;;   ;; :hook (after-init-hook . smartparens-global-strict-mode) ; strictモードを有効化
+;;   :require smartparens-config
+;;   :custom ((electric-pair-mode . nil))) ; electirc-pair-modeを無効化
+
+(leaf super-save
+  :ensure t
+  ;; :require t
+  ;; :config
+  ;; (super-save-mode 1)
+  )
+
+(leaf topsy
+  :ensure t
+  :hook (prog-mode-hook . topsy-mode))
+
+(leaf transient-dwim
+  :ensure t
+  :bind (("M-=" . transient-dwim-dispatch)))
+
+(leaf tree-sitter
+  :ensure (t tree-sitter-langs)
+  :require tree-sitter-langs
+  :config
+  (global-tree-sitter-mode)
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+  ;; TSXの対応
+  (tree-sitter-require 'tsx)
+  (add-to-list 'tree-sitter-major-mode-language-alist '(typescript-tsx-mode . tsx))
+  ;; ハイライトの追加
+  (tree-sitter-hl-add-patterns 'tsx
+    [
+     ;; styled.div``
+     (call_expression
+      function: (member_expression
+                 object: (identifier) @function.call
+                 (.eq? @function.call "styled"))
+      arguments: ((template_string) @property.definition
+                  (.offset! @property.definition 0 1 0 -1)))
+     ;; styled(Component)``
+     (call_expression
+      function: (call_expression
+                 function: (identifier) @function.call
+                 (.eq? @function.call "styled"))
+      arguments: ((template_string) @property.definition
+                  (.offset! @property.definition 0 1 0 -1)))
+     ])
+  )
+
 (leaf typescript-mode
   :ensure t
   :init
@@ -662,6 +916,12 @@
   :config
   (add-hook 'typescript-mode-hook (lambda () (setq typescript-indent-level 2)))
   :mode (("\\.tsx\\'" . typescript-tsx-mode)))
+
+(leaf yasnippet
+  :ensure t
+  :init (yas-global-mode 1)
+  :custom
+  ((yas-snippet-dirs . '("`/.emacs.d/yasnippets"))))
 
 ;; ;; web-mode
 ;; (add-to-list 'auto-mode-alist '("\\.?html$" . web-mode))
@@ -700,245 +960,6 @@
 ;;  '(web-mode-html-attr-value-face ((t (:foreground "#D78181"))))
 ;;  '(web-mode-html-tag-face ((t (:foreground "#6AAAEA"))))
 ;;  '(web-mode-server-comment-face ((t (:foreground "#98BF75")))))
-
-
-;; GNU Emacs 27.1
-;; https://ubuntuhandbook.org/index.php/2020/09/install-emacs-27-1-ppa-ubuntu-20-04/
-;; sudo add-apt-repository ppa:kelleyk/emacs
-;; sudo apt update
-;; sudo apt upgrade
-;; sudo apt remove --autoremove emacs-common # remove Emacs 26.3 first
-;; sudo apt install emacs27
-
-;; https://blog.tomoya.dev/posts/a-new-wave-has-arrived-at-emacs/
-;; vertico
-;; consult
-;; marginalia
-;; orderless
-;; embark
-;; embark-consult
-
-;; https://github.com/uwabami/emacs
-;; 補完スタイルにorderlessを利用する
-(leaf orderless
-  :ensure t
-  :custom
-  ((completion-styles . '(orderless))))
-
-(defun filename-upto-parent ()
-  "Move to parent directory like \"cd ..\" in find-file."
-  (interactive)
-  (let ((sep (eval-when-compile (regexp-opt '("/" "\\")))))
-    (save-excursion
-      (left-char 1)
-      (when (looking-at-p sep)
-        (delete-char 1)))
-    (save-match-data
-      (when (search-backward-regexp sep nil t)
-        (right-char 1)
-        (filter-buffer-substring (point)
-                                 (save-excursion (end-of-line) (point))
-                                 #'delete)))))
-
-(leaf vertico
-  :ensure t
-  :custom
-  ;; 補完候補を最大20行まで表示する
-  ((vertico-count . 20))
-  :bind
-  (:vertico-map (("C-l" . filename-upto-parent)
-                 ;; evil-want-minibuffer対応
-                 ;; C-n/p, jkで選択移動を有効化
-                 ([remap next-window-line] . vertico-next)
-                 ([remap previous-window-line] . vertico-previous)
-                 ([remap evil-complete-next] . vertico-next)
-                 ([remap evil-complete-previous] . vertico-previous)
-                 ([remap evil-paste-pop] . vertico-previous)
-                 ([remap evil-next-line] . vertico-next)
-                 ([remap evil-previous-line] . vertico-previous)
-                 ;; C-f/bで選択ページ送りを有効化
-                 ([remap forward-char] . vertico-scroll-up)
-                 ([remap backward-char] . vertico-scroll-down)
-                 ([remap evil-jump-forward] . vertico-scroll-up)
-                 ([remap evil-jump-backward] . vertico-scroll-down)
-                 ([remap evil-scroll-page-down] . vertico-scroll-up)
-                 ([remap evil-scroll-page-up] . vertico-scroll-down)
-                 ;; RETで選択確定を有効化
-                 ([remap evil-ret] . vertico-exit)
-                 ;; TAB, C-i, C-j: 補完
-                 ("C-j" . vertico-insert)
-                 ))
-  :hook ((after-init-hook . vertico-mode)
-         ;; savehist-modeを使ってVerticoの順番を永続化する
-         (after-init-hook . savehist-mode)))
-
-(leaf marginalia
-  :ensure t
-  :hook ((after-init-hook . marginalia-mode)))
-
-(leaf consult
-  :ensure t
-  )
-
-;; 標準コマンドをconsultコマンドに差し替える
-(global-set-key [remap switch-to-buffer] 'consult-buffer)
-(global-set-key [remap goto-line] 'consult-goto-line)
-(setq xref-show-xrefs-function #'consult-xref
-      xref-show-definitions-function #'consult-xref)
-
-;; C-uを付けるとカーソル位置の文字列を使うmy-consult-lineコマンドを定義する
-(defun my-consult-line (&optional at-point)
-  "Consult-line uses things-at-point if set C-u prefix."
-  (interactive "P")
-  (if at-point
-      (consult-line (thing-at-point 'symbol))
-    (consult-line)))
-;; C-s（isearch-forward）をmy-consult-lineコマンドに割り当てる
-(global-set-key (kbd "C-s") 'my-consult-line)
-;; C-s/C-rで行を移動できるようにする
-(with-eval-after-load 'vertico
-  (define-key vertico-map (kbd "C-r") 'vertico-previous)
-  (define-key vertico-map (kbd "C-s") 'vertico-next))
-
-;; embark-consultを読み込む
-(with-eval-after-load 'consult
-  (with-eval-after-load 'embark
-    (require 'embark-consult)))
-
-;; Terminal
-(unless (display-graphic-p)
-  ;; Change cursor shape and color by evil state in terminal
-  (require 'evil-terminal-cursor-changer)
-  (evil-terminal-cursor-changer-activate))
-
-;; topsy
-(require 'topsy)
-(add-hook 'prog-mode-hook #'topsy-mode)
-
-;; https://zenn.dev/lambdagonbei/articles/0bf693abee6e71
-;; moody
-;; (require 'moody)
-;; (setq x-underline-at-descent-line t)
-;; (moody-replace-mode-line-buffer-identification)
-;; (moody-replace-vc-mode)
-
-;; tree-sitter
-;; (require 'tree-sitter)
-;; (require 'tree-sitter-langs)
-;; (global-tree-sitter-mode)
-;; (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
-;; https://zenn.dev/hyakt/articles/6ff892c2edbabb
-(leaf tree-sitter
-  :ensure (t tree-sitter-langs)
-  :require tree-sitter-langs
-  :config
-  (global-tree-sitter-mode)
-  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
-  ;; TSXの対応
-  (tree-sitter-require 'tsx)
-  (add-to-list 'tree-sitter-major-mode-language-alist '(typescript-tsx-mode . tsx))
-  ;; ハイライトの追加
-  (tree-sitter-hl-add-patterns 'tsx
-    [
-     ;; styled.div``
-     (call_expression
-      function: (member_expression
-                 object: (identifier) @function.call
-                 (.eq? @function.call "styled"))
-      arguments: ((template_string) @property.definition
-                  (.offset! @property.definition 0 1 0 -1)))
-     ;; styled(Component)``
-     (call_expression
-      function: (call_expression
-                 function: (identifier) @function.call
-                 (.eq? @function.call "styled"))
-      arguments: ((template_string) @property.definition
-                  (.offset! @property.definition 0 1 0 -1)))
-     ])
-  )
-
-;; fix window position in WSLg on local zeft machine
-(when (equal (getenv "NAME") "zeft")
-  (defun wsl-set-frame-right ()
-    (interactive)
-    (set-frame-position (selected-frame) 1286 28)
-    (set-frame-size (selected-frame) 136 70)) ; 67 for UDEV Gothic
-  (defun wsl-set-frame-top-right ()
-    (interactive)
-    (set-frame-position (selected-frame) 1286 28)
-    (set-frame-size (selected-frame) 136 34))
-  (defun boox-set-frame ()
-    (interactive)
-    (setq redisplay-dont-pause nil)
-    (set-frame-position (selected-frame) 0 0)
-    (set-frame-size (selected-frame) 108 36))
-  (wsl-set-frame-right))
-  ;(set-background-color "black"))
-
-;; Disable double-buffering on boox
-(modify-all-frames-parameters '((inhibit-double-buffering . t)))
-;(setq inhibit-redisplay t)
-(setq redisplay-dont-pause nil)
-
-;; Emacs28
-
-;; ;;; lsp-bridge
-;; (defvar-local root_dir "/home/umemoto/distfiles")
-;; (defvar-local lsp-bridge-path (file-name-concat root_dir "lsp-bridge"))
-;; (when (file-directory-p lsp-bridge-path)
-;;   (add-to-list 'load-path lsp-bridge-path)
-;;   (require 'yasnippet)
-;;   (yas-global-mode 1)
-;;   (require 'lsp-bridge)
-;;   (global-lsp-bridge-mode)
-;;   (define-key acm-mode-map (kbd "RET") 'newline)
-
-;;   (unless (display-graphic-p)
-;;     (defvar-local acm-terminal-path (file-name-concat root_dir, "acm-terminal"))
-;;     (when (file-directory-p lsp-bridge-path)
-;;       (add-to-list 'load-path acm-terminal-path)
-;;       (with-eval-after-load 'acm
-;;         (require 'acm-terminal))))
-;;   ;(add-hook 'python-mode-hook 'lsp-bridge-mode)
-;;   ;(setq lsp-bridge-enable-mode-line nil)
-;;   ;(define-key acm-mode-map [remap evil-complete-next] 'acm-select-next)
-;;   ;(define-key acm-mode-map [remap evil-complete-previous] 'acm-select-prev)
-;;   ;(setq acm-candidate-match-function 'orderless-flex)
-;;   ;(setq lsp-bridge-complete-manually t)
-;;   ;(add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-next")
-;;   ;(add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-previous")
-;;   ;(add-to-list 'lsp-bridge-completion-stop-commands "dabbrev-expand")
-;;   )
-
-(require 'lang)   ;; base extensions
-(require 'lang-python)
-
-;; rsync after save-buffer
-(defun execute-rsync () ;&optional _PRED _ARG)
-  "Execute .rsync script file in the current directory if exists."
-  (interactive)
-  (let ((rsync-file (file-name-concat default-directory ".rsync")))
-    (when (file-exists-p rsync-file)
-      (async-shell-command rsync-file))))
-(advice-add #'save-buffer :after #'execute-rsync)
-(add-to-list 'display-buffer-alist
-             '("*Async Shell Command*" display-buffer-no-window))
-;;             '(shell-command-buffer-name-async display-buffer-no-window))
-
-(leaf rust-mode
-  :ensure t
-  :custom ((rust-format-on-save . t)))
-
-(leaf cargo
-  :ensure t
-  :commands cargo-minor-mode
-  :hook ((rust-mode-hook . cargo-minor-mode)))
-
-(leaf super-save
-  :ensure t
-  :require t
-  :config
-  (super-save-mode 1))
 
 (leaf which-key
   :ensure t
