@@ -4,6 +4,15 @@
 
 ;;; Code:
 
+;;;
+;;; Profiler (start)
+;;;
+
+(defvar enable-profiler nil)
+(when enable-profiler
+  (require 'profiler)
+  (profiler-start 'cpu))
+
 ;; Initialize local emacs-lisp repository
 ;; https://qiita.com/tadsan/items/431899f76f3765892abd
 (let ((default-directory (locate-user-emacs-file "./lisp")))
@@ -328,6 +337,20 @@
 ;; Type backslash instead of yen mark
 (define-key global-map [165] [92]) ;; 165が¥（円マーク） , 92が\（バックスラッシュ）を表す
 
+(leaf startup-performance
+  ;; The default is 800 kilobytes.  Measured in bytes.
+  :custom (gc-cons-threshold . 50000000) ;; 50 megabytes
+  :hook ((emacs-startup-hook . my/display-startup-time))
+  :preface
+  (defun my/display-startup-time ()
+    "Report startup performance."
+    (message
+     "Emacs loaded in %s with %d garbage collections."
+     (format "%.2f seconds"
+             (float-time
+              (time-subtract after-init-time before-init-time)))
+     gcs-done)))
+
 (leaf text-scale
   :doc "Magnify and demagnify texts"
   :custom ((text-scale-mode-step . 1.05)) ;; 1.2
@@ -468,7 +491,7 @@
     ;; (use-file-dialog . nil)
     (menu-bar-mode . nil)
     (tool-bar-mode . nil)
-    (scroll-bar-mode . nil) ;; scroll-bar
+    ;; (scroll-bar-mode . nil) ;; scroll-bar
     (indent-tabs-mode . nil)
     (tab-width . 2)
     ;; disable to color the selected region
@@ -550,6 +573,37 @@
 ;;
 ;; Initialize completions
 ;;
+
+(leaf company
+  :disabled t
+  :doc "Modular text completion framework"
+  :req "emacs-24.3"
+  :tag "matching" "convenience" "abbrev" "emacs>=24.3"
+  :url "http://company-mode.github.io/"
+  :emacs>= 24.3
+  :ensure t
+  :blackout t
+  :leaf-defer nil
+  :config
+  ;; (add-to-list 'company-backends 'company-yasnippet)
+  :bind ((company-active-map
+          ("M-n" . nil)
+          ("M-p" . nil)
+          ("C-s" . company-filter-candidates)
+          ("C-n" . company-select-next)
+          ("C-p" . company-select-previous)
+          ("<tab>" . company-complete-selection))
+         (company-search-map
+          ("C-n" . company-select-next)
+          ("C-p" . company-select-previous)))
+  :custom ((company-idle-delay . 0)
+           (company-minimum-prefix-length . 1)
+           (company-transformers . '(company-sort-by-occurrence)))
+  :global-minor-mode global-company-mode)
+
+(leaf corfu
+  :ensure t
+  :global-minor-mode global-corfu-mode)
 
 (leaf consult :ensure t)
 
@@ -639,7 +693,126 @@
                                  #'delete)))))
 
 ;;
-;; Initialize external packages
+;; lsp: select among eglot, lsp-bridge and lsp-mode
+;;
+
+(leaf pyvenv
+  :disabled t
+  :ensure t
+  :after python-mode
+  :config
+  (pyvenv-mode 1))
+
+;; Note: pyrightconfig.json is required for venv
+(leaf eglot
+  :disabled nil
+  :ensure t
+  :hook ((python-mode-hook . eglot-ensure))
+  :custom ((eldoc-echo-area-use-multiline-p . nil)))
+
+;; Note: disable company, corfu
+(leaf lsp-bridge
+  :disabled t
+  :config
+  (defvar-local root_dir "/home/umemoto/distfiles")
+  (defvar-local lsp-bridge-path (file-name-concat root_dir "lsp-bridge"))
+  (when (file-directory-p lsp-bridge-path)
+    (add-to-list 'load-path lsp-bridge-path)
+    (require 'yasnippet)
+    (yas-global-mode 1)
+    (require 'lsp-bridge)
+    (global-lsp-bridge-mode)
+    (define-key acm-mode-map (kbd "RET") 'newline))
+
+  (unless (display-graphic-p)
+    (defvar-local acm-terminal-path (file-name-concat root_dir, "acm-terminal"))
+    (when (file-directory-p lsp-bridge-path)
+      (add-to-list 'load-path acm-terminal-path)
+      (with-eval-after-load 'acm
+        (require 'acm-terminal))))
+  ;; (add-hook 'python-mode-hook 'lsp-bridge-mode)
+  ;; (setq lsp-bridge-enable-mode-line nil)
+  ;; (define-key acm-mode-map [remap evil-complete-next] 'acm-select-next)
+  ;; (define-key acm-mode-map [remap evil-complete-previous] 'acm-select-prev)
+  ;; (setq acm-candidate-match-function 'orderless-flex)
+  ;; (setq lsp-bridge-complete-manually t)
+  ;; (add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-next")
+  ;; (add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-previous")
+  ;; (add-to-list 'lsp-bridge-completion-stop-commands "dabbrev-expand")
+  )
+
+;; Note: work with corfu, not company
+(leaf lsp-mode
+  :disabled t
+  :ensure t
+  :commands (lsp lsp-deferred)
+  :config
+  :custom ((lsp-keymap-prefix        . "C-c l")
+           (lsp-log-io               . t)
+           (lsp-keep-workspace-alive . nil)
+           (lsp-document-sync-method . 2)
+           (lsp-response-timeout     . 5)
+           (lsp-enable-file-watchers . nil)
+           ;; use corfu instead of company
+           (lsp-completion-provider . :none))
+  :hook (lsp-mode-hook . lsp-headerline-breadcrumb-mode)
+  :init
+  (leaf lsp-ui
+    :ensure t
+    :after lsp-mode
+    :custom ((lsp-ui-doc-enable            . t)
+             (lsp-ui-doc-position          . 'at-point)
+             (lsp-ui-doc-header            . t)
+             (lsp-ui-doc-include-signature . t)
+             (lsp-ui-doc-max-width         . 150)
+             (lsp-ui-doc-max-height        . 30)
+             (lsp-ui-doc-use-childframe    . nil)
+             (lsp-ui-doc-use-webkit        . nil)
+             (lsp-ui-peek-enable           . t)
+             (lsp-ui-peek-peek-height      . 20)
+             (lsp-ui-peek-list-width       . 50))
+    :bind ((lsp-ui-mode-map ([remap xref-find-definitions] .
+                             lsp-ui-peek-find-definitions)
+                            ([remap xref-find-references] .
+                             lsp-ui-peek-find-references))
+           (lsp-mode-map ("C-c s" . lsp-ui-sideline-mode)
+                         ("C-c d" . lsp-ui-doc-mode)))
+    :hook ((lsp-mode-hook . lsp-ui-mode)))
+  :config
+  (leaf lsp-treemacs :ensure t)
+
+  (leaf lsp-pyright
+    :ensure t
+    :custom (lsp-pyright-venv-path . "/home/umemoto")
+    :hook (python-mode-hook . (lambda ()
+                                (require 'lsp-pyright)
+                                (lsp-deferred))))
+
+  (leaf python-mode
+    :ensure t
+    :hook (python-mode-hook . lsp-deferred)
+    :custom
+    ;; NOTE: Set these if Python 3 is called "python3" on your system!
+    ;; (python-shell-interpreter "python3")
+    ;; (dap-python-executable "python3")
+    (dap-python-debugger . 'debugpy)
+    :config
+    (require 'dap-python))
+
+  (leaf dap-mode
+    :commands dap-debug
+    :custom
+    (lsp-enable-dap-auto-configure . nil)
+    :config
+    (dap-ui-mode 1)
+    (require 'dap-node)
+    (dap-node-setup)
+    (general-define-key
+     :keymaps 'lsp-mode-map :prefix lsp-keymap-prefix "d"
+     '(dap-hydra t :wk "debugger"))))
+
+;;
+;; Initialize other external packages
 ;;
 
 (leaf ace-window
@@ -660,44 +833,6 @@
     :ensure t
     :bind
     ([remap zap-to-char] . avy-zap-to-char)))
-
-(leaf company
-  :disabled t
-  :doc "Modular text completion framework"
-  :req "emacs-24.3"
-  :tag "matching" "convenience" "abbrev" "emacs>=24.3"
-  :url "http://company-mode.github.io/"
-  :emacs>= 24.3
-  :ensure t
-  :blackout t
-  :leaf-defer nil
-  :config
-  ;; (add-to-list 'company-backends 'company-yasnippet)
-  :bind ((company-active-map
-          ("M-n" . nil)
-          ("M-p" . nil)
-          ("C-s" . company-filter-candidates)
-          ("C-n" . company-select-next)
-          ("C-p" . company-select-previous)
-          ("<tab>" . company-complete-selection))
-         (company-search-map
-          ("C-n" . company-select-next)
-          ("C-p" . company-select-previous)))
-  :custom ((company-idle-delay . 0)
-           (company-minimum-prefix-length . 1)
-           (company-transformers . '(company-sort-by-occurrence)))
-  :global-minor-mode global-company-mode)
-
-(leaf eglot
-  :disabled t
-  :ensure t
-  :hook ((python-mode-hook . eglot-ensure))
-  :require t
-  :custom ((eldoc-echo-area-use-multiline-p . nil))
-  :config
-  (add-to-list 'eglot-server-programs
-               '(python-mode "pyls")))
-  ;; ("pyls" "-v" "--tcp" "--host" "localhost" "--port" :autoport)))
 
 (leaf flycheck
   :doc "On-the-fly syntax checking"
@@ -755,7 +890,8 @@
 (leaf highlight-indent-guides
   :ensure t
   :blackout t
-  :hook (((prog-mode-hook yaml-mode-hook) . highlight-indent-guides-mode))
+  :hook (((prog-mode-hook yaml-mode-hook)
+          . highlight-indent-guides-mode))
   :custom ((highlight-indent-guides-method . 'character)
            (highlight-indent-guides-auto-enabled . t)
            (highlight-indent-guides-responsive . t)
@@ -791,6 +927,7 @@
   (modus-themes-load-themes)
   (modus-themes-load-operandi))
 
+;; Warning: load-theme hangs!
 (leaf moody
   :disabled t ;; load-theme hangs
   :doc "Tabs and ribbons for the mode line"
@@ -802,74 +939,11 @@
   (moody-replace-vc-mode)
   (moody-replace-eldoc-minibuffer-message-function))
 
-(leaf lsp-bridge
-  :disabled t
-  :config
-  (defvar-local root_dir "/home/umemoto/distfiles")
-  (defvar-local lsp-bridge-path (file-name-concat root_dir "lsp-bridge"))
-  (when (file-directory-p lsp-bridge-path)
-    (add-to-list 'load-path lsp-bridge-path)
-    (require 'yasnippet)
-    (yas-global-mode 1)
-    (require 'lsp-bridge)
-    (global-lsp-bridge-mode)
-    (define-key acm-mode-map (kbd "RET") 'newline))
-
-  (unless (display-graphic-p)
-    (defvar-local acm-terminal-path (file-name-concat root_dir, "acm-terminal"))
-    (when (file-directory-p lsp-bridge-path)
-      (add-to-list 'load-path acm-terminal-path)
-      (with-eval-after-load 'acm
-        (require 'acm-terminal))))
-  ;; (add-hook 'python-mode-hook 'lsp-bridge-mode)
-  ;; (setq lsp-bridge-enable-mode-line nil)
-  ;; (define-key acm-mode-map [remap evil-complete-next] 'acm-select-next)
-  ;; (define-key acm-mode-map [remap evil-complete-previous] 'acm-select-prev)
-  ;; (setq acm-candidate-match-function 'orderless-flex)
-  ;; (setq lsp-bridge-complete-manually t)
-  ;; (add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-next")
-  ;; (add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-previous")
-  ;; (add-to-list 'lsp-bridge-completion-stop-commands "dabbrev-expand")
-  )
-
-(leaf lsp-mode
+(leaf paradox
+  :doc "wrapper of package.el"
   :ensure t
-  :commands (lsp lsp-deferred)
   :config
-  :custom ((lsp-keymap-prefix                  . "C-c l")
-           (lsp-log-io                         . t)
-           (lsp-keep-workspace-alive           . nil)
-           (lsp-document-sync-method           . 2)
-           (lsp-response-timeout               . 5)
-           (lsp-enable-file-watchers           . nil))
-  :hook (lsp-mode-hook . lsp-headerline-breadcrumb-mode)
-  :init (leaf lsp-ui
-          :ensure t
-          :after lsp-mode
-          :custom ((lsp-ui-doc-enable            . t)
-                   (lsp-ui-doc-position          . 'at-point)
-                   (lsp-ui-doc-header            . t)
-                   (lsp-ui-doc-include-signature . t)
-                   (lsp-ui-doc-max-width         . 150)
-                   (lsp-ui-doc-max-height        . 30)
-                   (lsp-ui-doc-use-childframe    . nil)
-                   (lsp-ui-doc-use-webkit        . nil)
-                   (lsp-ui-peek-enable           . t)
-                   (lsp-ui-peek-peek-height      . 20)
-                   (lsp-ui-peek-list-width       . 50))
-          :bind ((lsp-ui-mode-map ([remap xref-find-definitions] .
-                                   lsp-ui-peek-find-definitions)
-                                  ([remap xref-find-references] .
-                                   lsp-ui-peek-find-references))
-                 (lsp-mode-map ("C-c s" . lsp-ui-sideline-mode)
-                               ("C-c d" . lsp-ui-doc-mode)))
-          :hook ((lsp-mode-hook . lsp-ui-mode)))
-  :config
-  (leaf lsp-pyright
-    :ensure t
-    :hook (python-mode-hook . (lambda ()
-                                (require 'lsp-pyright)
-                                (lsp-deferred)))))
+  (paradox-enable))
 
 ;; powerline
 ;; http://shibayu36.hatenablog.com/entry/2014/02/11/160945
@@ -1025,6 +1099,13 @@
   :require t
   :config
   (which-key-mode))
+
+;;
+;; Profiler (end)
+;;
+(when enable-profiler
+  (profiler-report)
+  (profiler-stop))
 
 (provide 'init)
 
