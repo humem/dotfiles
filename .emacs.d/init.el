@@ -15,6 +15,7 @@
 ;; https://github.com/conao3/leaf.el
 ;; https://emacs-jp.github.io/tips/emacs-in-2020
 ;;
+
 (eval-and-compile
   (customize-set-variable
    'package-archives
@@ -45,415 +46,13 @@
 
 (leaf use-package :ensure t :require t)
 
-;; set before loading evil
-(setq evil-want-keybinding nil)
-
-;;
-;; Fetch external packages if not installed
-;; http://qiita.com/hottestseason/items/1e8a46ad1ebcf7d0e11c
-;;
-(defvar installed-package-list
-  '(
-    ace-window
-    avy
-    avy-zap
-    cmake-mode
-    consult
-    consult-flycheck
-    embark-consult
-    csv-mode
-    dockerfile-mode
-    ess
-    evil
-    evil-collection
-    evil-leader
-    evil-surround
-    evil-terminal-cursor-changer
-    exec-path-from-shell
-    flycheck
-    flymake
-    flymake-diagnostic-at-point
-    general
-    helm
-    julia-mode
-    jsonnet-mode
-    lua-mode
-    magit
-    marginalia
-    markdown-mode
-    matlab-mode
-    minions
-    moody
-    mozc
-    mozc-im
-    mozc-popup
-    neotree
-    orderless
-    popwin
-    posframe
-    powerline
-    restart-emacs
-    super-save
-    topsy
-    tree-sitter
-    tree-sitter-langs
-    typescript-mode
-    undo-tree
-    vertico
-    vimrc-mode
-    web-mode
-    which-key
-    yaml-mode
-    yascroll
-    ))
-(let ((not-installed
-       (cl-loop for x in installed-package-list
-                when (not (package-installed-p x)) collect x)))
-  (when not-installed
-    (package-refresh-contents)
-    (dolist (pkg not-installed)
-      (package-install pkg))))
-
-;;
-;; Settings for builtins
-;;
-(leaf cus-edit
-  :doc "prevent custom from updating init file"
-  :custom
-  `((custom-file . ,(locate-user-emacs-file "custom.el"))))
-
-;; (leaf cus-start
-;;   :doc "define customization properties of builtins"
-;;  :preface
-;;   (defun c/redraw-frame nil
-;;     (interactive)
-;;     (redraw-frame))
-;;
-;;   :bind (("M-ESC ESC" . c/redraw-frame))
-;;   :custom '((user-full-name . "Naoya Yamashita")
-;;             (user-mail-address . "conao3@gmail.com")
-;;             (user-login-name . "conao3")
-;;             (create-lockfiles . nil)
-;;             (debug-on-error . t)
-;;             (init-file-debug . t)
-;;             (frame-resize-pixelwise . t)
-;;             (enable-recursive-minibuffers . t)
-;;             (history-length . 1000)
-;;             (history-delete-duplicates . t)
-;;             (scroll-preserve-screen-position . t)
-;;             (scroll-conservatively . 100)
-;;             (mouse-wheel-scroll-amount . '(1 ((control) . 5)))
-;;             (ring-bell-function . 'ignore)
-;;             (text-quoting-style . 'straight)
-;;             (truncate-lines . t)
-;;             ;; (use-dialog-box . nil)
-;;             ;; (use-file-dialog . nil)
-;;             ;; (menu-bar-mode . t)
-;;             ;; (tool-bar-mode . nil)
-;;             (scroll-bar-mode . nil)
-;;             (indent-tabs-mode . nil))
-;;   :config
-;;   (defalias 'yes-or-no-p 'y-or-n-p)
-;;   (keyboard-translate ?\C-h ?\C-?))
-
-(leaf custom-buitins
-  :custom
-  ((blink-cursor-mode        . nil)
-   (byte-compile-warnings    . '(not cl-functions obsolete))
-   (dabbrev-case-fold-search . nil)
-   (desktop-save-mode        . t)
-   (global-display-line-numbers-mode . t)
-   (global-hl-line-mode      . nil)
-   (indent-tabs-mode         . nil)
-   (js-indent-level          . 2)
-   (kill-whole-line          . t)
-   (make-backup-files        . nil)
-   (menu-bar-mode            . nil)
-   (next-line-add-newlines   . nil)
-   (tab-width                . 2)
-   (tool-bar-mode            . nil)
-   ;; disable to color the selected region
-   (transient-mark-mode      . nil)
-   (visible-bell             . nil))
-  :config
-  (defalias 'yes-or-no-p 'y-or-n-p))
-
-;;(require 'cl-lib)
-
-(leaf dired
-  :custom
-  ((dired-dwim-target . t)
-   (dired-guess-shell-alist-user . '(("\\.*" "open")))
-   (dired-listing-switches . "-agho")
-   (dired-use-ls-dired . t)))
-
-(leaf Japanese-language
-  :config
-  (set-language-environment "Japanese")
-  (set-default-coding-systems 'utf-8-unix)
-  (prefer-coding-system       'utf-8-unix)
-  (setenv "LANG" "C.UTF-8")
-  (setq default-process-coding-system '(undecided-dos . utf-8-unix))
-  ;; プロセスが出力する文字コードを判定して、process-coding-system の DECODING の設定値を決定する
-  ;; ※ 設定値の car を "undecided-dos" にしておくと、Windows コマンドの出力にも柔軟に対応できます。
-  ;; デフォルト フォント
-  ;;(set-face-attribute 'default nil :family "PlemolJP35Console")
-  ;;(set-face-attribute 'default nil :family "UDEV Gothic" :height 125)
-  ;;(set-face-attribute 'default nil :family "HackGen35Nerd Console")
-  (set-face-attribute 'default nil :family "HackGenNerd Console" :height 125)
-)
-
-(leaf mode-line
-  :custom
-  ((display-time-string-forms
-    . '(year "-" month "-" day " " dayname " " 24-hours ":" minutes)))
-  :config
-  (column-number-mode)
-  (display-time))
-
-(leaf *mozc
-  :doc "日本語入力 https://w.atwiki.jp/ntemacs/pages/48.html"
-  :custom ((default-input-method . "japanese-mozc-im")
-           (mozc-candidate-style . 'popup))
-  :config
-  (require 'mozc-im)
-  (require 'mozc-popup)
-  (require 'mozc-cursor-color)
-  (require 'wdired)
-  (setq mozc-cursor-color-alist
-        '((direct        . "black") ;"white")
-          (read-only     . "dim gray") ;"yellow")
-          (hiragana      . "light green")
-          (full-katakana . "goldenrod")
-          (half-ascii    . "dark orchid")
-          (full-ascii    . "orchid")
-          (half-katakana . "dark goldenrod")))
-
-  ;; C-\ で IME をトグルする
-  (global-set-key (kbd "C-\\") 'toggle-input-method)
-  (define-key isearch-mode-map (kbd "C-\\") 'isearch-toggle-input-method)
-  (define-key wdired-mode-map (kbd "C-\\") 'toggle-input-method)
-  ;; C-SPC で IME をトグルする
-  (global-set-key (kbd "C-SPC") 'toggle-input-method)
-  (define-key isearch-mode-map (kbd "C-SPC") 'isearch-toggle-input-method)
-  (define-key wdired-mode-map (kbd "C-SPC") 'toggle-input-method)
-  ;; F2 で IME をトグルする
-  (global-set-key (kbd "<f2>") 'toggle-input-method)
-  (define-key isearch-mode-map (kbd "<f2>") 'isearch-toggle-input-method)
-  (define-key wdired-mode-map (kbd "<f2>") 'toggle-input-method)
-  ;; mozc-cursor-color を利用するための対策
-  ;; (defvar mozc-im-mode nil)
-  ;; (make-variable-buffer-local 'mozc-im-mode)
-  (defvar-local mozc-im-mode nil)
-  (add-hook 'mozc-im-activate-hook (lambda () (setq mozc-im-mode t)))
-  (add-hook 'mozc-im-deactivate-hook (lambda () (setq mozc-im-mode nil)))
-  (advice-add 'mozc-cursor-color-update
-              :around (lambda (orig-fun &rest args)
-                        (let ((mozc-mode mozc-im-mode))
-                          (apply orig-fun args))))
-  ;; isearch を利用する前後で IME の状態を維持するための対策
-  (add-hook 'isearch-mode-hook (lambda () (setq im-state mozc-im-mode)))
-  (add-hook 'isearch-mode-end-hook
-            (lambda ()
-              (unless (eq im-state mozc-im-mode)
-                (if im-state
-                    (activate-input-method default-input-method)
-                  (deactivate-input-method)))))
-  ;; wdired 終了時に IME を OFF にする
-  (advice-add 'wdired-finish-edit
-              :after (lambda (&rest args)
-                       (deactivate-input-method)))
-
-  (when (/= (length (getenv "WSL_DISTRO_NAME")) 0)
-    ;; Windows の mozc では、セッション接続直後 directモード になるので hiraganaモード にする
-    (advice-add
-     'mozc-session-execute-command
-     :after (lambda (&rest args)
-              (when (eq (nth 0 args) 'CreateSession)
-                ;; (mozc-session-sendkey '(hiragana)))))
-                (mozc-session-sendkey '(Hankaku/Zenkaku)))))))
-
-(leaf terminal-emacs
-  :doc "settings for terminal emacs"
-  :unless (display-graphic-p)
-  :config
-  ;; Mouse scrolling in terminal emacs
-  ;; activate mouse-based scrolling
-  (xterm-mouse-mode 1)
-  (global-set-key (kbd "<mouse-4>") 'scroll-down-line)
-  (global-set-key (kbd "<mouse-5>") 'scroll-up-line)
-  ;; scroll bar
-  ;(global-yascroll-bar-mode 1)
-  ;(setq yascroll:delay-to-hide nil)
-  ;; sync with x clipboard
-  (when (file-exists-p "/usr/bin/xsel")
-    (defvar env-display "")
-    (when (getenv "TMUX")
-      (setq env-display "env $(tmux showenv DISPLAY) "))
-
-    ;;(setq interprogram-cut-function   'xsel-cut-function)
-    ;;(setq interprogram-paste-function 'xsel-paste-function)
-    ;; use Ctrl+Shift+V to paste with system clipboard
-
-    (defun xsel-cut-function (text &optional _push)
-      (with-temp-buffer
-        (insert text)
-        (call-shell-region (point-min) (point-max)
-                           (concat env-display "xsel -bi"))))
-
-    (defun xsel-paste-function ()
-      (let ((xsel-output
-             (shell-command-to-string
-              (concat env-display "xsel --clipboard --output"))))
-        (unless (string= (car kill-ring) xsel-output)
-          xsel-output )))
-
-    (defun toggle-cut-function ()
-      (interactive)
-      (if (eq interprogram-cut-function 'xsel-cut-function)
-          (setq interprogram-cut-function 'gui-select-text)
-        (setq interprogram-cut-function 'xsel-cut-function)))
-
-    (defun toggle-paste-function ()
-      (interactive)
-      (if (eq interprogram-paste-function 'xsel-paste-function)
-          (setq interprogram-paste-function 'gui-selection-value)
-        (setq interprogram-paste-function 'xsel-paste-function))))
-
-  (leaf evil-terminal-cursor-changer
-    :doc "Change cursor shape and color by evil state in terminal"
-    :ensure t
-    :config
-    (evil-terminal-cursor-changer-activate)))
-
-(leaf WSLg-zeft
-  :doc "fix window position in WSLg on local zeft machine"
-  :when (equal (getenv "NAME") "zeft")
-  ;; :config
-  ;; ;;(set-background-color "black")
-  ;; (wsl-set-frame-right)
-  :preface
-  (defun wsl-set-frame-right ()
-    (interactive)
-    (set-frame-position (selected-frame) 1286 28)
-    (set-frame-size (selected-frame) 136 70)) ; 67 for UDEV Gothic
-
-  (defun wsl-set-frame-top-right ()
-    (interactive)
-    (set-frame-position (selected-frame) 1286 28)
-    (set-frame-size (selected-frame) 136 34))
-
-  (defun boox-set-frame ()
-    (interactive)
-    (setq redisplay-dont-pause nil)
-    (set-frame-position (selected-frame) 0 0)
-    (set-frame-size (selected-frame) 108 36)))
-
-;; ;; Disable double-buffering on boox
-;; (modify-all-frames-parameters '((inhibit-double-buffering . t)))
-;; ;(setq inhibit-redisplay t)
-;; (setq redisplay-dont-pause nil)
-
-;; (require 'lang)   ;; base extensions
-;; (require 'lang-python)
-
-;; ;; フレームの高さを補正する設定
-;; (defun reset-frame-parameter (frame)
-;;   (sleep-for 0.1)
-;;   (set-frame-parameter frame 'height 32))
-;; (add-hook 'after-make-frame-functions #'reset-frame-parameter)
-;; smooth mouse scroll
-;; (setq mouse-wheel-scroll-amount '(1))
-;; M-x whitespace-mode: 空白や改行を表示する
-
-;; tramp hanging
-;; https://gongo.hatenablog.com/entry/2011/11/14/195912
-;(setq vc-handled-backends ())
-
-(leaf save-files
-  :hook
-  ((before-save-hook . delete-trailing-whitespace)
-   (after-save-hook . executable-make-buffer-file-executable-if-script-p))
-  :preface
-  (defun execute-rsync () ;; &optional _PRED _ARG)
-    "Execute .rsync script file in the current directory if exists."
-    (interactive)
-    (let ((rsync-file (file-name-concat default-directory ".rsync")))
-      (when (file-exists-p rsync-file)
-        (async-shell-command rsync-file))))
-
-  (advice-add #'save-buffer :after #'execute-rsync)
-  (add-to-list 'display-buffer-alist
-               ;; '(shell-command-buffer-name-async display-buffer-no-window))
-               '("*Async Shell Command*" display-buffer-no-window)))
-
-;; Key settings
-(global-set-key (kbd "<f5>") 'save-buffer)
-;; Type backslash instead of yen mark
-(define-key global-map [165] [92]) ;; 165が¥（円マーク） , 92が\（バックスラッシュ）を表す
-
-(leaf text-scale
-  :doc "Magnify and demagnify texts"
-  :custom ((text-scale-mode-step . 1.05)) ;; 1.2
-  :bind (("C-+" . (lambda () (interactive) (text-scale-increase 1)))
-         ("C-=" . (lambda () (interactive) (text-scale-increase 1)))
-         ("C--" . (lambda () (interactive) (text-scale-decrease 1)))
-         ("C-0" . (lambda () (interactive) (text-scale-increase 0)))))
-
-(leaf autorevert
-  :doc "revert buffers when files on disk change"
-  :tag "builtin"
-  :global-minor-mode global-auto-revert-mode)
-
-(leaf modus-themes-builtin
-  :doc "highly accessible and customizable themes"
-  :emacs>= 28
-  :custom
-  ((modus-themes-bold-constructs   . nil)
-   (modus-themes-italic-constructs . nil)
-   (modus-themes-region            . '(bg-only no-extend)))
-  :config
-  (require-theme 'modus-themes)
-  (load-theme 'modus-operandi)
-  (global-set-key (kbd "<f5>") 'modus-themes-toggle))
-
-(leaf paren
-  :doc "highlight matching paren"
-  :tag "builtin"
-  :custom ((show-paren-delay . 0))
-  :global-minor-mode show-paren-mode)
-
-(leaf uniquify
-  :custom
-  ((uniquify-buffer-name-style . 'post-forward-angle-brackets)))
-
-(leaf window
-  :bind (("C-;"    . 'other-window-or-split)
-         ("C-]"    . 'other-window-or-split)
-         ("<f8>"   . 'other-window-or-split)
-         ("C-<f8>" . 'other-window-or-split))
-  :preface
-  (defun other-window-or-split ()
-    "Select other window or split window horizontally."
-    (interactive)
-    (when (one-window-p)
-      (split-window-horizontally))
-    (other-window 1)
-    ;; IMEをオフにする
-    (when (fboundp 'mac-toggle-input-method)
-      (mac-toggle-input-method nil)))
-
-  (defun split-side-window ()
-    "Split side window."
-    (interactive)
-    (split-window-horizontally)
-    (split-window-horizontally)
-    (other-window 2)
-    (delete-window)))
-
 ;;
 ;; Initialize Evil
 ;;
+
+;; set before loading evil
+(defvar evil-want-keybinding nil)
+
 (leaf evil
   :ensure t
   :custom (;; restore TAB functionality in org mode
@@ -525,7 +124,7 @@
     "k" 'kill-buffer
     "n" 'display-line-numbers-mode
     "o" 'other-window-or-split
-    "q" 'quit-window
+    "q" 'delete-next-window
     "s" 'save-buffer
     "u" 'undo-tree-visualize
     "x" 'execute-extended-command
@@ -548,13 +147,6 @@
 ;; v Sb: 選択文字列を丸括弧で囲む
 ;; v Sf: 選択文字列を関数形式で囲む
 
-;; ediff
-;; http://qiita.com/l3msh0@github/items/97909d6e2c92af3acc00
-;; コントロール用のバッファを同一フレーム内に表示
-(setq ediff-window-setup-function 'ediff-setup-windows-plain)
-;; diffのバッファを上下ではなく左右に並べる
-(setq ediff-split-window-function 'split-window-horizontally)
-
 ;; NeoTree with evil mode
 (add-hook 'neotree-mode-hook
           (lambda ()
@@ -569,66 +161,384 @@
             (define-key evil-normal-state-local-map (kbd "H") 'neotree-hidden-file-toggle)))
 
 ;;
-;; Initialize completions
+;; Personal enhancements
 ;;
 
-;; https://github.com/uwabami/emacs
-;; 補完スタイルにorderlessを利用する
-(leaf orderless
-  :ensure t
+(leaf japanese
+  :config
+  (set-language-environment "Japanese")
+  (set-default-coding-systems 'utf-8-unix)
+  (prefer-coding-system       'utf-8-unix)
+  (setenv "LANG" "C.UTF-8")
+  (setq default-process-coding-system '(undecided-dos . utf-8-unix))
+  ;; プロセスが出力する文字コードを判定して、process-coding-system の DECODING の設定値を決定する
+  ;; ※ 設定値の car を "undecided-dos" にしておくと、Windows コマンドの出力にも柔軟に対応できます。
+  ;; デフォルト フォント
+  ;;(set-face-attribute 'default nil :family "PlemolJP35Console")
+  ;;(set-face-attribute 'default nil :family "UDEV Gothic" :height 125)
+  ;;(set-face-attribute 'default nil :family "HackGen35Nerd Console")
+  (set-face-attribute 'default nil :family "HackGenNerd Console" :height 125)
+)
+
+(leaf mozc
+  :doc "日本語入力 https://w.atwiki.jp/ntemacs/pages/48.html"
+  :custom ((default-input-method . "japanese-mozc-im")
+           (mozc-candidate-style . 'popup))
+  :config
+  (require 'mozc-im)
+  (require 'mozc-popup)
+  (require 'mozc-cursor-color)
+  (require 'wdired)
+  (setq mozc-cursor-color-alist
+        '((direct        . "black") ;"white")
+          (read-only     . "dim gray") ;"yellow")
+          (hiragana      . "light green")
+          (full-katakana . "goldenrod")
+          (half-ascii    . "dark orchid")
+          (full-ascii    . "orchid")
+          (half-katakana . "dark goldenrod")))
+
+  ;; C-\ で IME をトグルする
+  (global-set-key (kbd "C-\\") 'toggle-input-method)
+  (define-key isearch-mode-map (kbd "C-\\") 'isearch-toggle-input-method)
+  (define-key wdired-mode-map (kbd "C-\\") 'toggle-input-method)
+  ;; C-SPC で IME をトグルする
+  (global-set-key (kbd "C-SPC") 'toggle-input-method)
+  (define-key isearch-mode-map (kbd "C-SPC") 'isearch-toggle-input-method)
+  (define-key wdired-mode-map (kbd "C-SPC") 'toggle-input-method)
+  ;; F2 で IME をトグルする
+  (global-set-key (kbd "<f2>") 'toggle-input-method)
+  (define-key isearch-mode-map (kbd "<f2>") 'isearch-toggle-input-method)
+  (define-key wdired-mode-map (kbd "<f2>") 'toggle-input-method)
+  ;; mozc-cursor-color を利用するための対策
+  ;; (defvar mozc-im-mode nil)
+  ;; (make-variable-buffer-local 'mozc-im-mode)
+  (defvar-local mozc-im-mode nil)
+  (add-hook 'mozc-im-activate-hook (lambda () (setq mozc-im-mode t)))
+  (add-hook 'mozc-im-deactivate-hook (lambda () (setq mozc-im-mode nil)))
+  (advice-add 'mozc-cursor-color-update
+              :around (lambda (orig-fun &rest args)
+                        (let ((mozc-mode mozc-im-mode))
+                          (apply orig-fun args))))
+  ;; isearch を利用する前後で IME の状態を維持するための対策
+  (add-hook 'isearch-mode-hook (lambda () (setq im-state mozc-im-mode)))
+  (add-hook 'isearch-mode-end-hook
+            (lambda ()
+              (unless (eq im-state mozc-im-mode)
+                (if im-state
+                    (activate-input-method default-input-method)
+                  (deactivate-input-method)))))
+  ;; wdired 終了時に IME を OFF にする
+  (advice-add 'wdired-finish-edit
+              :after (lambda (&rest args)
+                       (deactivate-input-method)))
+
+  (when (/= (length (getenv "WSL_DISTRO_NAME")) 0)
+    ;; Windows の mozc では、セッション接続直後 directモード になるので hiraganaモード にする
+    (advice-add
+     'mozc-session-execute-command
+     :after (lambda (&rest args)
+              (when (eq (nth 0 args) 'CreateSession)
+                ;; (mozc-session-sendkey '(hiragana)))))
+                (mozc-session-sendkey '(Hankaku/Zenkaku)))))))
+
+(leaf frame-wslg-zeft
+  :doc "fix window position in WSLg on local zeft machine"
+  :when (equal (getenv "NAME") "zeft")
+  ;; :config
+  ;; ;;(set-background-color "black")
+  ;; (wsl-set-frame-right)
+  :preface
+  (defun wsl-set-frame-right ()
+    (interactive)
+    (set-frame-position (selected-frame) 1286 28)
+    (set-frame-size (selected-frame) 136 70)) ; 67 for UDEV Gothic
+
+  (defun wsl-set-frame-top-right ()
+    (interactive)
+    (set-frame-position (selected-frame) 1286 28)
+    (set-frame-size (selected-frame) 136 34))
+
+  (defun boox-set-frame ()
+    (interactive)
+    (setq redisplay-dont-pause nil)
+    (set-frame-position (selected-frame) 0 0)
+    (set-frame-size (selected-frame) 108 36)))
+
+;; ;; Disable double-buffering on boox
+;; (modify-all-frames-parameters '((inhibit-double-buffering . t)))
+;; ;(setq inhibit-redisplay t)
+;; (setq redisplay-dont-pause nil)
+
+;; (require 'lang)   ;; base extensions
+;; (require 'lang-python)
+
+;; ;; フレームの高さを補正する設定
+;; (defun reset-frame-parameter (frame)
+;;   (sleep-for 0.1)
+;;   (set-frame-parameter frame 'height 32))
+;; (add-hook 'after-make-frame-functions #'reset-frame-parameter)
+;; smooth mouse scroll
+;; (setq mouse-wheel-scroll-amount '(1))
+;; M-x whitespace-mode: 空白や改行を表示する
+
+;; tramp hanging
+;; https://gongo.hatenablog.com/entry/2011/11/14/195912
+;(setq vc-handled-backends ())
+
+(leaf mode-line
   :custom
-  ((completion-styles . '(orderless))))
+  ((display-time-string-forms
+    . '(year "-" month "-" day " " dayname " " 24-hours ":" minutes)))
+  :config
+  (column-number-mode)
+  (display-time))
 
-(leaf vertico
-  :ensure t
+(leaf save-files
+  :hook
+  ((before-save-hook . delete-trailing-whitespace)
+   (after-save-hook . executable-make-buffer-file-executable-if-script-p))
+  :preface
+  (defun execute-rsync () ;; &optional _PRED _ARG)
+    "Execute .rsync script file in the current directory if exists."
+    (interactive)
+    (let ((rsync-file (file-name-concat default-directory ".rsync")))
+      (when (file-exists-p rsync-file)
+        (async-shell-command rsync-file))))
+
+  (advice-add #'save-buffer :after #'execute-rsync)
+  (add-to-list 'display-buffer-alist
+               ;; '(shell-command-buffer-name-async display-buffer-no-window))
+               '("*Async Shell Command*" display-buffer-no-window)))
+
+;; Key settings
+(global-set-key (kbd "<f5>") 'save-buffer)
+;; Type backslash instead of yen mark
+(define-key global-map [165] [92]) ;; 165が¥（円マーク） , 92が\（バックスラッシュ）を表す
+
+(leaf text-scale
+  :doc "Magnify and demagnify texts"
+  :custom ((text-scale-mode-step . 1.05)) ;; 1.2
+  :bind (("C-+" . text-scale-up)
+         ("C-=" . text-scale-up)
+         ("C--" . text-scale-down)
+         ("C-0" . text-scale-reset))
+  :preface
+  (defun text-scale-up ()
+    "Increase the text scale up."
+    (interactive)
+    (text-scale-increase 1))
+
+  (defun text-scale-down ()
+    "Decrease the text scale down."
+    (interactive)
+    (text-scale-decrease 1))
+
+  (defun text-scale-reset ()
+    "Reset the text scale."
+    (interactive)
+    (text-scale-increase 0)))
+
+(leaf terminal-emacs
+  :doc "settings for terminal emacs"
+  :unless (display-graphic-p)
+  :config
+  ;; Mouse scrolling in terminal emacs
+  ;; activate mouse-based scrolling
+  (xterm-mouse-mode 1)
+  (global-set-key (kbd "<mouse-4>") 'scroll-down-line)
+  (global-set-key (kbd "<mouse-5>") 'scroll-up-line)
+  ;; scroll bar
+  ;(global-yascroll-bar-mode 1)
+  ;(setq yascroll:delay-to-hide nil)
+  ;; sync with x clipboard
+  (when (file-exists-p "/usr/bin/xsel")
+    (defvar env-display "")
+    (when (getenv "TMUX")
+      (setq env-display "env $(tmux showenv DISPLAY) "))
+
+    ;;(setq interprogram-cut-function   'xsel-cut-function)
+    ;;(setq interprogram-paste-function 'xsel-paste-function)
+    ;; use Ctrl+Shift+V to paste with system clipboard
+
+    (defun xsel-cut-function (text &optional _push)
+      (with-temp-buffer
+        (insert text)
+        (call-shell-region (point-min) (point-max)
+                           (concat env-display "xsel -bi"))))
+
+    (defun xsel-paste-function ()
+      (let ((xsel-output
+             (shell-command-to-string
+              (concat env-display "xsel --clipboard --output"))))
+        (unless (string= (car kill-ring) xsel-output)
+          xsel-output )))
+
+    (defun toggle-cut-function ()
+      (interactive)
+      (if (eq interprogram-cut-function 'xsel-cut-function)
+          (setq interprogram-cut-function 'gui-select-text)
+        (setq interprogram-cut-function 'xsel-cut-function)))
+
+    (defun toggle-paste-function ()
+      (interactive)
+      (if (eq interprogram-paste-function 'xsel-paste-function)
+          (setq interprogram-paste-function 'gui-selection-value)
+        (setq interprogram-paste-function 'xsel-paste-function))))
+
+  (leaf evil-terminal-cursor-changer
+    :doc "Change cursor shape and color by evil state in terminal"
+    :ensure t
+    :config
+    (evil-terminal-cursor-changer-activate)))
+
+(leaf window
+  :bind (("C-;"    . 'other-window-or-split)
+         ("C-]"    . 'other-window-or-split)
+         ("<f8>"   . 'other-window-or-split)
+         ("C-<f8>" . 'other-window-or-split))
+  :preface
+  (defun other-window-or-split ()
+    "Select other window or split window horizontally."
+    (interactive)
+    (when (one-window-p)
+      (split-window-horizontally))
+    (other-window 1)
+    ;; IMEをオフにする
+    (when (fboundp 'mac-toggle-input-method)
+      (mac-toggle-input-method nil)))
+
+  (defun split-side-window ()
+    "Split side window."
+    (interactive)
+    (split-window-horizontally)
+    (split-window-horizontally)
+    (other-window 2)
+    (delete-window))
+
+  (defun delete-next-window ()
+    "Delete the next window."
+    (interactive)
+    (unless (one-window-p)
+      (other-window 1)
+      (delete-window))))
+
+;;
+;; Customize builtin packages
+;;
+
+(leaf cus-edit
+  :doc "prevent custom from updating init file"
   :custom
-  ;; 補完候補を最大20行まで表示する
-  ((vertico-count . 20))
-  :bind
-  (:vertico-map (("C-l" . filename-upto-parent)
-                 ;; evil-want-minibuffer対応
-                 ;; C-n/p, jkで選択移動を有効化
-                 ([remap next-window-line] . vertico-next)
-                 ([remap previous-window-line] . vertico-previous)
-                 ([remap evil-complete-next] . vertico-next)
-                 ([remap evil-complete-previous] . vertico-previous)
-                 ([remap evil-paste-pop] . vertico-previous)
-                 ([remap evil-next-line] . vertico-next)
-                 ([remap evil-previous-line] . vertico-previous)
-                 ;; C-f/bで選択ページ送りを有効化
-                 ([remap forward-char] . vertico-scroll-up)
-                 ([remap backward-char] . vertico-scroll-down)
-                 ([remap evil-jump-forward] . vertico-scroll-up)
-                 ([remap evil-jump-backward] . vertico-scroll-down)
-                 ([remap evil-scroll-page-down] . vertico-scroll-up)
-                 ([remap evil-scroll-page-up] . vertico-scroll-down)
-                 ;; RETで選択確定を有効化
-                 ([remap evil-ret] . vertico-exit)
-                 ;; TAB, C-i, C-j: 補完
-                 ("C-j" . vertico-insert)
-                 ))
-  :hook ((after-init-hook . vertico-mode)
-         ;; savehist-modeを使ってVerticoの順番を永続化する
-         (after-init-hook . savehist-mode)))
+  `((custom-file . ,(locate-user-emacs-file "custom.el"))))
 
-(defun filename-upto-parent ()
-  "Move to parent directory like \"cd ..\" in find-file."
-  (interactive)
-  (let ((sep (eval-when-compile (regexp-opt '("/" "\\")))))
-    (save-excursion
-      (left-char 1)
-      (when (looking-at-p sep)
-        (delete-char 1)))
-    (save-match-data
-      (when (search-backward-regexp sep nil t)
-        (right-char 1)
-        (filter-buffer-substring (point)
-                                 (save-excursion (end-of-line) (point))
-                                 #'delete)))))
+;; (leaf cus-start
+;;   :doc "define customization properties of builtins"
+;;  :preface
+;;   (defun c/redraw-frame nil
+;;     (interactive)
+;;     (redraw-frame))
+;;
+;;   :bind (("M-ESC ESC" . c/redraw-frame))
+;;   :custom '((user-full-name . "Naoya Yamashita")
+;;             (user-mail-address . "conao3@gmail.com")
+;;             (user-login-name . "conao3")
+;;             (create-lockfiles . nil)
+;;             (debug-on-error . t)
+;;             (init-file-debug . t)
+;;             (frame-resize-pixelwise . t)
+;;             (enable-recursive-minibuffers . t)
+;;             (history-length . 1000)
+;;             (history-delete-duplicates . t)
+;;             (scroll-preserve-screen-position . t)
+;;             (scroll-conservatively . 100)
+;;             (mouse-wheel-scroll-amount . '(1 ((control) . 5)))
+;;             (ring-bell-function . 'ignore)
+;;             (text-quoting-style . 'straight)
+;;             (truncate-lines . t)
+;;             ;; (use-dialog-box . nil)
+;;             ;; (use-file-dialog . nil)
+;;             ;; (menu-bar-mode . t)
+;;             ;; (tool-bar-mode . nil)
+;;             (scroll-bar-mode . nil)
+;;             (indent-tabs-mode . nil))
+;;   :config
+;;   (defalias 'yes-or-no-p 'y-or-n-p)
+;;   (keyboard-translate ?\C-h ?\C-?))
 
-(leaf marginalia
-  :ensure t
-  :hook ((after-init-hook . marginalia-mode)))
+(leaf custom-buitins
+  :custom
+  ((blink-cursor-mode        . nil)
+   (byte-compile-warnings    . '(not cl-functions obsolete))
+   (dabbrev-case-fold-search . nil)
+   (desktop-save-mode        . t)
+   (global-display-line-numbers-mode . t)
+   (global-hl-line-mode      . nil)
+   (indent-tabs-mode         . nil)
+   (js-indent-level          . 2)
+   (kill-whole-line          . t)
+   (make-backup-files        . nil)
+   (menu-bar-mode            . nil)
+   (next-line-add-newlines   . nil)
+   (tab-width                . 2)
+   (tool-bar-mode            . nil)
+   ;; disable to color the selected region
+   (transient-mark-mode      . nil)
+   (visible-bell             . nil))
+  :config
+  (defalias 'yes-or-no-p 'y-or-n-p))
+
+;;(require 'cl-lib)
+
+(leaf autorevert
+  :doc "revert buffers when files on disk change"
+  :tag "builtin"
+  :global-minor-mode global-auto-revert-mode)
+
+(leaf dired
+  :custom
+  ((dired-dwim-target . t)
+   (dired-guess-shell-alist-user . '(("\\.*" "open")))
+   (dired-listing-switches . "-agho")
+   (dired-use-ls-dired . t)))
+
+(leaf ediff
+  :custom
+  ((ediff-window-setup-function . 'ediff-setup-windows-plain)
+   (ediff-split-window-function . 'split-window-horizontally)))
+
+;; (leaf help
+;;   :preface
+;;   (defun my/advice--describe-variable (fn &rest _args)
+;;     (apply fn (variable-at-point)))
+;;   :advice (:around describe-variable
+;;                    my/advice--describe-variable))
+
+(leaf modus-themes-builtin
+  :doc "highly accessible and customizable themes"
+  :emacs>= 28
+  :custom
+  ((modus-themes-bold-constructs   . nil)
+   (modus-themes-italic-constructs . nil)
+   (modus-themes-region            . '(bg-only no-extend)))
+  :config
+  (require-theme 'modus-themes)
+  (load-theme 'modus-operandi)
+  (global-set-key (kbd "<f5>") 'modus-themes-toggle))
+
+(leaf paren
+  :doc "highlight matching paren"
+  :tag "builtin"
+  :custom ((show-paren-delay . 0))
+  :global-minor-mode show-paren-mode)
+
+(leaf uniquify
+  :custom
+  ((uniquify-buffer-name-style . 'post-forward-angle-brackets)))
+
+;;
+;; Initialize completions
+;;
 
 (leaf consult :ensure t)
 
@@ -659,14 +569,72 @@
   (with-eval-after-load 'embark
     (require 'embark-consult)))
 
+(leaf marginalia
+  :ensure t
+  :hook ((after-init-hook . marginalia-mode)))
+
+(leaf orderless
+  :ensure t
+  :custom
+  ((completion-styles . '(orderless))))
+
+(leaf vertico
+  :ensure t
+  :custom
+  ;; 補完候補を最大20行まで表示する
+  ((vertico-count . 20))
+  :bind
+  (:vertico-map
+   (("C-l" . filename-upto-parent)
+    ;; evil-want-minibuffer対応
+    ;; C-n/p, jkで選択移動を有効化
+    ([remap next-window-line] . vertico-next)
+    ([remap previous-window-line] . vertico-previous)
+    ([remap evil-complete-next] . vertico-next)
+    ([remap evil-complete-previous] . vertico-previous)
+    ([remap evil-paste-pop] . vertico-previous)
+    ([remap evil-next-line] . vertico-next)
+    ([remap evil-previous-line] . vertico-previous)
+    ;; C-f/bで選択ページ送りを有効化
+    ([remap forward-char] . vertico-scroll-up)
+    ([remap backward-char] . vertico-scroll-down)
+    ([remap evil-jump-forward] . vertico-scroll-up)
+    ([remap evil-jump-backward] . vertico-scroll-down)
+    ([remap evil-scroll-page-down] . vertico-scroll-up)
+    ([remap evil-scroll-page-up] . vertico-scroll-down)
+    ;; RETで選択確定を有効化
+    ([remap evil-ret] . vertico-exit)
+    ;; TAB, C-i, C-j: 補完
+    ("C-j" . vertico-insert)
+    ))
+  :hook ((after-init-hook . vertico-mode)
+         ;; savehist-modeを使ってVerticoの順番を永続化する
+         (after-init-hook . savehist-mode)))
+
+(defun filename-upto-parent ()
+  "Move to parent directory like \"cd ..\" in find-file."
+  (interactive)
+  (let ((sep (eval-when-compile (regexp-opt '("/" "\\")))))
+    (save-excursion
+      (left-char 1)
+      (when (looking-at-p sep)
+        (delete-char 1)))
+    (save-match-data
+      (when (search-backward-regexp sep nil t)
+        (right-char 1)
+        (filter-buffer-substring
+         (point)
+         (save-excursion (end-of-line) (point))
+                                 #'delete)))))
+
 ;;
-;; Settings for external packages
+;; Initialize external packages
 ;;
 
 (leaf ace-window
   :ensure t
-  :config
-  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+  :custom
+  ((aw-keys . '(?a ?s ?d ?f ?g ?h ?j ?k ?l)))
   :custom-face
   (aw-leading-char-face . '((t (:height 2.0)))))
 
@@ -747,6 +715,30 @@
     :require t)
   )
 
+(leaf go-translate
+  :ensure t
+  :bind (("C-c t" . gts-do-translate))
+  :custom ((gts-translate-list . '(("en" "ja") ("ja" "en"))))
+  :defvar (gts-default-translator gts-translate-list)
+  :preface
+  (defun gts-do-translate-zh-ja ()
+    "Translate zh to ja."
+    (interactive)
+    (let ((tlist gts-translate-list))
+      (setq gts-translate-list '(("zh" "ja")))
+      (gts-do-translate)
+      (setq gts-translate-list tlist)))
+  :config
+  (setq gts-default-translator
+	      (gts-translator
+	       :picker (gts-noprompt-picker)
+	       :engines (list
+		               ;; (gts-deepl-engine
+                   ;;  :auth-key "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:xx" :pro nil) ;; CHANGEME
+		               (gts-google-engine)
+		               (gts-bing-engine))
+ 	       :render (gts-buffer-render))))
+
 (leaf highlight-indent-guides
   :ensure t
   :blackout t
@@ -787,7 +779,7 @@
   (modus-themes-load-operandi))
 
 (leaf moody
-  :disabled t
+  :disabled t ;; load-theme hangs
   :doc "Tabs and ribbons for the mode line"
   :ensure t
   :custom ((x-underline-at-descent-line . t)
@@ -797,16 +789,17 @@
   (moody-replace-vc-mode)
   (moody-replace-eldoc-minibuffer-message-function))
 
-;; ;;; lsp-bridge
-;; (defvar-local root_dir "/home/umemoto/distfiles")
-;; (defvar-local lsp-bridge-path (file-name-concat root_dir "lsp-bridge"))
-;; (when (file-directory-p lsp-bridge-path)
-;;   (add-to-list 'load-path lsp-bridge-path)
-;;   (require 'yasnippet)
-;;   (yas-global-mode 1)
-;;   (require 'lsp-bridge)
-;;   (global-lsp-bridge-mode)
-;;   (define-key acm-mode-map (kbd "RET") 'newline)
+(leaf lsp-bridge
+  :config
+  (defvar-local root_dir "/home/umemoto/distfiles")
+  (defvar-local lsp-bridge-path (file-name-concat root_dir "lsp-bridge"))
+  (when (file-directory-p lsp-bridge-path)
+    (add-to-list 'load-path lsp-bridge-path)
+    (require 'yasnippet)
+    (yas-global-mode 1)
+    (require 'lsp-bridge)
+    (global-lsp-bridge-mode)
+    (define-key acm-mode-map (kbd "RET") 'newline)))
 
 ;;   (unless (display-graphic-p)
 ;;     (defvar-local acm-terminal-path (file-name-concat root_dir, "acm-terminal"))
@@ -871,11 +864,12 @@
     :commands cargo-minor-mode
     :hook ((rust-mode-hook . cargo-minor-mode))))
 
-;; (leaf smartparens
-;;   :ensure t
-;;   ;; :hook (after-init-hook . smartparens-global-strict-mode) ; strictモードを有効化
-;;   :require smartparens-config
-;;   :custom ((electric-pair-mode . nil))) ; electirc-pair-modeを無効化
+(leaf smartparens
+  :disabled t
+  :ensure t
+  ;; :hook (after-init-hook . smartparens-global-strict-mode) ; strictモードを有効化
+  :require smartparens-config
+  :custom ((electric-pair-mode . nil))) ; electirc-pair-modeを無効化
 
 (leaf super-save
   :ensure t
