@@ -16,6 +16,10 @@
 ;; https://emacs-jp.github.io/tips/emacs-in-2020
 ;;
 
+;; Prevent custom from updating init file
+(customize-set-variable 'custom-file
+                        (locate-user-emacs-file "custom.el"))
+
 (eval-and-compile
   (customize-set-variable
    'package-archives
@@ -286,6 +290,14 @@
 ;; https://gongo.hatenablog.com/entry/2011/11/14/195912
 ;(setq vc-handled-backends ())
 
+(leaf help
+  :disabled t
+  :preface
+  (defun my/advice--describe-variable (fn &rest _args)
+    (apply fn (variable-at-point)))
+  :advice (:around describe-variable
+                   my/advice--describe-variable))
+
 (leaf mode-line
   :custom
   ((display-time-string-forms
@@ -308,8 +320,8 @@
 
   (advice-add #'save-buffer :after #'execute-rsync)
   (add-to-list 'display-buffer-alist
-               ;; '(shell-command-buffer-name-async display-buffer-no-window))
-               '("*Async Shell Command*" display-buffer-no-window)))
+               ;; '("*Async Shell Command*" display-buffer-no-window)))
+               `(,shell-command-buffer-name-async display-buffer-no-window)))
 
 ;; Key settings
 (global-set-key (kbd "<f5>") 'save-buffer)
@@ -427,92 +439,87 @@
 ;; Customize builtin packages
 ;;
 
-(leaf cus-edit
-  :doc "prevent custom from updating init file"
-  :custom
-  `((custom-file . ,(locate-user-emacs-file "custom.el"))))
+(leaf cus-start
+  :doc "define customization properties of builtins"
+ :preface
+  (defun c/redraw-frame nil
+    (interactive)
+    (redraw-frame))
 
-;; (leaf cus-start
-;;   :doc "define customization properties of builtins"
-;;  :preface
-;;   (defun c/redraw-frame nil
-;;     (interactive)
-;;     (redraw-frame))
-;;
-;;   :bind (("M-ESC ESC" . c/redraw-frame))
-;;   :custom '((user-full-name . "Naoya Yamashita")
-;;             (user-mail-address . "conao3@gmail.com")
-;;             (user-login-name . "conao3")
-;;             (create-lockfiles . nil)
-;;             (debug-on-error . t)
-;;             (init-file-debug . t)
-;;             (frame-resize-pixelwise . t)
-;;             (enable-recursive-minibuffers . t)
-;;             (history-length . 1000)
-;;             (history-delete-duplicates . t)
-;;             (scroll-preserve-screen-position . t)
-;;             (scroll-conservatively . 100)
-;;             (mouse-wheel-scroll-amount . '(1 ((control) . 5)))
-;;             (ring-bell-function . 'ignore)
-;;             (text-quoting-style . 'straight)
-;;             (truncate-lines . t)
-;;             ;; (use-dialog-box . nil)
-;;             ;; (use-file-dialog . nil)
-;;             ;; (menu-bar-mode . t)
-;;             ;; (tool-bar-mode . nil)
-;;             (scroll-bar-mode . nil)
-;;             (indent-tabs-mode . nil))
-;;   :config
-;;   (defalias 'yes-or-no-p 'y-or-n-p)
-;;   (keyboard-translate ?\C-h ?\C-?))
-
-(leaf custom-buitins
+  :bind (("M-ESC ESC" . c/redraw-frame))
   :custom
-  ((blink-cursor-mode        . nil)
-   (byte-compile-warnings    . '(not cl-functions obsolete))
-   (dabbrev-case-fold-search . nil)
-   (desktop-save-mode        . t)
-   (global-display-line-numbers-mode . t)
-   (global-hl-line-mode      . nil)
-   (indent-tabs-mode         . nil)
-   (js-indent-level          . 2)
-   (kill-whole-line          . t)
-   (make-backup-files        . nil)
-   (menu-bar-mode            . nil)
-   (next-line-add-newlines   . nil)
-   (tab-width                . 2)
-   (tool-bar-mode            . nil)
-   ;; disable to color the selected region
-   (transient-mark-mode      . nil)
-   (visible-bell             . nil))
+  '(;; (user-full-name . "Naoya Yamashita")
+    ;; (user-login-name . "conao3")
+    ;; (user-mail-address . "conao3@gmail.com") ;; startup
+    ;; (create-lockfiles . nil)
+    (debug-on-error . t)
+    (init-file-debug . t) ;; startup
+    (frame-resize-pixelwise . t)
+    (enable-recursive-minibuffers . t)
+    (history-length . 1000)
+    (history-delete-duplicates . t)
+    (scroll-preserve-screen-position . t)
+    (scroll-conservatively . 100)
+    (ring-bell-function . 'ignore)
+    (visible-bell . nil)
+    (text-quoting-style . 'straight)
+    ;; (truncate-lines . t)
+    ;; (use-dialog-box . nil)
+    ;; (use-file-dialog . nil)
+    (menu-bar-mode . nil)
+    (tool-bar-mode . nil)
+    (scroll-bar-mode . nil) ;; scroll-bar
+    (indent-tabs-mode . nil)
+    (tab-width . 2)
+    ;; disable to color the selected region
+    (transient-mark-mode . nil))
   :config
+  ;; (keyboard-translate ?\C-h ?\C-?)
   (defalias 'yes-or-no-p 'y-or-n-p))
-
-;;(require 'cl-lib)
 
 (leaf autorevert
   :doc "revert buffers when files on disk change"
   :tag "builtin"
   :global-minor-mode global-auto-revert-mode)
 
+(leaf bytecomp
+  :custom
+   (byte-compile-warnings . '(not cl-functions obsolete)))
+
+(leaf dabbrev
+  :custom (dabbrev-case-fold-search . nil))
+
+(leaf desktop
+  :custom (desktop-save-mode . t))
+
 (leaf dired
   :custom
   ((dired-dwim-target . t)
-   (dired-guess-shell-alist-user . '(("\\.*" "open")))
    (dired-listing-switches . "-agho")
-   (dired-use-ls-dired . t)))
+   (dired-use-ls-dired . t)
+   ;; dired-x
+   (dired-guess-shell-alist-user . '(("\\.*" "open")))))
 
-(leaf ediff
+(leaf display-line-numbers
+  :global-minor-mode global-display-line-numbers-mode)
+
+(leaf ediff-wind
   :custom
   ((ediff-window-setup-function . 'ediff-setup-windows-plain)
    (ediff-split-window-function . 'split-window-horizontally)))
 
-;; (leaf help
-;;   :preface
-;;   (defun my/advice--describe-variable (fn &rest _args)
-;;     (apply fn (variable-at-point)))
-;;   :advice (:around describe-variable
-;;                    my/advice--describe-variable))
+(leaf files
+  :custom (make-backup-files . nil))
+
+(leaf frame
+  :custom (blink-cursor-mode . nil))
+
+(leaf hl-line
+  :disabled t
+  :global-minor-mode global-hl-line-mode)
+
+(leaf js
+  :custom (js-indent-level . 2))
 
 (leaf modus-themes-builtin
   :doc "highly accessible and customizable themes"
@@ -532,6 +539,10 @@
   :custom ((show-paren-delay . 0))
   :global-minor-mode show-paren-mode)
 
+(leaf simple
+  :custom ((kill-whole-line  . t)
+           (next-line-add-newlines . nil)))
+
 (leaf uniquify
   :custom
   ((uniquify-buffer-name-style . 'post-forward-angle-brackets)))
@@ -550,7 +561,7 @@
 
 ;; C-uを付けるとカーソル位置の文字列を使うmy-consult-lineコマンドを定義する
 (defun my-consult-line (&optional at-point)
-  "Consult-line uses things-at-point if set C-u prefix."
+  "Consult-line thing-at-point if AT-POINT is non-nil."
   (interactive "P")
   (if at-point
       (consult-line (thing-at-point 'symbol))
@@ -650,41 +661,43 @@
     :bind
     ([remap zap-to-char] . avy-zap-to-char)))
 
-;; (leaf company
-;;   :doc "Modular text completion framework"
-;;   :req "emacs-24.3"
-;;   :tag "matching" "convenience" "abbrev" "emacs>=24.3"
-;;   :url "http://company-mode.github.io/"
-;;   :emacs>= 24.3
-;;   :ensure t
-;;   :blackout t
-;;   :leaf-defer nil
-;;   :config
-;;   ;; (add-to-list 'company-backends 'company-yasnippet)
-;;   :bind ((company-active-map
-;;           ("M-n" . nil)
-;;           ("M-p" . nil)
-;;           ("C-s" . company-filter-candidates)
-;;           ("C-n" . company-select-next)
-;;           ("C-p" . company-select-previous)
-;;           ("<tab>" . company-complete-selection))
-;;          (company-search-map
-;;           ("C-n" . company-select-next)
-;;           ("C-p" . company-select-previous)))
-;;   :custom ((company-idle-delay . 0)
-;;            (company-minimum-prefix-length . 1)
-;;            (company-transformers . '(company-sort-by-occurrence))))
-;; ; :global-minor-mode global-company-mode)
+(leaf company
+  :disabled t
+  :doc "Modular text completion framework"
+  :req "emacs-24.3"
+  :tag "matching" "convenience" "abbrev" "emacs>=24.3"
+  :url "http://company-mode.github.io/"
+  :emacs>= 24.3
+  :ensure t
+  :blackout t
+  :leaf-defer nil
+  :config
+  ;; (add-to-list 'company-backends 'company-yasnippet)
+  :bind ((company-active-map
+          ("M-n" . nil)
+          ("M-p" . nil)
+          ("C-s" . company-filter-candidates)
+          ("C-n" . company-select-next)
+          ("C-p" . company-select-previous)
+          ("<tab>" . company-complete-selection))
+         (company-search-map
+          ("C-n" . company-select-next)
+          ("C-p" . company-select-previous)))
+  :custom ((company-idle-delay . 0)
+           (company-minimum-prefix-length . 1)
+           (company-transformers . '(company-sort-by-occurrence)))
+  :global-minor-mode global-company-mode)
 
-;; (leaf eglot
-;;  :ensure t
-;;  :hook ((python-mode-hook . eglot-ensure))
-;;  :require t
-;;  :custom ((eldoc-echo-area-use-multiline-p . nil)))
-;; ; :config
-;; ; (add-to-list 'eglot-server-programs
-;; ;              '(python-mode "pyls")))
-;; ;                "pyls" "-v" "--tcp" "--host" "localhost" "--port" :autoport)))
+(leaf eglot
+  :disabled t
+  :ensure t
+  :hook ((python-mode-hook . eglot-ensure))
+  :require t
+  :custom ((eldoc-echo-area-use-multiline-p . nil))
+  :config
+  (add-to-list 'eglot-server-programs
+               '(python-mode "pyls")))
+  ;; ("pyls" "-v" "--tcp" "--host" "localhost" "--port" :autoport)))
 
 (leaf flycheck
   :doc "On-the-fly syntax checking"
@@ -790,6 +803,7 @@
   (moody-replace-eldoc-minibuffer-message-function))
 
 (leaf lsp-bridge
+  :disabled t
   :config
   (defvar-local root_dir "/home/umemoto/distfiles")
   (defvar-local lsp-bridge-path (file-name-concat root_dir "lsp-bridge"))
@@ -799,24 +813,63 @@
     (yas-global-mode 1)
     (require 'lsp-bridge)
     (global-lsp-bridge-mode)
-    (define-key acm-mode-map (kbd "RET") 'newline)))
+    (define-key acm-mode-map (kbd "RET") 'newline))
 
-;;   (unless (display-graphic-p)
-;;     (defvar-local acm-terminal-path (file-name-concat root_dir, "acm-terminal"))
-;;     (when (file-directory-p lsp-bridge-path)
-;;       (add-to-list 'load-path acm-terminal-path)
-;;       (with-eval-after-load 'acm
-;;         (require 'acm-terminal))))
-;;   ;(add-hook 'python-mode-hook 'lsp-bridge-mode)
-;;   ;(setq lsp-bridge-enable-mode-line nil)
-;;   ;(define-key acm-mode-map [remap evil-complete-next] 'acm-select-next)
-;;   ;(define-key acm-mode-map [remap evil-complete-previous] 'acm-select-prev)
-;;   ;(setq acm-candidate-match-function 'orderless-flex)
-;;   ;(setq lsp-bridge-complete-manually t)
-;;   ;(add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-next")
-;;   ;(add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-previous")
-;;   ;(add-to-list 'lsp-bridge-completion-stop-commands "dabbrev-expand")
-;;   )
+  (unless (display-graphic-p)
+    (defvar-local acm-terminal-path (file-name-concat root_dir, "acm-terminal"))
+    (when (file-directory-p lsp-bridge-path)
+      (add-to-list 'load-path acm-terminal-path)
+      (with-eval-after-load 'acm
+        (require 'acm-terminal))))
+  ;; (add-hook 'python-mode-hook 'lsp-bridge-mode)
+  ;; (setq lsp-bridge-enable-mode-line nil)
+  ;; (define-key acm-mode-map [remap evil-complete-next] 'acm-select-next)
+  ;; (define-key acm-mode-map [remap evil-complete-previous] 'acm-select-prev)
+  ;; (setq acm-candidate-match-function 'orderless-flex)
+  ;; (setq lsp-bridge-complete-manually t)
+  ;; (add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-next")
+  ;; (add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-previous")
+  ;; (add-to-list 'lsp-bridge-completion-stop-commands "dabbrev-expand")
+  )
+
+(leaf lsp-mode
+  :ensure t
+  :commands (lsp lsp-deferred)
+  :config
+  :custom ((lsp-keymap-prefix                  . "C-c l")
+           (lsp-log-io                         . t)
+           (lsp-keep-workspace-alive           . nil)
+           (lsp-document-sync-method           . 2)
+           (lsp-response-timeout               . 5)
+           (lsp-enable-file-watchers           . nil))
+  :hook (lsp-mode-hook . lsp-headerline-breadcrumb-mode)
+  :init (leaf lsp-ui
+          :ensure t
+          :after lsp-mode
+          :custom ((lsp-ui-doc-enable            . t)
+                   (lsp-ui-doc-position          . 'at-point)
+                   (lsp-ui-doc-header            . t)
+                   (lsp-ui-doc-include-signature . t)
+                   (lsp-ui-doc-max-width         . 150)
+                   (lsp-ui-doc-max-height        . 30)
+                   (lsp-ui-doc-use-childframe    . nil)
+                   (lsp-ui-doc-use-webkit        . nil)
+                   (lsp-ui-peek-enable           . t)
+                   (lsp-ui-peek-peek-height      . 20)
+                   (lsp-ui-peek-list-width       . 50))
+          :bind ((lsp-ui-mode-map ([remap xref-find-definitions] .
+                                   lsp-ui-peek-find-definitions)
+                                  ([remap xref-find-references] .
+                                   lsp-ui-peek-find-references))
+                 (lsp-mode-map ("C-c s" . lsp-ui-sideline-mode)
+                               ("C-c d" . lsp-ui-doc-mode)))
+          :hook ((lsp-mode-hook . lsp-ui-mode)))
+  :config
+  (leaf lsp-pyright
+    :ensure t
+    :hook (python-mode-hook . (lambda ()
+                                (require 'lsp-pyright)
+                                (lsp-deferred)))))
 
 ;; powerline
 ;; http://shibayu36.hatenablog.com/entry/2014/02/11/160945
