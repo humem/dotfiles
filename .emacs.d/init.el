@@ -4,12 +4,14 @@
 
 ;;; Code:
 
-;;;
-;;; Profiler (start)
-;;;
+;; Load private settings
+(let ((my-private (locate-user-emacs-file "my-private.el")))
+  (when (file-exists-p my-private)
+    (load my-private)))
 
-(defvar enable-profiler nil)
-(when enable-profiler
+;; Profile startup
+(defvar my/enable-profiler nil)
+(when my/enable-profiler
   (require 'profiler)
   (profiler-start 'cpu))
 
@@ -57,7 +59,7 @@
     :custom ((imenu-list-size     . 30)
              (imenu-list-position . 'left))))
 
-(leaf use-package :ensure t :require t)
+(leaf use-package :ensure t)
 
 ;;
 ;; Initialize Evil
@@ -78,6 +80,7 @@
   (evil-global-set-key 'motion (kbd "S-SPC") 'evil-scroll-page-up)
   (evil-global-set-key 'motion "j" 'evil-next-visual-line)
   (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+  (evil-global-set-key 'motion (kbd "C-]") 'other-window-or-split)
   ;;   (evil-set-initial-state 'messages-buffer-mode 'normal)
   ;;   (evil-set-initial-state 'dashboard-mode 'normal))
 
@@ -105,15 +108,27 @@
       "0" 'evil-beginning-of-line ; 'text-scale-adjust
       ))
 
+  (leaf evil-surround
+    ;; https://blog.3qe.us/entry/2020/05/12/012958
+    ;; b B r a: ) } ] >
+    ;; yswb: 単語を丸括弧で囲む
+    ;; csbB: 丸括弧を大括弧に書き換える
+    ;; dsb: 丸括弧を削除する
+    ;; v Sb: 選択文字列を丸括弧で囲む
+    ;; v Sf: 選択文字列を関数形式で囲む
+    :ensure t
+    :global-minor-mode global-evil-surround-mode)
+
   (leaf undo-tree
     :ensure t
-    :bind ((undo-tree-visualizer-mode-map
+    :after evil
+    :bind ((:undo-tree-visualizer-mode-map
             ([remap evil-previous-visual-line] . 'undo-tree-visualize-undo)
             ([remap evil-next-visual-line]     . 'undo-tree-visualize-redo)))
-    :custom ((undo-tree-auto-save-history . nil))
+    :custom ((undo-tree-auto-save-history . nil)
+             (evil-undo-system . 'undo-tree))
     :config
-    (global-undo-tree-mode)
-    (evil-set-undo-system 'undo-tree)))
+    (global-undo-tree-mode)))
 
 (leaf general
   :ensure t
@@ -126,7 +141,6 @@
 
   (my/leader-keys
     "SPC" 'set-mark-command
-    ";" 'ace-window
     "a" 'avy-goto-char-timer
     "b" 'switch-to-buffer
     "e" 'eval-region
@@ -139,6 +153,7 @@
     "o" 'other-window-or-split
     "q" 'delete-next-window
     "s" 'save-buffer
+    "t" 'gts-do-translate
     "u" 'undo-tree-visualize
     "x" 'execute-extended-command
     "w" 'evil-window-prev
@@ -148,30 +163,28 @@
     "3" 'split-window-horizontally
     "4" 'switch-to-buffer-other-window
     "5" 'split-side-window
+    ";" 'comment-dwim
+    "'" 'ace-window
+    "," 'xref-pop-marker-stack
+    "." 'xref-find-definitions
+    "/" 'xref-find-references
     ))
 
-;; evil-surround
-(global-evil-surround-mode 1)
-;; https://blog.3qe.us/entry/2020/05/12/012958
-;; b B r a: ) } ] >
-;; yswb: 単語を丸括弧で囲む
-;; csbB: 丸括弧を大括弧に書き換える
-;; dsb: 丸括弧を削除する
-;; v Sb: 選択文字列を丸括弧で囲む
-;; v Sf: 選択文字列を関数形式で囲む
-
-;; NeoTree with evil mode
-(add-hook 'neotree-mode-hook
-          (lambda ()
-            (define-key evil-normal-state-local-map (kbd "TAB") 'neotree-enter)
-            (define-key evil-normal-state-local-map (kbd "SPC") 'neotree-quick-look)
-            (define-key evil-normal-state-local-map (kbd "q") 'neotree-hide)
-            (define-key evil-normal-state-local-map (kbd "RET") 'neotree-enter)
-            (define-key evil-normal-state-local-map (kbd "g") 'neotree-refresh)
-            (define-key evil-normal-state-local-map (kbd "n") 'neotree-next-line)
-            (define-key evil-normal-state-local-map (kbd "p") 'neotree-previous-line)
-            (define-key evil-normal-state-local-map (kbd "A") 'neotree-stretch-toggle)
-            (define-key evil-normal-state-local-map (kbd "H") 'neotree-hidden-file-toggle)))
+(leaf neotree
+  :ensure t
+  :config
+  (add-hook
+   'neotree-mode-hook
+   (lambda ()
+     (define-key evil-normal-state-local-map (kbd "RET") 'neotree-enter)
+     (define-key evil-normal-state-local-map (kbd "TAB") 'neotree-enter)
+     (define-key evil-normal-state-local-map (kbd "SPC") 'neotree-quick-look)
+     (define-key evil-normal-state-local-map (kbd "g") 'neotree-refresh)
+     (define-key evil-normal-state-local-map (kbd "n") 'neotree-next-line)
+     (define-key evil-normal-state-local-map (kbd "p") 'neotree-previous-line)
+     (define-key evil-normal-state-local-map (kbd "q") 'neotree-hide)
+     (define-key evil-normal-state-local-map (kbd "A") 'neotree-stretch-toggle)
+     (define-key evil-normal-state-local-map (kbd "H") 'neotree-hidden-file-toggle))))
 
 ;;
 ;; Personal enhancements
@@ -187,52 +200,118 @@
   ;; プロセスが出力する文字コードを判定して、process-coding-system の DECODING の設定値を決定する
   ;; ※ 設定値の car を "undecided-dos" にしておくと、Windows コマンドの出力にも柔軟に対応できます。
   ;; デフォルト フォント
-  ;;(set-face-attribute 'default nil :family "PlemolJP35Console")
-  ;;(set-face-attribute 'default nil :family "UDEV Gothic" :height 125)
-  ;;(set-face-attribute 'default nil :family "HackGen35Nerd Console")
-  (set-face-attribute 'default nil :family "HackGenNerd Console" :height 125)
+  ;; "PlemolJP35Console"
+  ;; "UDEV Gothic"
+  ;; "HackGen35Nerd Console"
+  (defvar my/fonts-family "HackGen35Nerd Console")
+  (defvar my/fonts-height 120)
+  (set-face-attribute
+   'default nil :family my/fonts-family :height my/fonts-height)
 )
+(leaf *mozc
+  :disabled t
+  :ensure t
+  :bind* ("<f2>" . toggle-input-method)
+  :bind ("<f8>" . my:select-mozc-tool)
+  :config
+  (setq default-input-method "japanese-mozc"
+        mozc-helper-program-name "mozc_emacs_helper"
+        mozc-leim-title "♡かな")
+  :preface
+  (defadvice toggle-input-method (around toggle-input-method-around activate)
+    "Input method function in key-chord.el not to be nil."
+    (let ((input-method-function-save input-method-function))
+      ad-do-it
+      (setq input-method-function input-method-function-save)))
+  (defun mozc-insert-str (str)
+    "If punctuation marks, immediately confirm."
+    (mozc-handle-event 'enter)
+    (toggle-input-method)
+    (insert str)
+    (toggle-input-method))
+  (add-hook 'mozc-mode-hook
+            (lambda ()
+              (define-key mozc-mode-map "?" #'(lambda () (interactive) (mozc-insert-str "？")))
+              (define-key mozc-mode-map "," #'(lambda () (interactive) (mozc-insert-str "、")))
+              (define-key mozc-mode-map "." #'(lambda () (interactive) (mozc-insert-str "。")))))
+  :init
+  (leaf mozc-temp
+    :ensure t
+    :bind* ("<henkan>" . mozc-temp-convert))
+  (leaf mozc-cursor-color
+    :el-get iRi-E/mozc-el-extensions
+    :require t
+    :config
+    (setq mozc-cursor-color-alist
+          '((direct . "#BD93F9")
+            (read-only . "#84A0C6")
+            (hiragana . "#CC3333"))))
+  (leaf mozc-cand-posframe
+    :ensure t
+    :require t
+    :config
+    (setq mozc-candidate-style 'posframe)
+    :init
+    (leaf posframe :ensure t)))
+
+
+(leaf *user-mozc-tool
+  :init
+  (defun my:select-mozc-tool ()
+    "Narrow the only espy command in M-x."
+    (interactive)
+    (counsel-M-x "^my:mozc "))
+
+  (defun my:mozc-config-dialog ()
+    "Run the mozc-tool in the background."
+    (interactive)
+    (compile "/usr/lib/mozc/mozc_tool --mode=config_dialog")
+    (delete-other-windows))
+
+  (defun my:mozc-dictionary-tool ()
+    "Run the mozc-tool in the background."
+    (interactive)
+    (compile "/usr/lib/mozc/mozc_tool --mode=dictionary_tool")
+    (delete-other-windows))
+
+  (defun my:mozc-word-regist ()
+    "Run the mozc-tool in the background."
+    (interactive)
+    (compile "/usr/lib/mozc/mozc_tool --mode=word_register_dialog")
+    (delete-other-windows))
+
+  (defun my:mozc-hand-writing ()
+    "Run the mozc-tool in the background."
+    (interactive)
+    (compile "/usr/lib/mozc/mozc_tool --mode=hand_writing")
+    (delete-other-windows)))
 
 (leaf mozc
   :doc "日本語入力 https://w.atwiki.jp/ntemacs/pages/48.html"
+  :require t
   :custom ((default-input-method . "japanese-mozc-im")
+           (mozc-leim-title . "あ")
            (mozc-candidate-style . 'popup))
+  :bind ((("C-\\"  . 'toggle-input-method)
+          ("C-SPC" . 'toggle-input-method)
+          ("<f2>"  . 'toggle-input-method))
+         (isearch-mode-map
+          :package isearch
+          ("C-\\"  . 'toggle-input-method)
+          ("C-SPC" . 'toggle-input-method)
+          ("<f2>"  . 'toggle-input-method))
+         (wdired-mode-map
+          :package wdired
+          ("C-\\"  . 'toggle-input-method)
+          ("C-SPC" . 'toggle-input-method)
+          ("<f2>"  . 'toggle-input-method)))
   :config
-  (require 'mozc-im)
-  (require 'mozc-popup)
-  (require 'mozc-cursor-color)
-  (require 'wdired)
-  (setq mozc-cursor-color-alist
-        '((direct        . "black") ;"white")
-          (read-only     . "dim gray") ;"yellow")
-          (hiragana      . "light green")
-          (full-katakana . "goldenrod")
-          (half-ascii    . "dark orchid")
-          (full-ascii    . "orchid")
-          (half-katakana . "dark goldenrod")))
+  (leaf mozc-im :ensure t :require t)
+  (leaf mozc-popup :ensure t :require t)
 
-  ;; C-\ で IME をトグルする
-  (global-set-key (kbd "C-\\") 'toggle-input-method)
-  (define-key isearch-mode-map (kbd "C-\\") 'isearch-toggle-input-method)
-  (define-key wdired-mode-map (kbd "C-\\") 'toggle-input-method)
-  ;; C-SPC で IME をトグルする
-  (global-set-key (kbd "C-SPC") 'toggle-input-method)
-  (define-key isearch-mode-map (kbd "C-SPC") 'isearch-toggle-input-method)
-  (define-key wdired-mode-map (kbd "C-SPC") 'toggle-input-method)
-  ;; F2 で IME をトグルする
-  (global-set-key (kbd "<f2>") 'toggle-input-method)
-  (define-key isearch-mode-map (kbd "<f2>") 'isearch-toggle-input-method)
-  (define-key wdired-mode-map (kbd "<f2>") 'toggle-input-method)
-  ;; mozc-cursor-color を利用するための対策
-  ;; (defvar mozc-im-mode nil)
-  ;; (make-variable-buffer-local 'mozc-im-mode)
   (defvar-local mozc-im-mode nil)
   (add-hook 'mozc-im-activate-hook (lambda () (setq mozc-im-mode t)))
   (add-hook 'mozc-im-deactivate-hook (lambda () (setq mozc-im-mode nil)))
-  (advice-add 'mozc-cursor-color-update
-              :around (lambda (orig-fun &rest args)
-                        (let ((mozc-mode mozc-im-mode))
-                          (apply orig-fun args))))
   ;; isearch を利用する前後で IME の状態を維持するための対策
   (add-hook 'isearch-mode-hook (lambda () (setq im-state mozc-im-mode)))
   (add-hook 'isearch-mode-end-hook
@@ -245,59 +324,38 @@
   (advice-add 'wdired-finish-edit
               :after (lambda (&rest args)
                        (deactivate-input-method)))
-
+  ;; Windows の mozc では、セッション接続直後 directモード になるので
+  ;; hiraganaモード にする
   (when (/= (length (getenv "WSL_DISTRO_NAME")) 0)
-    ;; Windows の mozc では、セッション接続直後 directモード になるので hiraganaモード にする
     (advice-add
      'mozc-session-execute-command
      :after (lambda (&rest args)
               (when (eq (nth 0 args) 'CreateSession)
                 ;; (mozc-session-sendkey '(hiragana)))))
-                (mozc-session-sendkey '(Hankaku/Zenkaku)))))))
+                (mozc-session-sendkey '(Hankaku/Zenkaku))))))
 
-(leaf frame-wslg-zeft
-  :doc "fix window position in WSLg on local zeft machine"
-  :when (equal (getenv "NAME") "zeft")
-  ;; :config
-  ;; ;;(set-background-color "black")
-  ;; (wsl-set-frame-right)
-  :preface
-  (defun wsl-set-frame-right ()
-    (interactive)
-    (set-frame-position (selected-frame) 1286 28)
-    (set-frame-size (selected-frame) 136 70)) ; 67 for UDEV Gothic
-
-  (defun wsl-set-frame-top-right ()
-    (interactive)
-    (set-frame-position (selected-frame) 1286 28)
-    (set-frame-size (selected-frame) 136 34))
-
-  (defun boox-set-frame ()
-    (interactive)
-    (setq redisplay-dont-pause nil)
-    (set-frame-position (selected-frame) 0 0)
-    (set-frame-size (selected-frame) 108 36)))
-
-;; ;; Disable double-buffering on boox
-;; (modify-all-frames-parameters '((inhibit-double-buffering . t)))
-;; ;(setq inhibit-redisplay t)
-;; (setq redisplay-dont-pause nil)
-
-;; (require 'lang)   ;; base extensions
-;; (require 'lang-python)
-
-;; ;; フレームの高さを補正する設定
-;; (defun reset-frame-parameter (frame)
-;;   (sleep-for 0.1)
-;;   (set-frame-parameter frame 'height 32))
-;; (add-hook 'after-make-frame-functions #'reset-frame-parameter)
-;; smooth mouse scroll
-;; (setq mouse-wheel-scroll-amount '(1))
-;; M-x whitespace-mode: 空白や改行を表示する
-
-;; tramp hanging
-;; https://gongo.hatenablog.com/entry/2011/11/14/195912
-;(setq vc-handled-backends ())
+  (leaf mozc-cursor-color
+    :disabled t
+    :el-get iRi-E/mozc-el-extensions
+    :config
+    (setq mozc-cursor-color-alist
+          '((direct        . "black") ;"white")
+            (read-only     . "dim gray") ;"yellow")
+            (hiragana      . "light green")
+            (full-katakana . "goldenrod")
+            (half-ascii    . "dark orchid")
+            (full-ascii    . "orchid")
+            (half-katakana . "dark goldenrod")))
+    ;; mozc-cursor-color を利用するための対策
+    ;; (defvar mozc-im-mode nil)
+    ;; (make-variable-buffer-local 'mozc-im-mode)
+    (defvar-local mozc-im-mode nil)
+    (add-hook 'mozc-im-activate-hook (lambda () (setq mozc-im-mode t)))
+    (add-hook 'mozc-im-deactivate-hook (lambda () (setq mozc-im-mode nil)))
+    (advice-add 'mozc-cursor-color-update
+                :around (lambda (orig-fun &rest args)
+                          (let ((mozc-mode mozc-im-mode))
+                            (apply orig-fun args))))))
 
 (leaf help
   :disabled t
@@ -354,21 +412,11 @@
 (leaf text-scale
   :doc "Magnify and demagnify texts"
   :custom ((text-scale-mode-step . 1.05)) ;; 1.2
-  :bind (("C-+" . text-scale-up)
-         ("C-=" . text-scale-up)
-         ("C--" . text-scale-down)
+  :bind (("C-+" . text-scale-increase)
+         ("C-=" . text-scale-increase)
+         ("C--" . text-scale-decrease)
          ("C-0" . text-scale-reset))
   :preface
-  (defun text-scale-up ()
-    "Increase the text scale up."
-    (interactive)
-    (text-scale-increase 1))
-
-  (defun text-scale-down ()
-    "Decrease the text scale down."
-    (interactive)
-    (text-scale-decrease 1))
-
   (defun text-scale-reset ()
     "Reset the text scale."
     (interactive)
@@ -427,6 +475,19 @@
     :config
     (evil-terminal-cursor-changer-activate)))
 
+(leaf tramp
+  disabled t
+  :config
+  ;; tramp hanging
+  ;; https://gongo.hatenablog.com/entry/2011/11/14/195912
+  (setq vc-handled-backends ())
+
+  ;; https://holidays-l.hatenadiary.org/entry/20101020/p1
+  (defadvice tramp-handle-vc-registered
+      (around tramp-handle-vc-registered-around activate)
+    ;; '(RCS CVS SVN SCCS Bzr Git Hg Mtn Arch)
+    (let ((vc-handled-backends '(SVN Git))) ad-do-it)))
+
 (leaf window
   :bind (("C-;"    . 'other-window-or-split)
          ("C-]"    . 'other-window-or-split)
@@ -471,11 +532,8 @@
 
   :bind (("M-ESC ESC" . c/redraw-frame))
   :custom
-  '(;; (user-full-name . "Naoya Yamashita")
-    ;; (user-login-name . "conao3")
-    ;; (user-mail-address . "conao3@gmail.com") ;; startup
-    ;; (create-lockfiles . nil)
-    (debug-on-error . t)
+  '(;; (create-lockfiles . nil)
+    ;; (debug-on-error . t)
     (init-file-debug . t) ;; startup
     (frame-resize-pixelwise . t)
     (enable-recursive-minibuffers . t)
@@ -518,7 +576,7 @@
 (leaf dired
   :custom
   ((dired-dwim-target . t)
-   (dired-listing-switches . "-agho")
+   (dired-listing-switches . "-aho")
    (dired-use-ls-dired . t)
    ;; dired-x
    (dired-guess-shell-alist-user . '(("\\.*" "open")))))
@@ -544,18 +602,6 @@
 (leaf js
   :custom (js-indent-level . 2))
 
-(leaf modus-themes-builtin
-  :doc "highly accessible and customizable themes"
-  :emacs>= 28
-  :custom
-  ((modus-themes-bold-constructs   . nil)
-   (modus-themes-italic-constructs . nil)
-   (modus-themes-region            . '(bg-only no-extend)))
-  :config
-  (require-theme 'modus-themes)
-  (load-theme 'modus-operandi)
-  (global-set-key (kbd "<f5>") 'modus-themes-toggle))
-
 (leaf paren
   :doc "highlight matching paren"
   :tag "builtin"
@@ -565,6 +611,19 @@
 (leaf simple
   :custom ((kill-whole-line  . t)
            (next-line-add-newlines . nil)))
+
+(defvar my/modus-themes 'modus-operandi) ;; modus-vivendi
+(leaf themes/modus-themes
+  :doc "highly accessible and customizable themes"
+  :emacs>= 28
+  :custom
+  ((modus-themes-bold-constructs   . nil)
+   (modus-themes-italic-constructs . nil)
+   (modus-themes-region            . '(bg-only no-extend)))
+  :config
+  (require-theme 'modus-themes)
+  (load-theme my/modus-themes)
+  (global-set-key (kbd "<f5>") 'modus-themes-toggle))
 
 (leaf uniquify
   :custom
@@ -602,7 +661,9 @@
   :global-minor-mode global-company-mode)
 
 (leaf corfu
+  :disabled nil
   :ensure t
+  :custom (corfu-auto . t)
   :global-minor-mode global-corfu-mode)
 
 (leaf consult :ensure t)
@@ -695,6 +756,10 @@
 ;;
 ;; lsp: select among eglot, lsp-bridge and lsp-mode
 ;;
+
+(leaf python-mode
+  :ensure t
+  :custom (python-indent-guess-indent-offset-verbose . nil))
 
 (leaf pyvenv
   :disabled t
@@ -800,6 +865,7 @@
     (require 'dap-python))
 
   (leaf dap-mode
+    :ensure t
     :commands dap-debug
     :custom
     (lsp-enable-dap-auto-configure . nil)
@@ -835,6 +901,7 @@
     ([remap zap-to-char] . avy-zap-to-char)))
 
 (leaf flycheck
+  :disabled t
   :doc "On-the-fly syntax checking"
   :emacs>= 24.3
   :ensure t
@@ -854,14 +921,20 @@
     :emacs>= 25
     :ensure t
     :config
-    (flycheck-elsa-setup))
+    (flycheck-elsa-setup)))
 
+(leaf flymake
+  :ensure t
+  :hook (emacs-lisp-mode-hook lisp-interaction-mode-hook)
+  :config
   (leaf flymake-diagnostic-at-point
     :ensure t
     :after flymake
-    :hook (flymake-mode-hook)
-    :require t)
-  )
+    :hook (flymake-mode-hook)))
+
+(leaf git-gutter
+  :ensure t
+  :global-minor-mode global-git-gutter-mode)
 
 (leaf go-translate
   :ensure t
@@ -1013,34 +1086,38 @@
   :ensure t
   :bind (("M-=" . transient-dwim-dispatch)))
 
-(leaf tree-sitter
-  :ensure (t tree-sitter-langs)
-  :require tree-sitter-langs
-  :config
-  (global-tree-sitter-mode)
-  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
-  ;; TSXの対応
-  (tree-sitter-require 'tsx)
-  (add-to-list 'tree-sitter-major-mode-language-alist '(typescript-tsx-mode . tsx))
-  ;; ハイライトの追加
-  (tree-sitter-hl-add-patterns 'tsx
-    [
-     ;; styled.div``
-     (call_expression
-      function: (member_expression
-                 object: (identifier) @function.call
-                 (.eq? @function.call "styled"))
-      arguments: ((template_string) @property.definition
-                  (.offset! @property.definition 0 1 0 -1)))
-     ;; styled(Component)``
-     (call_expression
-      function: (call_expression
-                 function: (identifier) @function.call
-                 (.eq? @function.call "styled"))
-      arguments: ((template_string) @property.definition
-                  (.offset! @property.definition 0 1 0 -1)))
-     ])
-  )
+(leaf tree-sitter :ensure t :leaf-defer t)
+
+(leaf tree-sitter-langs :ensure t :leaf-defer t)
+
+;; (leaf tree-sitter
+;;   :ensure (t tree-sitter-langs)
+;;   :require tree-sitter-langs
+;;   :config
+;;   (global-tree-sitter-mode)
+;;   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+;;   ;; TSXの対応
+;;   (tree-sitter-require 'tsx)
+;;   (add-to-list 'tree-sitter-major-mode-language-alist '(typescript-tsx-mode . tsx))
+;;   ;; ハイライトの追加
+;;   (tree-sitter-hl-add-patterns 'tsx
+;;     [
+;;      ;; styled.div``
+;;      (call_expression
+;;       function: (member_expression
+;;                  object: (identifier) @function.call
+;;                  (.eq? @function.call "styled"))
+;;       arguments: ((template_string) @property.definition
+;;                   (.offset! @property.definition 0 1 0 -1)))
+;;      ;; styled(Component)``
+;;      (call_expression
+;;       function: (call_expression
+;;                  function: (identifier) @function.call
+;;                  (.eq? @function.call "styled"))
+;;       arguments: ((template_string) @property.definition
+;;                   (.offset! @property.definition 0 1 0 -1)))
+;;      ])
+;;   )
 
 (leaf typescript-mode
   :ensure t
@@ -1050,9 +1127,11 @@
   (add-hook 'typescript-mode-hook (lambda () (setq typescript-indent-level 2)))
   :mode (("\\.tsx\\'" . typescript-tsx-mode)))
 
+(leaf yaml-mode :ensure t)
+
 (leaf yasnippet
-  :ensure t
-  :init (yas-global-mode 1))
+  :ensure t)
+  ;; :init (yas-global-mode 1))
   ;; :custom
   ;; ((yas-snippet-dirs . '("`/.emacs.d/yasnippets"))))
 
@@ -1103,7 +1182,7 @@
 ;;
 ;; Profiler (end)
 ;;
-(when enable-profiler
+(when my/enable-profiler
   (profiler-report)
   (profiler-stop))
 
