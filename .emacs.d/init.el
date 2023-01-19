@@ -163,6 +163,7 @@
     "3" 'split-window-horizontally
     "4" 'switch-to-buffer-other-window
     "5" 'split-side-window
+    "=" 'er/expand-region
     ";" 'comment-dwim
     "'" 'ace-window
     "," 'xref-pop-marker-stack
@@ -525,7 +526,7 @@
 
 (leaf cus-start
   :doc "define customization properties of builtins"
- :preface
+  :preface
   (defun c/redraw-frame nil
     (interactive)
     (redraw-frame))
@@ -554,7 +555,7 @@
     (tab-width . 2)
     ;; disable to color the selected region
     (transient-mark-mode . nil))
-  :config
+  :init
   ;; (keyboard-translate ?\C-h ?\C-?)
   (defalias 'yes-or-no-p 'y-or-n-p))
 
@@ -590,7 +591,8 @@
    (ediff-split-window-function . 'split-window-horizontally)))
 
 (leaf files
-  :custom (make-backup-files . nil))
+  :custom ((find-file-visit-truename . t)
+           (make-backup-files . nil)))
 
 (leaf frame
   :custom (blink-cursor-mode . nil))
@@ -628,6 +630,9 @@
 (leaf uniquify
   :custom
   ((uniquify-buffer-name-style . 'post-forward-angle-brackets)))
+
+(leaf vc-hooks
+  :custom (vc-follow-symlinks . t))
 
 ;;
 ;; Initialize completions
@@ -757,16 +762,22 @@
 ;; lsp: select among eglot, lsp-bridge and lsp-mode
 ;;
 
-(leaf python-mode
-  :ensure t
-  :custom (python-indent-guess-indent-offset-verbose . nil))
-
-(leaf pyvenv
-  :disabled t
-  :ensure t
-  :after python-mode
+(leaf python
   :config
-  (pyvenv-mode 1))
+  (leaf python-mode
+    :ensure t
+    :custom (python-indent-guess-indent-offset-verbose . nil))
+
+  (leaf blacken :ensure t)
+
+  (leaf py-isort :ensure t)
+
+  (leaf pyvenv
+    :disabled t
+    :ensure t
+    :after python-mode
+    :config
+    (pyvenv-mode 1)))
 
 ;; Note: pyrightconfig.json is required for venv
 (leaf eglot
@@ -806,7 +817,7 @@
   ;; (add-to-list 'lsp-bridge-completion-stop-commands "dabbrev-expand")
   )
 
-;; Note: work with corfu, not company
+;; Note: work with corfu instead company
 (leaf lsp-mode
   :disabled t
   :ensure t
@@ -900,6 +911,15 @@
     :bind
     ([remap zap-to-char] . avy-zap-to-char)))
 
+(leaf dashboard
+  :ensure t
+  :config
+  (dashboard-setup-startup-hook))
+
+(leaf expand-region
+  :ensure t
+  :bind ("C-=" . er/expand-region))
+
 (leaf flycheck
   :disabled t
   :doc "On-the-fly syntax checking"
@@ -960,6 +980,11 @@
 		               (gts-bing-engine))
  	       :render (gts-buffer-render))))
 
+(leaf hide-mode-line
+  :disabled t
+  :ensure t
+  :hook (neotree-mode-hook imenu-list-minor-mode-hook minimap-mode-hook))
+
 (leaf highlight-indent-guides
   :ensure t
   :blackout t
@@ -1011,6 +1036,17 @@
   (moody-replace-mode-line-buffer-identification)
   (moody-replace-vc-mode)
   (moody-replace-eldoc-minibuffer-message-function))
+
+(leaf mwim
+  :ensure t
+  :bind (("C-a" . 'mwim-beginning)
+         ("C-e" . 'mwim-end))
+  :init
+  (evil-global-set-key 'motion (kbd "C-e") 'mwim-end))
+
+(leaf org-modern
+  :ensure t
+  :global-minor-mode global-org-modern-mode)
 
 (leaf paradox
   :doc "wrapper of package.el"
@@ -1086,9 +1122,13 @@
   :ensure t
   :bind (("M-=" . transient-dwim-dispatch)))
 
-(leaf tree-sitter :ensure t :leaf-defer t)
+(leaf tree-sitter
+  :ensure t
+  :config
+  (global-tree-sitter-mode)
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
 
-(leaf tree-sitter-langs :ensure t :leaf-defer t)
+(leaf tree-sitter-langs :ensure t)
 
 ;; (leaf tree-sitter
 ;;   :ensure (t tree-sitter-langs)
