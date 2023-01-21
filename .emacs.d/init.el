@@ -9,7 +9,7 @@
   (when (file-exists-p my-private)
     (load my-private)))
 
-;; Profile startup
+;; Profiler (start)
 (defvar my/enable-profiler nil)
 (when my/enable-profiler
   (require 'profiler)
@@ -54,10 +54,7 @@
 (leaf leaf
   :config
   (leaf leaf-convert :ensure t)
-  (leaf leaf-tree
-    :ensure t
-    :custom ((imenu-list-size     . 30)
-             (imenu-list-position . 'left))))
+  (leaf leaf-tree :ensure t))
 
 (leaf use-package :ensure t)
 
@@ -66,6 +63,7 @@
 ;;
 
 ;; set before loading evil
+(defvar evil-respect-visual-line-mode t)
 (defvar evil-want-keybinding nil)
 
 (leaf evil
@@ -74,19 +72,23 @@
            (evil-want-C-i-jump   . nil)
            (evil-want-fine-undo  . t)
            (evil-want-minibuffer . t))
+  :global-minor-mode evil-mode
+  :defun evil-global-set-key
   :config
-  (evil-mode 1)
   (evil-global-set-key 'motion (kbd "SPC")   'evil-scroll-page-down)
   (evil-global-set-key 'motion (kbd "S-SPC") 'evil-scroll-page-up)
-  (evil-global-set-key 'motion "j" 'evil-next-visual-line)
-  (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+  (evil-global-set-key 'motion (kbd "<home>") 'evil-goto-first-line)
+  (evil-global-set-key 'motion (kbd "<end>") 'evil-goto-line)
   (evil-global-set-key 'motion (kbd "C-]") 'other-window-or-split)
+  ;; (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+  ;; (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
   ;;   (evil-set-initial-state 'messages-buffer-mode 'normal)
   ;;   (evil-set-initial-state 'dashboard-mode 'normal))
 
   (leaf evil-collection
     :ensure t
-    :custom ((evil-collection-setup-minibuffer . t))
+    :custom (evil-collection-setup-minibuffer . t)
+    :defun evil-collection-define-key
     :config
     (evil-collection-init)
     ;; fix evil-collection-dired-setup
@@ -122,25 +124,22 @@
   (leaf undo-tree
     :ensure t
     :after evil
-    :bind ((:undo-tree-visualizer-mode-map
+    :bind ((undo-tree-visualizer-mode-map
             ([remap evil-previous-visual-line] . 'undo-tree-visualize-undo)
             ([remap evil-next-visual-line]     . 'undo-tree-visualize-redo)))
     :custom ((undo-tree-auto-save-history . nil)
              (evil-undo-system . 'undo-tree))
-    :config
-    (global-undo-tree-mode)))
+    :global-minor-mode global-undo-tree-mode))
 
 (leaf general
   :ensure t
-  ;; :after evil magit
-  :config
+  :defer-config
+  (declare-function my/leader-keys "init")
   (general-create-definer my/leader-keys
     :keymaps '(normal insert visual emacs)
-    :prefix        ","
+    :prefix ","
     :global-prefix "C-,")
-
   (my/leader-keys
-    "SPC" 'set-mark-command
     "a" 'avy-goto-char-timer
     "b" 'switch-to-buffer
     "e" 'eval-region
@@ -156,6 +155,7 @@
     "t" 'gts-do-translate
     "u" 'undo-tree-visualize
     "x" 'execute-extended-command
+    "v" 'visual-line-mode
     "w" 'evil-window-prev
     "0" 'delete-window
     "1" 'delete-other-windows
@@ -169,23 +169,22 @@
     "," 'xref-pop-marker-stack
     "." 'xref-find-definitions
     "/" 'xref-find-references
+    "SPC" 'set-mark-command
     ))
 
 (leaf neotree
   :ensure t
+  :defvar neotree-mode-map
   :config
-  (add-hook
-   'neotree-mode-hook
-   (lambda ()
-     (define-key evil-normal-state-local-map (kbd "RET") 'neotree-enter)
-     (define-key evil-normal-state-local-map (kbd "TAB") 'neotree-enter)
-     (define-key evil-normal-state-local-map (kbd "SPC") 'neotree-quick-look)
-     (define-key evil-normal-state-local-map (kbd "g") 'neotree-refresh)
-     (define-key evil-normal-state-local-map (kbd "n") 'neotree-next-line)
-     (define-key evil-normal-state-local-map (kbd "p") 'neotree-previous-line)
-     (define-key evil-normal-state-local-map (kbd "q") 'neotree-hide)
-     (define-key evil-normal-state-local-map (kbd "A") 'neotree-stretch-toggle)
-     (define-key evil-normal-state-local-map (kbd "H") 'neotree-hidden-file-toggle))))
+  (declare-function evil-define-key "evil-core")
+  (evil-define-key 'normal neotree-mode-map
+    "g" 'neotree-refresh
+    "n" 'neotree-next-line
+    "p" 'neotree-previous-line
+    "q" 'neotree-hide
+    "v" 'neotree-quick-look
+    "A" 'neotree-stretch-toggle
+    "H" 'neotree-hidden-file-toggle))
 
 ;;
 ;; Personal enhancements
@@ -209,122 +208,47 @@
   (set-face-attribute
    'default nil :family my/fonts-family :height my/fonts-height)
 )
-(leaf *mozc
-  :disabled t
-  :ensure t
-  :bind* ("<f2>" . toggle-input-method)
-  :bind ("<f8>" . my:select-mozc-tool)
-  :config
-  (setq default-input-method "japanese-mozc"
-        mozc-helper-program-name "mozc_emacs_helper"
-        mozc-leim-title "♡かな")
-  :preface
-  (defadvice toggle-input-method (around toggle-input-method-around activate)
-    "Input method function in key-chord.el not to be nil."
-    (let ((input-method-function-save input-method-function))
-      ad-do-it
-      (setq input-method-function input-method-function-save)))
-  (defun mozc-insert-str (str)
-    "If punctuation marks, immediately confirm."
-    (mozc-handle-event 'enter)
-    (toggle-input-method)
-    (insert str)
-    (toggle-input-method))
-  (add-hook 'mozc-mode-hook
-            (lambda ()
-              (define-key mozc-mode-map "?" #'(lambda () (interactive) (mozc-insert-str "？")))
-              (define-key mozc-mode-map "," #'(lambda () (interactive) (mozc-insert-str "、")))
-              (define-key mozc-mode-map "." #'(lambda () (interactive) (mozc-insert-str "。")))))
-  :init
-  (leaf mozc-temp
-    :ensure t
-    :bind* ("<henkan>" . mozc-temp-convert))
-  (leaf mozc-cursor-color
-    :el-get iRi-E/mozc-el-extensions
-    :require t
-    :config
-    (setq mozc-cursor-color-alist
-          '((direct . "#BD93F9")
-            (read-only . "#84A0C6")
-            (hiragana . "#CC3333"))))
-  (leaf mozc-cand-posframe
-    :ensure t
-    :require t
-    :config
-    (setq mozc-candidate-style 'posframe)
-    :init
-    (leaf posframe :ensure t)))
-
-
-(leaf *user-mozc-tool
-  :init
-  (defun my:select-mozc-tool ()
-    "Narrow the only espy command in M-x."
-    (interactive)
-    (counsel-M-x "^my:mozc "))
-
-  (defun my:mozc-config-dialog ()
-    "Run the mozc-tool in the background."
-    (interactive)
-    (compile "/usr/lib/mozc/mozc_tool --mode=config_dialog")
-    (delete-other-windows))
-
-  (defun my:mozc-dictionary-tool ()
-    "Run the mozc-tool in the background."
-    (interactive)
-    (compile "/usr/lib/mozc/mozc_tool --mode=dictionary_tool")
-    (delete-other-windows))
-
-  (defun my:mozc-word-regist ()
-    "Run the mozc-tool in the background."
-    (interactive)
-    (compile "/usr/lib/mozc/mozc_tool --mode=word_register_dialog")
-    (delete-other-windows))
-
-  (defun my:mozc-hand-writing ()
-    "Run the mozc-tool in the background."
-    (interactive)
-    (compile "/usr/lib/mozc/mozc_tool --mode=hand_writing")
-    (delete-other-windows)))
 
 (leaf mozc
-  :doc "日本語入力 https://w.atwiki.jp/ntemacs/pages/48.html"
-  :require t
+  :doc "日本語入力"
+  :url "https://w.atwiki.jp/ntemacs/pages/48.html"
+  :ensure t
+  ;; :require t
   :custom ((default-input-method . "japanese-mozc-im")
            (mozc-leim-title . "あ")
            (mozc-candidate-style . 'popup))
   :bind ((("C-\\"  . 'toggle-input-method)
           ("C-SPC" . 'toggle-input-method)
-          ("<f2>"  . 'toggle-input-method))
-         (isearch-mode-map
-          :package isearch
-          ("C-\\"  . 'toggle-input-method)
-          ("C-SPC" . 'toggle-input-method)
-          ("<f2>"  . 'toggle-input-method))
-         (wdired-mode-map
-          :package wdired
-          ("C-\\"  . 'toggle-input-method)
-          ("C-SPC" . 'toggle-input-method)
           ("<f2>"  . 'toggle-input-method)))
-  :config
+         ;; (isearch-mode-map
+         ;;  :package isearch
+         ;;  ("C-\\"  . 'toggle-input-method)
+         ;;  ("C-SPC" . 'toggle-input-method)
+         ;;  ("<f2>"  . 'toggle-input-method))
+         ;; (wdired-mode-map
+         ;;  :package wdired
+         ;;  ("C-\\"  . 'toggle-input-method)
+         ;;  ("C-SPC" . 'toggle-input-method)
+         ;;  ("<f2>"  . 'toggle-input-method)))
+  :defer-config
   (leaf mozc-im :ensure t :require t)
   (leaf mozc-popup :ensure t :require t)
 
-  (defvar-local mozc-im-mode nil)
-  (add-hook 'mozc-im-activate-hook (lambda () (setq mozc-im-mode t)))
-  (add-hook 'mozc-im-deactivate-hook (lambda () (setq mozc-im-mode nil)))
-  ;; isearch を利用する前後で IME の状態を維持するための対策
-  (add-hook 'isearch-mode-hook (lambda () (setq im-state mozc-im-mode)))
-  (add-hook 'isearch-mode-end-hook
-            (lambda ()
-              (unless (eq im-state mozc-im-mode)
-                (if im-state
-                    (activate-input-method default-input-method)
-                  (deactivate-input-method)))))
-  ;; wdired 終了時に IME を OFF にする
-  (advice-add 'wdired-finish-edit
-              :after (lambda (&rest args)
-                       (deactivate-input-method)))
+  ;; (defvar mozc-im-mode nil)
+  ;; (add-hook 'mozc-im-activate-hook (lambda () (setq mozc-im-mode t)))
+  ;; (add-hook 'mozc-im-deactivate-hook (lambda () (setq mozc-im-mode nil)))
+  ;; ;; isearch を利用する前後で IME の状態を維持するための対策
+  ;; (add-hook 'isearch-mode-hook (lambda () (setq im-state mozc-im-mode)))
+  ;; (add-hook 'isearch-mode-end-hook
+  ;;           (lambda ()
+  ;;             (unless (eq im-state mozc-im-mode)
+  ;;               (if im-state
+  ;;                   (activate-input-method default-input-method)
+  ;;                 (deactivate-input-method)))))
+  ;; ;; wdired 終了時に IME を OFF にする
+  ;; (advice-add 'wdired-finish-edit
+  ;;             :after (lambda (&rest args)
+  ;;                      (deactivate-input-method)))
   ;; Windows の mozc では、セッション接続直後 directモード になるので
   ;; hiraganaモード にする
   (when (/= (length (getenv "WSL_DISTRO_NAME")) 0)
@@ -348,23 +272,15 @@
             (full-ascii    . "orchid")
             (half-katakana . "dark goldenrod")))
     ;; mozc-cursor-color を利用するための対策
-    ;; (defvar mozc-im-mode nil)
+    ;; (defvar-local mozc-im-mode nil)
     ;; (make-variable-buffer-local 'mozc-im-mode)
-    (defvar-local mozc-im-mode nil)
+    (defvar mozc-im-mode nil)
     (add-hook 'mozc-im-activate-hook (lambda () (setq mozc-im-mode t)))
     (add-hook 'mozc-im-deactivate-hook (lambda () (setq mozc-im-mode nil)))
     (advice-add 'mozc-cursor-color-update
                 :around (lambda (orig-fun &rest args)
                           (let ((mozc-mode mozc-im-mode))
                             (apply orig-fun args))))))
-
-(leaf help
-  :disabled t
-  :preface
-  (defun my/advice--describe-variable (fn &rest _args)
-    (apply fn (variable-at-point)))
-  :advice (:around describe-variable
-                   my/advice--describe-variable))
 
 (leaf mode-line
   :custom
@@ -374,33 +290,13 @@
   (column-number-mode)
   (display-time))
 
-(leaf save-files
-  :hook
-  ((before-save-hook . delete-trailing-whitespace)
-   (after-save-hook . executable-make-buffer-file-executable-if-script-p))
-  :preface
-  (defun execute-rsync () ;; &optional _PRED _ARG)
-    "Execute .rsync script file in the current directory if exists."
-    (interactive)
-    (let ((rsync-file (file-name-concat default-directory ".rsync")))
-      (when (file-exists-p rsync-file)
-        (async-shell-command rsync-file))))
-
-  (advice-add #'save-buffer :after #'execute-rsync)
-  (add-to-list 'display-buffer-alist
-               ;; '("*Async Shell Command*" display-buffer-no-window)))
-               `(,shell-command-buffer-name-async display-buffer-no-window)))
-
-;; Key settings
-(global-set-key (kbd "<f5>") 'save-buffer)
-;; Type backslash instead of yen mark
-(define-key global-map [165] [92]) ;; 165が¥（円マーク） , 92が\（バックスラッシュ）を表す
+;; ;; Type backslash instead of yen mark
+;; (define-key global-map [165] [92]) ;; 165が¥（円マーク） , 92が\（バックスラッシュ）を表す
 
 (leaf startup-performance
   ;; The default is 800 kilobytes.  Measured in bytes.
-  :custom (gc-cons-threshold . 50000000) ;; 50 megabytes
-  :hook ((emacs-startup-hook . my/display-startup-time))
-  :preface
+  :custom (gc-cons-threshold . `,(* 50 1000 1000)) ;; 50 megabytes
+  :init
   (defun my/display-startup-time ()
     "Report startup performance."
     (message
@@ -408,25 +304,14 @@
      (format "%.2f seconds"
              (float-time
               (time-subtract after-init-time before-init-time)))
-     gcs-done)))
-
-(leaf text-scale
-  :doc "Magnify and demagnify texts"
-  :custom ((text-scale-mode-step . 1.05)) ;; 1.2
-  :bind (("C-+" . text-scale-increase)
-         ("C-=" . text-scale-increase)
-         ("C--" . text-scale-decrease)
-         ("C-0" . text-scale-reset))
-  :preface
-  (defun text-scale-reset ()
-    "Reset the text scale."
-    (interactive)
-    (text-scale-increase 0)))
+     gcs-done))
+  (declare-function my/display-startup-time "init")
+  (add-hook 'emacs-startup-hook #'my/display-startup-time))
 
 (leaf terminal-emacs
   :doc "settings for terminal emacs"
   :unless (display-graphic-p)
-  :config
+  :init
   ;; Mouse scrolling in terminal emacs
   ;; activate mouse-based scrolling
   (xterm-mouse-mode 1)
@@ -476,19 +361,6 @@
     :config
     (evil-terminal-cursor-changer-activate)))
 
-(leaf tramp
-  disabled t
-  :config
-  ;; tramp hanging
-  ;; https://gongo.hatenablog.com/entry/2011/11/14/195912
-  (setq vc-handled-backends ())
-
-  ;; https://holidays-l.hatenadiary.org/entry/20101020/p1
-  (defadvice tramp-handle-vc-registered
-      (around tramp-handle-vc-registered-around activate)
-    ;; '(RCS CVS SVN SCCS Bzr Git Hg Mtn Arch)
-    (let ((vc-handled-backends '(SVN Git))) ad-do-it)))
-
 (leaf window
   :bind (("C-;"    . 'other-window-or-split)
          ("C-]"    . 'other-window-or-split)
@@ -533,9 +405,10 @@
 
   :bind (("M-ESC ESC" . c/redraw-frame))
   :custom
-  '(;; (create-lockfiles . nil)
+  '((auto-save-list-file-prefix . nil) ;; startup.el
+    (create-lockfiles . nil)
     ;; (debug-on-error . t)
-    (init-file-debug . t) ;; startup
+    (init-file-debug . t) ;; startup.el
     (frame-resize-pixelwise . t)
     (enable-recursive-minibuffers . t)
     (history-length . 1000)
@@ -559,6 +432,17 @@
   ;; (keyboard-translate ?\C-h ?\C-?)
   (defalias 'yes-or-no-p 'y-or-n-p))
 
+(leaf ansi-color
+  :hook ((compilation-filter-hook . ansi-color-apply-on-buffer)
+         (eshell-preoutput-filter-functions . ansi-color-apply))
+  :defun ansi-color-apply-on-region
+  :preface
+  (defun ansi-color-apply-on-buffer ()
+    "Enable colors in the buffer."
+    (interactive)
+    (let ((inhibit-read-only t))
+      (ansi-color-apply-on-region (point-min) (point-max)))))
+
 (leaf autorevert
   :doc "revert buffers when files on disk change"
   :tag "builtin"
@@ -572,7 +456,11 @@
   :custom (dabbrev-case-fold-search . nil))
 
 (leaf desktop
-  :custom (desktop-save-mode . t))
+  :custom
+  ((desktop-save-mode . t)
+   ;; TODO: ???
+   (desktop-files-not-to-save
+    . "\\(\\`/[^/:]*:\\|(ftp)\\'\\|\\.gz\\'\\|\\.jpg\\'\\|\\.png\\'\\)")))
 
 (leaf dired
   :custom
@@ -587,12 +475,34 @@
 
 (leaf ediff-wind
   :custom
-  ((ediff-window-setup-function . 'ediff-setup-windows-plain)
-   (ediff-split-window-function . 'split-window-horizontally)))
+  ((ediff-split-window-function . 'split-window-horizontally)
+   (ediff-window-setup-function . 'ediff-setup-windows-plain)))
 
 (leaf files
   :custom ((find-file-visit-truename . t)
-           (make-backup-files . nil)))
+           (make-backup-files . nil))
+  :config
+  (leaf save
+    :init
+    (defun execute-rsync ()
+      "Execute .rsync script file in the current directory if exists."
+      (interactive)
+      (let ((rsync-file
+             (file-name-concat default-directory ".rsync")))
+        (when (file-exists-p rsync-file)
+          (async-shell-command rsync-file))))
+    (declare-function execute-rsync "init")
+    ;; hide the buffer *Async Shell Command*
+    (add-to-list 'display-buffer-alist
+                 `(,shell-command-buffer-name-async
+                   display-buffer-no-window))
+    (add-hook 'before-save-hook
+              ;; simple.el
+              #'delete-trailing-whitespace)
+    (add-hook 'after-save-hook
+              #'execute-rsync
+              ;; executable.el
+              #'executable-make-buffer-file-executable-if-script-p)))
 
 (leaf frame
   :custom (blink-cursor-mode . nil))
@@ -610,9 +520,31 @@
   :custom ((show-paren-delay . 0))
   :global-minor-mode show-paren-mode)
 
+(leaf pixel-scroll
+  :global-minor-mode pixel-scroll-mode)
+
+(leaf recentf
+  :custom
+  (recentf-exclude . '("\\.gz\\'" "\\.jpg\\'" "\\.png\\'"))
+  :global-minor-mode recentf-mode)
+
 (leaf simple
   :custom ((kill-whole-line  . t)
-           (next-line-add-newlines . nil)))
+           (next-line-add-newlines . nil))
+  :global-minor-mode global-visual-line-mode)
+
+(leaf text-scale
+  :doc "Magnify and demagnify texts"
+  :custom (text-scale-mode-step . 1.05) ;; 1.2 ;; face-remap.el
+  :preface
+  (defun text-scale-reset ()
+    "Reset text scale."
+    (interactive)
+    (text-scale-increase 0))
+  :bind (("C-+" . text-scale-increase)
+         ("C-=" . text-scale-increase)
+         ("C--" . text-scale-decrease)
+         ("C-0" . text-scale-reset)))
 
 (defvar my/modus-themes 'modus-operandi) ;; modus-vivendi
 (leaf themes/modus-themes
@@ -627,12 +559,23 @@
   (load-theme my/modus-themes)
   (global-set-key (kbd "<f5>") 'modus-themes-toggle))
 
+(leaf tramp
+  :custom ((tramp-remote-path . '(tramp-own-remote-path))
+           (tramp-verbose . 1)
+           ;; tramp-sh.el
+           (tramp-inline-compress-start-size . 1000)
+           ;; ~/.ssh/config
+           (tramp-use-ssh-controlmaster-options . nil)
+           ;; files.el
+           (remote-file-name-inhibit-locks . t)))
+
 (leaf uniquify
   :custom
   ((uniquify-buffer-name-style . 'post-forward-angle-brackets)))
 
 (leaf vc-hooks
-  :custom (vc-follow-symlinks . t))
+  :custom ((vc-follow-symlinks . t)
+           (vc-handled-backends . '(Git))))
 
 ;;
 ;; Initialize completions
@@ -671,34 +614,28 @@
   :custom (corfu-auto . t)
   :global-minor-mode global-corfu-mode)
 
-(leaf consult :ensure t)
+(leaf consult
+  :ensure t
+  :bind (([remap goto-line] . consult-goto-line)
+         ([remap switch-to-buffer] . consult-buffer)
+         ([remap isearch-forward] . my-consult-line))
+  :defvar xref-show-xrefs-function xref-show-definitions-function
+  :config
+  (setq xref-show-xrefs-function #'consult-xref
+        xref-show-definitions-function #'consult-xref)
+  :preface
+  ;; C-uを付けるとカーソル位置の文字列を使うmy-consult-lineコマンドを定義する
+  (defun my-consult-line (&optional at-point)
+    "Consult-line thing-at-point if AT-POINT is non-nil."
+    (interactive "P")
+    (if at-point
+        (consult-line (thing-at-point 'symbol))
+      (consult-line))))
 
-;; 標準コマンドをconsultコマンドに差し替える
-(global-set-key [remap switch-to-buffer] 'consult-buffer)
-(global-set-key [remap goto-line] 'consult-goto-line)
-(setq xref-show-xrefs-function #'consult-xref
-      xref-show-definitions-function #'consult-xref)
-
-;; C-uを付けるとカーソル位置の文字列を使うmy-consult-lineコマンドを定義する
-(defun my-consult-line (&optional at-point)
-  "Consult-line thing-at-point if AT-POINT is non-nil."
-  (interactive "P")
-  (if at-point
-      (consult-line (thing-at-point 'symbol))
-    (consult-line)))
-
-;; C-s（isearch-forward）をmy-consult-lineコマンドに割り当てる
-(global-set-key (kbd "C-s") 'my-consult-line)
-
-;; C-s/C-rで行を移動できるようにする
-(with-eval-after-load 'vertico
-  (define-key vertico-map (kbd "C-r") 'vertico-previous)
-  (define-key vertico-map (kbd "C-s") 'vertico-next))
-
-;; embark-consultを読み込む
-(with-eval-after-load 'consult
-  (with-eval-after-load 'embark
-    (require 'embark-consult)))
+;; ;; embark-consultを読み込む
+;; (with-eval-after-load 'consult
+;;   (with-eval-after-load 'embark
+;;     (require 'embark-consult)))
 
 (leaf marginalia
   :ensure t
@@ -713,26 +650,31 @@
   :ensure t
   :custom
   ;; 補完候補を最大20行まで表示する
-  ((vertico-count . 20))
+  (vertico-count . 20)
   :bind
   (:vertico-map
    (("C-l" . filename-upto-parent)
+    ;; ;; C-s/C-rで行を移動できるようにする
+    ;; ("C-r" . vertico-previous)
+    ;; ("C-s" . vertico-next)
     ;; evil-want-minibuffer対応
     ;; C-n/p, jkで選択移動を有効化
-    ([remap next-window-line] . vertico-next)
+    ([remap next-window-line]     . vertico-next)
     ([remap previous-window-line] . vertico-previous)
-    ([remap evil-complete-next] . vertico-next)
+    ([remap evil-complete-next]     . vertico-next)
     ([remap evil-complete-previous] . vertico-previous)
-    ([remap evil-paste-pop] . vertico-previous)
-    ([remap evil-next-line] . vertico-next)
+    ([remap evil-paste-pop]     . vertico-previous)
+    ([remap evil-next-line]     . vertico-next)
     ([remap evil-previous-line] . vertico-previous)
+    ([remap evil-next-visual-line]     . vertico-next)
+    ([remap evil-previous-visual-line] . vertico-previous)
     ;; C-f/bで選択ページ送りを有効化
-    ([remap forward-char] . vertico-scroll-up)
+    ([remap forward-char]  . vertico-scroll-up)
     ([remap backward-char] . vertico-scroll-down)
-    ([remap evil-jump-forward] . vertico-scroll-up)
+    ([remap evil-jump-forward]  . vertico-scroll-up)
     ([remap evil-jump-backward] . vertico-scroll-down)
     ([remap evil-scroll-page-down] . vertico-scroll-up)
-    ([remap evil-scroll-page-up] . vertico-scroll-down)
+    ([remap evil-scroll-page-up]   . vertico-scroll-down)
     ;; RETで選択確定を有効化
     ([remap evil-ret] . vertico-exit)
     ;; TAB, C-i, C-j: 補完
@@ -740,23 +682,23 @@
     ))
   :hook ((after-init-hook . vertico-mode)
          ;; savehist-modeを使ってVerticoの順番を永続化する
-         (after-init-hook . savehist-mode)))
-
-(defun filename-upto-parent ()
-  "Move to parent directory like \"cd ..\" in find-file."
-  (interactive)
-  (let ((sep (eval-when-compile (regexp-opt '("/" "\\")))))
-    (save-excursion
-      (left-char 1)
-      (when (looking-at-p sep)
-        (delete-char 1)))
-    (save-match-data
-      (when (search-backward-regexp sep nil t)
-        (right-char 1)
-        (filter-buffer-substring
-         (point)
-         (save-excursion (end-of-line) (point))
-                                 #'delete)))))
+         (after-init-hook . savehist-mode))
+  :preface
+  (defun filename-upto-parent ()
+    "Move to parent directory like \"cd ..\" in find-file."
+    (interactive)
+    (let ((sep (eval-when-compile (regexp-opt '("/" "\\")))))
+      (save-excursion
+        (left-char 1)
+        (when (looking-at-p sep)
+          (delete-char 1)))
+      (save-match-data
+        (when (search-backward-regexp sep nil t)
+          (right-char 1)
+          (filter-buffer-substring
+           (point)
+           (save-excursion (end-of-line) (point))
+           #'delete))))))
 
 ;;
 ;; lsp: select among eglot, lsp-bridge and lsp-mode
@@ -773,35 +715,33 @@
   (leaf py-isort :ensure t)
 
   (leaf pyvenv
-    :disabled t
+    :disabled nil
     :ensure t
-    :after python-mode
-    :config
-    (pyvenv-mode 1)))
+    :hook (python-mode-hook . pyvenv-mode)))
 
-;; Note: pyrightconfig.json is required for venv
+;; ??Note: pyrightconfig.json is required for venv
 (leaf eglot
   :disabled nil
   :ensure t
   :hook ((python-mode-hook . eglot-ensure))
   :custom ((eldoc-echo-area-use-multiline-p . nil)))
 
-;; Note: disable company, corfu
+;; Note: company and corfu should be disabled; acm is used
 (leaf lsp-bridge
   :disabled t
   :config
-  (defvar-local root_dir "/home/umemoto/distfiles")
-  (defvar-local lsp-bridge-path (file-name-concat root_dir "lsp-bridge"))
+  (defvar root_dir (file-name-concat (getenv "HOME") "distfiles"))
+  (defvar lsp-bridge-path (file-name-concat root_dir "lsp-bridge"))
   (when (file-directory-p lsp-bridge-path)
     (add-to-list 'load-path lsp-bridge-path)
-    (require 'yasnippet)
-    (yas-global-mode 1)
+    ;; (require 'yasnippet)
+    ;; (yas-global-mode 1)
     (require 'lsp-bridge)
     (global-lsp-bridge-mode)
     (define-key acm-mode-map (kbd "RET") 'newline))
 
   (unless (display-graphic-p)
-    (defvar-local acm-terminal-path (file-name-concat root_dir, "acm-terminal"))
+    (defvar acm-terminal-path (file-name-concat root_dir, "acm-terminal"))
     (when (file-directory-p lsp-bridge-path)
       (add-to-list 'load-path acm-terminal-path)
       (with-eval-after-load 'acm
@@ -859,7 +799,7 @@
 
   (leaf lsp-pyright
     :ensure t
-    :custom (lsp-pyright-venv-path . "/home/umemoto")
+    :custom (lsp-pyright-venv-path . `,(getenv "HOME"))
     :hook (python-mode-hook . (lambda ()
                                 (require 'lsp-pyright)
                                 (lsp-deferred))))
@@ -956,11 +896,18 @@
   :ensure t
   :global-minor-mode global-git-gutter-mode)
 
+(defvar deepl-auth-key nil)
 (leaf go-translate
   :ensure t
   :bind (("C-c t" . gts-do-translate))
   :custom ((gts-translate-list . '(("en" "ja") ("ja" "en"))))
   :defvar (gts-default-translator gts-translate-list)
+  :defun (gts-translator
+          gts-noprompt-picker
+          gts-deepl-engine
+          gts-google-engine
+          gts-bing-engine
+          gts-buffer-render)
   :preface
   (defun gts-do-translate-zh-ja ()
     "Translate zh to ja."
@@ -970,15 +917,23 @@
       (gts-do-translate)
       (setq gts-translate-list tlist)))
   :config
+  (defvar gts-engins (list (gts-google-engine) (gts-bing-engine)))
   (setq gts-default-translator
 	      (gts-translator
 	       :picker (gts-noprompt-picker)
 	       :engines (list
 		               ;; (gts-deepl-engine
-                   ;;  :auth-key "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:xx" :pro nil) ;; CHANGEME
+                   ;;  :auth-key "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:xx" :pro nil)
 		               (gts-google-engine)
 		               (gts-bing-engine))
  	       :render (gts-buffer-render))))
+
+(leaf helpful
+  :ensure t
+  :bind
+  ([remap describe-function] . helpful-callable)
+  ([remap describe-key]      . helpful-key)
+  ([remap describe-variable] . helpful-variable))
 
 (leaf hide-mode-line
   :disabled t
@@ -1002,6 +957,7 @@
 (leaf magit
   :ensure t
   :bind (("C-x g" . magit-status))
+  :defvar magit-mode-map
   :config
   (define-key magit-mode-map (kbd "SPC") 'evil-scroll-page-down)
   (define-key magit-mode-map
@@ -1012,18 +968,6 @@
   :custom ((minions-mode-line-lighter . "[+]"))
   :config
   (minions-mode))
-
-(leaf modus-themes
-  :emacs< 28
-  :ensure t
-  :bind (("<f5>" . modus-themes-toggle))
-  :custom
-  ((modus-themes-bold-constructs   . nil)
-   (modus-themes-italic-constructs . t)
-   (modus-themes-region            . '(bg-only no-extend)))
-  :config
-  (modus-themes-load-themes)
-  (modus-themes-load-operandi))
 
 ;; Warning: load-theme hangs!
 (leaf moody
@@ -1163,8 +1107,7 @@
   :ensure t
   :init
   (define-derived-mode typescript-tsx-mode typescript-mode "tsx")
-  :config
-  (add-hook 'typescript-mode-hook (lambda () (setq typescript-indent-level 2)))
+  :custom (typescript-indent-level . 2)
   :mode (("\\.tsx\\'" . typescript-tsx-mode)))
 
 (leaf yaml-mode :ensure t)
@@ -1223,6 +1166,8 @@
 ;; Profiler (end)
 ;;
 (when my/enable-profiler
+  (declare-function profiler-report "subr")
+  (declare-function profiler-stop "subr")
   (profiler-report)
   (profiler-stop))
 
