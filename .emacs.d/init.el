@@ -16,8 +16,9 @@
 ;; Initialize local emacs-lisp repository
 ;; https://qiita.com/tadsan/items/431899f76f3765892abd
 (let ((default-directory (locate-user-emacs-file "./lisp")))
-  (add-to-list 'load-path default-directory)
-  (normal-top-level-add-subdirs-to-load-path))
+  (when (file-exists-p default-directory)
+    (add-to-list 'load-path default-directory)
+    (normal-top-level-add-subdirs-to-load-path)))
 
 ;; Setup tracker
 (defvar my/enable-setup-tracker nil)
@@ -86,7 +87,7 @@
     :ensure t
     :init
     (leaf hydra    :ensure t)
-    (leaf el-get   :ensure t)
+    ;; (leaf el-get   :ensure t)
     (leaf blackout :ensure t)
     :config
     (leaf-keywords-init)))
@@ -169,6 +170,7 @@
             ([remap evil-next-visual-line]     . 'undo-tree-visualize-redo)))
     :custom ((undo-tree-auto-save-history . nil)
              (evil-undo-system . 'undo-tree))
+    :hook (dired-mode-hook . undo-tree-mode)
     :global-minor-mode global-undo-tree-mode))
 
 (leaf general
@@ -255,6 +257,9 @@
   :url "https://w.atwiki.jp/ntemacs/pages/48.html"
   :ensure t
   ;; :require t
+  :init
+  (advice-add 'toggle-input-method
+              :before (lambda (&rest _args) (require 'mozc)))
   :custom ((default-input-method . "japanese-mozc-im")
            (mozc-leim-title . "あ")
            (mozc-candidate-style . 'popup))
@@ -271,6 +276,7 @@
          ;;  ("C-\\"  . 'toggle-input-method)
          ;;  ("C-SPC" . 'toggle-input-method)
          ;;  ("<f2>"  . 'toggle-input-method)))
+  :defun mozc-session-sendkey
   :defer-config
   (leaf mozc-im :ensure t :require t)
   (leaf mozc-popup :ensure t :require t)
@@ -399,8 +405,18 @@
   (leaf evil-terminal-cursor-changer
     :doc "Change cursor shape and color by evil state in terminal"
     :ensure t
+    :defun evil-terminal-cursor-changer-activate
     :config
     (evil-terminal-cursor-changer-activate)))
+
+ (leaf web-browser-for-wsl
+    :init
+    (let ((cmd-exe "/mnt/c/Windows/System32/cmd.exe")
+          (cmd-args '("/c" "start")))
+      (when (file-exists-p cmd-exe)
+        (setq browse-url-browser-function 'browse-url-generic
+              browse-url-generic-program cmd-exe
+              browse-url-generic-args cmd-args))))
 
 (leaf window
   :bind (("C-;"    . 'other-window-or-split)
@@ -449,27 +465,27 @@
   '((auto-save-list-file-prefix . nil) ;; startup.el
     (create-lockfiles . nil)
     ;; (debug-on-error . t)
-    (init-file-debug . t) ;; startup.el
-    (frame-resize-pixelwise . t)
     (enable-recursive-minibuffers . t)
+    (frame-resize-pixelwise . t)
     (garbage-collection-messages . t)
-    (history-length . 1000)
     (history-delete-duplicates . t)
-    (scroll-preserve-screen-position . t)
-    (scroll-conservatively . 100)
+    (history-length . 1000)
+    (indent-tabs-mode . nil)
+    (inhibit-startup-screen . t) ;; startup.el
+    (init-file-debug . t) ;; startup.el
+    (menu-bar-mode . nil)
     (ring-bell-function . 'ignore)
-    (visible-bell . nil)
+    ;; (scroll-bar-mode . nil) ;; scroll-bar
+    (scroll-conservatively . 100)
+    (scroll-preserve-screen-position . t)
+    (tab-width . 2)
     (text-quoting-style . 'straight)
+    (tool-bar-mode . nil)
+    (transient-mark-mode . nil))
     ;; (truncate-lines . t)
     ;; (use-dialog-box . nil)
     ;; (use-file-dialog . nil)
-    (menu-bar-mode . nil)
-    (tool-bar-mode . nil)
-    ;; (scroll-bar-mode . nil) ;; scroll-bar
-    (indent-tabs-mode . nil)
-    (tab-width . 2)
-    ;; disable to color the selected region
-    (transient-mark-mode . nil))
+    (visible-bell . nil)
   :init
   ;; (keyboard-translate ?\C-h ?\C-?)
   (defalias 'yes-or-no-p 'y-or-n-p))
@@ -525,7 +541,8 @@
 
 (leaf files
   :custom ((find-file-visit-truename . t)
-           (make-backup-files . nil))
+           (make-backup-files . nil)
+           (require-final-newline . t))
   :config
   (leaf save
     :init
@@ -558,6 +575,9 @@
 
 (leaf js
   :custom (js-indent-level . 2))
+
+(leaf mouse
+  :custom (mouse-drag-copy-region . t))
 
 (leaf paren
   :doc "highlight matching paren"
@@ -901,6 +921,23 @@
   :config
   (dashboard-setup-startup-hook))
 
+(leaf doom-modeline
+  :ensure t
+  :hook (after-init-hook . doom-modeline-mode)
+  :custom
+  (;; (doom-modeline-bar-width . 3) ;; 4
+   (doom-modeline-height . 20) ;; 25
+   (doom-modeline-major-mode-color-icon . t)
+   (doom-modeline-minor-modes . t) ;; nil
+   ;; (doom-modeline-github . nil)
+   ;; (doom-modeline-mu4e . nil)
+   ;; (doom-modeline-irc . nil)
+   ))
+
+(leaf emmet-mode :ensure t)
+
+(leaf google-this :ensure t)
+
 (leaf expand-region
   :ensure t
   :bind ("C-=" . er/expand-region))
@@ -937,22 +974,31 @@
     :after flymake
     :hook (flymake-mode-hook)))
 
+(leaf gcmh
+  :ensure t
+  :custom (gcmh-verbose . t)
+  :global-minor-mode gcmh-mode
+  :preface
+  (defun my/gc-debug-function (str)
+  "Display the memory size used after garbage coolection."
+    (let ((sum 0))
+      (dolist (x str)
+        (setq sum (+ sum (* (cl-second x) (cl-third x)))))
+      (message "Used Memory: %d MB" (/ sum (* 1024 1024)))))
+  (declare-function my/gc-debug-function "init")
+  (advice-add 'garbage-collect :filter-return #'my/gc-debug-function))
+
 (leaf git-gutter
   :ensure t
   :global-minor-mode global-git-gutter-mode)
 
-(defvar deepl-auth-key nil)
+(defvar my/deepl-auth-key nil)
 (leaf go-translate
   :ensure t
   :bind (("C-c t" . gts-do-translate))
   :custom ((gts-translate-list . '(("en" "ja") ("ja" "en"))))
-  :defvar (gts-default-translator gts-translate-list)
-  :defun (gts-translator
-          gts-noprompt-picker
-          gts-deepl-engine
-          gts-google-engine
-          gts-bing-engine
-          gts-buffer-render)
+  :defvar gts-default-translator gts-translate-list
+  :defun gts-translator gts-noprompt-picker gts-deepl-engine gts-google-engine gts-bing-engine gts-buffer-render
   :preface
   (defun gts-do-translate-zh-ja ()
     "Translate zh to ja."
@@ -1010,7 +1056,7 @@
 
 (leaf minions
   :ensure t
-  :custom ((minions-mode-line-lighter . "[+]"))
+  :custom (minions-mode-line-lighter . "[+]")
   :config
   (minions-mode))
 
@@ -1094,7 +1140,7 @@
     :hook ((rust-mode-hook . cargo-minor-mode))))
 
 (leaf smartparens
-  :disabled t
+  :disabled nil
   :ensure t
   ;; :hook (after-init-hook . smartparens-global-strict-mode) ; strictモードを有効化
   :require smartparens-config
