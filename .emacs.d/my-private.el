@@ -1,9 +1,11 @@
-;;; my-package.el -- My private settings  -*- lexical-binding: t; -*-
+;;; my-private.el -- My private settings  -*- lexical-binding: t; -*-
+
 ;;; Commentary:
 
 ;;; Code:
 
-(defvar enable-profiler nil)
+(defvar my/enable-setup-tracker nil)
+(defvar my/enable-profiler nil)
 (defvar my/fonts-family "HackGen35Nerd Console")
 (defvar my/fonts-height 120)
 (custom-set-variables
@@ -11,6 +13,6 @@
  '(user-mail-address "hiroshi.umemoto@gmail.com"))
 (defvar my/modus-themes 'modus-operandi) ;; modus-vivendi
 
-(provide 'my-package)
+(provide 'my-private)
 
-;;; my-package.el ends here
+;;; my-private.el ends here

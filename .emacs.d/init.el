@@ -4,22 +4,62 @@
 
 ;;; Code:
 
+;; Faster startup (start)
+(defconst my-saved-file-name-handler-alist file-name-handler-alist)
+(setq file-name-handler-alist nil)
+
 ;; Load private settings
 (let ((my-private (locate-user-emacs-file "my-private.el")))
   (when (file-exists-p my-private)
     (load my-private)))
-
-;; Profiler (start)
-(defvar my/enable-profiler nil)
-(when my/enable-profiler
-  (require 'profiler)
-  (profiler-start 'cpu))
 
 ;; Initialize local emacs-lisp repository
 ;; https://qiita.com/tadsan/items/431899f76f3765892abd
 (let ((default-directory (locate-user-emacs-file "./lisp")))
   (add-to-list 'load-path default-directory)
   (normal-top-level-add-subdirs-to-load-path))
+
+;; Setup tracker
+(defvar my/enable-setup-tracker nil)
+(when my/enable-setup-tracker
+  (message "Running setup tracker")
+  (defvar setup-tracker--level 0)
+  (defvar setup-tracker--parents nil)
+  (defvar setup-tracker--times nil)
+
+  (when load-file-name
+    (push load-file-name setup-tracker--parents)
+    (push (current-time) setup-tracker--times)
+    (setq setup-tracker--level (1+ setup-tracker--level)))
+
+  (add-variable-watcher
+   'load-file-name
+   (lambda (_ v &rest __)
+     (cond ((equal v (car setup-tracker--parents))
+            nil)
+           ((equal v (cadr setup-tracker--parents))
+            (setq setup-tracker--level (1- setup-tracker--level))
+            (let* ((now (current-time))
+                   (start (pop setup-tracker--times))
+                   (elapsed (+ (* (- (nth 1 now) (nth 1 start)) 1000)
+                               (/ (- (nth 2 now) (nth 2 start)) 1000))))
+              (with-current-buffer (get-buffer-create "*setup-tracker*")
+                (save-excursion
+                  (goto-char (point-min))
+                  (dotimes (_ setup-tracker--level) (insert "> "))
+                  (insert
+                   (file-name-nondirectory (pop setup-tracker--parents))
+                   " (" (number-to-string elapsed) " msec)\n")))))
+           (t
+            (push v setup-tracker--parents)
+            (push (current-time) setup-tracker--times)
+            (setq setup-tracker--level (1+ setup-tracker--level)))))))
+
+;; Profiler (start)
+(defvar my/enable-profiler nil)
+(when my/enable-profiler
+  (require 'profiler)
+  (profiler-start 'cpu))
 
 ;;
 ;; Initialize leaf package manager
@@ -133,7 +173,8 @@
 
 (leaf general
   :ensure t
-  :defer-config
+  :require t
+  :config
   (declare-function my/leader-keys "init")
   (general-create-definer my/leader-keys
     :keymaps '(normal insert visual emacs)
@@ -411,6 +452,7 @@
     (init-file-debug . t) ;; startup.el
     (frame-resize-pixelwise . t)
     (enable-recursive-minibuffers . t)
+    (garbage-collection-messages . t)
     (history-length . 1000)
     (history-delete-duplicates . t)
     (scroll-preserve-screen-position . t)
@@ -431,6 +473,9 @@
   :init
   ;; (keyboard-translate ?\C-h ?\C-?)
   (defalias 'yes-or-no-p 'y-or-n-p))
+
+;; startup.el
+(eval '(setq inhibit-startup-echo-area-message "umemoto"))
 
 (leaf ansi-color
   :hook ((compilation-filter-hook . ansi-color-apply-on-buffer)
@@ -458,9 +503,9 @@
 (leaf desktop
   :custom
   ((desktop-save-mode . t)
-   ;; TODO: ???
    (desktop-files-not-to-save
-    . "\\(\\`/[^/:]*:\\|(ftp)\\'\\|\\.gz\\'\\|\\.jpg\\'\\|\\.png\\'\\)")))
+    . "\\(\\`/[^/:]*:\\|(ftp)\\'\\|\\.gz\\'\\|\\.jpg\\'\\|\\.png\\'\\)")
+   (desktop-restore-eager . 0)))
 
 (leaf dired
   :custom
@@ -884,9 +929,9 @@
     (flycheck-elsa-setup)))
 
 (leaf flymake
-  :ensure t
+  ;; :ensure t
   :hook (emacs-lisp-mode-hook lisp-interaction-mode-hook)
-  :config
+  :defer-config
   (leaf flymake-diagnostic-at-point
     :ensure t
     :after flymake
@@ -988,7 +1033,9 @@
   :init
   (evil-global-set-key 'motion (kbd "C-e") 'mwim-end))
 
+;; Note: slower startup
 (leaf org-modern
+  :disabled t
   :ensure t
   :global-minor-mode global-org-modern-mode)
 
@@ -996,7 +1043,9 @@
   :doc "wrapper of package.el"
   :ensure t
   :config
-  (paradox-enable))
+  (let ((inhibit-message t)
+        (message-log-max nil))
+    (paradox-enable)))
 
 ;; powerline
 ;; http://shibayu36.hatenablog.com/entry/2014/02/11/160945
@@ -1067,12 +1116,13 @@
   :bind (("M-=" . transient-dwim-dispatch)))
 
 (leaf tree-sitter
+  :disabled t
   :ensure t
   :config
   (global-tree-sitter-mode)
   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
 
-(leaf tree-sitter-langs :ensure t)
+;; (leaf tree-sitter-langs :ensure t)
 
 ;; (leaf tree-sitter
 ;;   :ensure (t tree-sitter-langs)
@@ -1162,14 +1212,15 @@
   :config
   (which-key-mode))
 
-;;
 ;; Profiler (end)
-;;
 (when my/enable-profiler
   (declare-function profiler-report "subr")
   (declare-function profiler-stop "subr")
   (profiler-report)
   (profiler-stop))
+
+;; Faster startup (end)
+(setq file-name-handler-alist my-saved-file-name-handler-alist)
 
 (provide 'init)
 
