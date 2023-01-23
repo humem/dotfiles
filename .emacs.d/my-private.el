@@ -4,14 +4,19 @@
 
 ;;; Code:
 
-(defvar my/enable-setup-tracker nil)
-(defvar my/enable-profiler nil)
-(defvar my/fonts-family "HackGen35Nerd Console")
-(defvar my/fonts-height 120)
+(defvar my/enable-setup-tracker t)
+;; (defvar my/enable-profiler t)
+;; (defvar my/fonts-family "HackGenNerd Console")
+;; (defvar my/fonts-height 80)
 (custom-set-variables
  '(user-full-name "Hiroshi Umemoto")
  '(user-mail-address "hiroshi.umemoto@gmail.com"))
-(defvar my/modus-themes 'modus-operandi) ;; modus-vivendi
+;; (defvar my/modus-themes 'modus-vivendi)
+;; (defvar my/modus-themes-region '(accented no-extend))
+;; (custom-set-faces
+;;  '(fill-column-indicator ((t (:foreground "dim gray"))))
+;;  '(highlight-indent-guides-character-face ((t (:foreground "dim gray"))))
+;;  '(highlight-indent-guides-top-character-face ((t (:foreground "light gray")))))
 
 (provide 'my-private)
 

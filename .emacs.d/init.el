@@ -540,7 +540,8 @@
    (ediff-window-setup-function . 'ediff-setup-windows-plain)))
 
 (leaf files
-  :custom ((find-file-visit-truename . t)
+  :custom ((enable-local-variables . :safe)
+           (find-file-visit-truename . t)
            (make-backup-files . nil)
            (require-final-newline . t))
   :config
@@ -612,13 +613,11 @@
          ("C-0" . text-scale-reset)))
 
 (defvar my/modus-themes 'modus-operandi) ;; modus-vivendi
+(defvar my/modus-themes-region '(bg-only no-extend)) ;; accented
 (leaf themes/modus-themes
   :doc "highly accessible and customizable themes"
   :emacs>= 28
-  :custom
-  ((modus-themes-bold-constructs   . nil)
-   (modus-themes-italic-constructs . nil)
-   (modus-themes-region            . '(bg-only no-extend)))
+  :custom (modus-themes-region . my/modus-themes-region)
   :config
   (require-theme 'modus-themes)
   (load-theme my/modus-themes)
@@ -770,6 +769,8 @@
 ;;
 
 (leaf python
+  :custom (display-fill-column-indicator-column . 79)
+  :hook (python-mode-hook . display-fill-column-indicator-mode)
   :config
   (leaf python-mode
     :ensure t
@@ -780,7 +781,7 @@
   (leaf py-isort :ensure t)
 
   (leaf pyvenv
-    :disabled nil
+    :disabled t
     :ensure t
     :hook (python-mode-hook . pyvenv-mode)))
 
@@ -1080,10 +1081,8 @@
   (evil-global-set-key 'motion (kbd "C-e") 'mwim-end))
 
 ;; Note: slower startup
-(leaf org-modern
-  :disabled t
-  :ensure t
-  :global-minor-mode global-org-modern-mode)
+(leaf org-modern :ensure t)
+  ;; :global-minor-mode global-org-modern-mode)
 
 (leaf paradox
   :doc "wrapper of package.el"
@@ -1140,7 +1139,7 @@
     :hook ((rust-mode-hook . cargo-minor-mode))))
 
 (leaf smartparens
-  :disabled nil
+  :disabled t
   :ensure t
   ;; :hook (after-init-hook . smartparens-global-strict-mode) ; strictモードを有効化
   :require smartparens-config
@@ -1164,11 +1163,10 @@
 (leaf tree-sitter
   :disabled t
   :ensure t
+  :hook (tree-sitter-after-on-hook . tree-sitter-hl-mode)
+  :global-minor-mode global-tree-sitter-mode
   :config
-  (global-tree-sitter-mode)
-  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
-
-;; (leaf tree-sitter-langs :ensure t)
+  (leaf tree-sitter-langs :ensure t))
 
 ;; (leaf tree-sitter
 ;;   :ensure (t tree-sitter-langs)
