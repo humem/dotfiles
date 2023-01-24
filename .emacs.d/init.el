@@ -13,13 +13,6 @@
   (when (file-exists-p my-private)
     (load my-private)))
 
-;; Initialize local emacs-lisp repository
-;; https://qiita.com/tadsan/items/431899f76f3765892abd
-(let ((default-directory (locate-user-emacs-file "./lisp")))
-  (when (file-exists-p default-directory)
-    (add-to-list 'load-path default-directory)
-    (normal-top-level-add-subdirs-to-load-path)))
-
 ;; Setup tracker
 (defvar my/enable-setup-tracker nil)
 (when my/enable-setup-tracker
@@ -62,15 +55,25 @@
   (require 'profiler)
   (profiler-start 'cpu))
 
-;;
-;; Initialize leaf package manager
-;; https://github.com/conao3/leaf.el
-;; https://emacs-jp.github.io/tips/emacs-in-2020
-;;
+;; Initialize local emacs-lisp repository
+;; https://qiita.com/tadsan/items/431899f76f3765892abd
+(let ((default-directory (locate-user-emacs-file "./lisp")))
+  (when (file-exists-p default-directory)
+    (add-to-list 'load-path default-directory)
+    (normal-top-level-add-subdirs-to-load-path)))
+
+;; Define utilities
+(defun wsl-p ()
+  "Return t if running on WSL."
+  (/= (length (getenv "WSL_DISTRO_NAME")) 0))
 
 ;; Prevent custom from updating init file
 (customize-set-variable 'custom-file
                         (locate-user-emacs-file "custom.el"))
+
+;;
+;; Initialize leaf package manager
+;;
 
 (eval-and-compile
   (customize-set-variable
@@ -123,8 +126,8 @@
   (evil-global-set-key 'motion (kbd "C-]") 'other-window-or-split)
   ;; (evil-global-set-key 'motion "j" 'evil-next-visual-line)
   ;; (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
-  ;;   (evil-set-initial-state 'messages-buffer-mode 'normal)
-  ;;   (evil-set-initial-state 'dashboard-mode 'normal))
+  (evil-set-initial-state 'dashboard-mode 'normal)
+  (evil-set-initial-state 'messages-buffer-mode 'normal)
 
   (leaf evil-collection
     :ensure t
@@ -234,7 +237,7 @@
 ;;
 
 (leaf japanese
-  :config
+  :init
   (set-language-environment "Japanese")
   (set-default-coding-systems 'utf-8-unix)
   (prefer-coding-system       'utf-8-unix)
@@ -277,10 +280,7 @@
          ;;  ("C-SPC" . 'toggle-input-method)
          ;;  ("<f2>"  . 'toggle-input-method)))
   :defun mozc-session-sendkey
-  :defer-config
-  (leaf mozc-im :ensure t :require t)
-  (leaf mozc-popup :ensure t :require t)
-
+  :config
   ;; (defvar mozc-im-mode nil)
   ;; (add-hook 'mozc-im-activate-hook (lambda () (setq mozc-im-mode t)))
   ;; (add-hook 'mozc-im-deactivate-hook (lambda () (setq mozc-im-mode nil)))
@@ -298,44 +298,147 @@
   ;;                      (deactivate-input-method)))
   ;; Windows の mozc では、セッション接続直後 directモード になるので
   ;; hiraganaモード にする
-  (when (/= (length (getenv "WSL_DISTRO_NAME")) 0)
+  (when (wsl-p)
     (advice-add
      'mozc-session-execute-command
      :after (lambda (&rest args)
               (when (eq (nth 0 args) 'CreateSession)
                 ;; (mozc-session-sendkey '(hiragana)))))
-                (mozc-session-sendkey '(Hankaku/Zenkaku))))))
+                (mozc-session-sendkey '(Hankaku/Zenkaku)))))))
 
-  (leaf mozc-cursor-color
-    :disabled t
-    :el-get iRi-E/mozc-el-extensions
-    :config
-    (setq mozc-cursor-color-alist
-          '((direct        . "black") ;"white")
-            (read-only     . "dim gray") ;"yellow")
-            (hiragana      . "light green")
-            (full-katakana . "goldenrod")
-            (half-ascii    . "dark orchid")
-            (full-ascii    . "orchid")
-            (half-katakana . "dark goldenrod")))
-    ;; mozc-cursor-color を利用するための対策
-    ;; (defvar-local mozc-im-mode nil)
-    ;; (make-variable-buffer-local 'mozc-im-mode)
-    (defvar mozc-im-mode nil)
-    (add-hook 'mozc-im-activate-hook (lambda () (setq mozc-im-mode t)))
-    (add-hook 'mozc-im-deactivate-hook (lambda () (setq mozc-im-mode nil)))
-    (advice-add 'mozc-cursor-color-update
-                :around (lambda (orig-fun &rest args)
-                          (let ((mozc-mode mozc-im-mode))
-                            (apply orig-fun args))))))
+(leaf mozc-im :ensure t :require t)
+
+(leaf mozc-popup :ensure t :require t)
+
+(leaf mozc-cursor-color
+  :disabled t
+  :el-get iRi-E/mozc-el-extensions
+  :config
+  (setq mozc-cursor-color-alist
+        '((direct        . "black") ;"white")
+          (read-only     . "dim gray") ;"yellow")
+          (hiragana      . "light green")
+          (full-katakana . "goldenrod")
+          (half-ascii    . "dark orchid")
+          (full-ascii    . "orchid")
+          (half-katakana . "dark goldenrod")))
+  ;; mozc-cursor-color を利用するための対策
+  ;; (defvar-local mozc-im-mode nil)
+  ;; (make-variable-buffer-local 'mozc-im-mode)
+  (defvar mozc-im-mode nil)
+  (add-hook 'mozc-im-activate-hook (lambda () (setq mozc-im-mode t)))
+  (add-hook 'mozc-im-deactivate-hook (lambda () (setq mozc-im-mode nil)))
+  (advice-add 'mozc-cursor-color-update
+              :around (lambda (orig-fun &rest args)
+                        (let ((mozc-mode mozc-im-mode))
+                          (apply orig-fun args)))))
+
+(defvar my/battery nil)
+(leaf battery
+  :if my/battery
+  :init
+  (defun battery-linux-sysfs-wsl ()
+    "Get ACPI status information from Linux kernel.
+This function works only with the Windows Subsystem for Linux.
+
+The following %-sequences are provided:
+%c Current capacity (mAh)
+%r Current rate
+%B Battery status (verbose)
+%b Battery status (charging:'+' discharging:'')
+%d Temperature (in degrees Celsius)
+%p Battery load percentage
+%L AC line status (verbose)
+%m Remaining time (to charge or discharge) in minutes
+%h Remaining time (to charge or discharge) in hours
+%t Remaining time (to charge or discharge) in the form `h:min'"
+    (let (charging-state
+          ac-state
+          temperature
+          hours
+          energy-now
+          energy-now-rate
+          power-now
+          current-now
+          voltage-now
+          (dir "/sys/class/power_supply/battery"))
+      (with-temp-buffer
+        (erase-buffer)
+        (ignore-errors (insert-file-contents
+                        (expand-file-name "capacity" dir)))
+        (setq energy-now-rate (or (thing-at-point 'number) "N/A"))
+
+        (erase-buffer)
+        (ignore-errors (insert-file-contents
+                        (expand-file-name "status" dir)))
+        (setq charging-state (or (thing-at-point 'word) "N/A"))
+
+        (erase-buffer)
+        (ignore-errors (insert-file-contents
+                        (expand-file-name "temp" dir)))
+        (setq temperature (or (thing-at-point 'number) "N/A"))
+        (setq temperature (if (numberp temperature) (* temperature 0.1)))
+
+        (erase-buffer)
+        (ignore-errors (insert-file-contents
+                        (expand-file-name "charge_counter" dir)))
+        (setq energy-now (or (thing-at-point 'number) "N/A"))
+
+        (erase-buffer)
+        (ignore-errors (insert-file-contents
+                        (expand-file-name "current_now" dir)))
+        (setq current-now (or (thing-at-point 'number) "N/A"))
+        (unless (or   (stringp energy-now) (stringp current-now)
+                      (stringp energy-now-rate) (zerop current-now))
+          (if (string= charging-state "Discharging")
+              (setq hours (/ energy-now current-now))
+            (setq hours (/ (* energy-now (- 100.0 energy-now-rate))
+                           energy-now-rate current-now ))))
+
+        (erase-buffer)
+        (ignore-errors (insert-file-contents
+                        (expand-file-name "voltage_now" dir)))
+        (setq voltage-now (or (thing-at-point 'number) "N/A"))
+        (setq power-now (if (and (numberp current-now) (numberp voltage-now))
+                            (* (/ current-now 1000.0) (/ voltage-now 1000000.0))))
+        ;; current-now[mA]->[A] voltage-now[uV]->[V]
+
+        (erase-buffer)
+        (setq dir "/sys/class/power_supply/ac")
+        (ignore-errors (insert-file-contents
+                        (expand-file-name "online" dir)))
+        (setq ac-state (cond ((eq (thing-at-point 'number) 1) "AC")
+                             ((eq (thing-at-point 'number) 0) "BAT")
+                             (t "N/A")))
+        )
+      ;; set return value
+      (list (cons ?c (number-to-string energy-now))
+            (cons ?r (if hours (number-to-string power-now) "N/A"))
+            (cons ?B charging-state)
+            (cons ?b (if (string= charging-state "Charging") "+" ""))
+            (cons ?d (number-to-string temperature))
+            (cons ?p (number-to-string energy-now-rate))
+            (cons ?L ac-state)
+            (cons ?m (if hours (format "%d" (* hours 60)) "N/A"))
+            (cons ?h (if hours (format "%d" hours) "N/A"))
+            (cons ?t (if hours (format "%d:%02d" hours
+                                       (* (- hours (floor hours)) 60)) "N/A")))))
+  (when (wsl-p)
+    (defvar battery-status-function)
+    (declare-function battery-linux-sysfs-wsl "init")
+    (setq battery-status-function #'battery-linux-sysfs-wsl))
+  (display-battery-mode 1))
 
 (leaf mode-line
   :custom
   ((display-time-string-forms
     . '(year "-" month "-" day " " dayname " " 24-hours ":" minutes)))
-  :config
+  :init
   (column-number-mode)
-  (display-time))
+  (display-time)
+  (setq frame-title-format
+        '(multiple-frames
+          "%b" ("" "%b - GNU Emacs at " system-name " " display-time-string))))
 
 ;; ;; Type backslash instead of yen mark
 ;; (define-key global-map [165] [92]) ;; 165が¥（円マーク） , 92が\（バックスラッシュ）を表す
@@ -400,23 +503,25 @@
       (interactive)
       (if (eq interprogram-paste-function 'xsel-paste-function)
           (setq interprogram-paste-function 'gui-selection-value)
-        (setq interprogram-paste-function 'xsel-paste-function))))
+        (setq interprogram-paste-function 'xsel-paste-function)))))
 
-  (leaf evil-terminal-cursor-changer
-    :doc "Change cursor shape and color by evil state in terminal"
-    :ensure t
-    :defun evil-terminal-cursor-changer-activate
-    :config
+(leaf evil-terminal-cursor-changer
+  :doc "Change cursor shape and color by evil state in terminal"
+  :ensure t
+  :defun evil-terminal-cursor-changer-activate
+  :config
+  (unless (display-graphic-p)
     (evil-terminal-cursor-changer-activate)))
 
- (leaf web-browser-for-wsl
-    :init
-    (let ((cmd-exe "/mnt/c/Windows/System32/cmd.exe")
-          (cmd-args '("/c" "start")))
-      (when (file-exists-p cmd-exe)
-        (setq browse-url-browser-function 'browse-url-generic
-              browse-url-generic-program cmd-exe
-              browse-url-generic-args cmd-args))))
+(leaf web-browser-for-wsl
+  :if (wsl-p)
+  :init
+  (let ((cmd-exe "/mnt/c/Windows/System32/cmd.exe")
+        (cmd-args '("/c" "start")))
+    (when (file-exists-p cmd-exe)
+      (setq browse-url-browser-function 'browse-url-generic
+            browse-url-generic-program cmd-exe
+            browse-url-generic-args cmd-args))))
 
 (leaf window
   :bind (("C-;"    . 'other-window-or-split)
@@ -518,10 +623,12 @@
 
 (leaf desktop
   :custom
-  ((desktop-save-mode . t)
-   (desktop-files-not-to-save
-    . "\\(\\`/[^/:]*:\\|(ftp)\\'\\|\\.gz\\'\\|\\.jpg\\'\\|\\.png\\'\\)")
-   (desktop-restore-eager . 0)))
+  ((desktop-files-not-to-save
+    . "\\(\\`/[^/:]*:\\|(ftp)\\'\\|\\.gz\\'\\|\\.jpg\\'\\|\\.png\\'|\\.tif\\'\\)")
+   (desktop-lazy-verbose . nil)
+   (desktop-restore-eager . 0))
+  :config
+  (desktop-save-mode 1))
 
 (leaf dired
   :custom
@@ -591,7 +698,8 @@
 
 (leaf recentf
   :custom
-  (recentf-exclude . '("\\.gz\\'" "\\.jpg\\'" "\\.png\\'"))
+  ((recentf-exclude . '("\\.gz\\'" "\\.jpg\\'" "\\.png\\'" "\\.tif\\'"))
+   (recentf-max-saved-items . 100))
   :global-minor-mode recentf-mode)
 
 (leaf simple
@@ -910,17 +1018,12 @@
   :bind
   (("C-:"     . avy-goto-char-timer)
    ("C-*"     . avy-resume)
-   ("M-g M-g" . avy-goto-line))
-  :config
-  (leaf avy-zap
-    :ensure t
-    :bind
-    ([remap zap-to-char] . avy-zap-to-char)))
+   ("M-g M-g" . avy-goto-line)))
 
-(leaf dashboard
+(leaf avy-zap
   :ensure t
-  :config
-  (dashboard-setup-startup-hook))
+  :bind
+  ([remap zap-to-char] . avy-zap-to-char))
 
 (leaf doom-modeline
   :ensure t
@@ -977,15 +1080,16 @@
 
 (leaf gcmh
   :ensure t
-  :custom (gcmh-verbose . t)
   :global-minor-mode gcmh-mode
+  :defvar gcmh-verbose
   :preface
   (defun my/gc-debug-function (str)
   "Display the memory size used after garbage coolection."
     (let ((sum 0))
       (dolist (x str)
         (setq sum (+ sum (* (cl-second x) (cl-third x)))))
-      (message "Used Memory: %d MB" (/ sum (* 1024 1024)))))
+      (when gcmh-verbose
+        (message "Used Memory: %d MB" (/ sum (* 1024 1024))))))
   (declare-function my/gc-debug-function "init")
   (advice-add 'garbage-collect :filter-return #'my/gc-debug-function))
 
@@ -1009,16 +1113,21 @@
       (gts-do-translate)
       (setq gts-translate-list tlist)))
   :config
-  (defvar gts-engins (list (gts-google-engine) (gts-bing-engine)))
-  (setq gts-default-translator
-	      (gts-translator
-	       :picker (gts-noprompt-picker)
-	       :engines (list
-		               ;; (gts-deepl-engine
-                   ;;  :auth-key "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:xx" :pro nil)
-		               (gts-google-engine)
-		               (gts-bing-engine))
- 	       :render (gts-buffer-render))))
+  (if my/deepl-auth-key
+      (setq gts-default-translator
+	          (gts-translator
+	           :picker (gts-noprompt-picker)
+	           :engines (list
+                       (gts-deepl-engine :auth-key my/deepl-auth-key :pro nil)
+                       (gts-google-engine) (gts-bing-engine))
+             :render (gts-buffer-render)))
+    (setq gts-default-translator
+	        (gts-translator
+	         :picker (gts-noprompt-picker)
+	         :engines (list
+                     (gts-google-engine) (gts-bing-engine))
+           :render (gts-buffer-render)))
+    ))
 
 (leaf helpful
   :ensure t
@@ -1083,14 +1192,6 @@
 ;; Note: slower startup
 (leaf org-modern :ensure t)
   ;; :global-minor-mode global-org-modern-mode)
-
-(leaf paradox
-  :doc "wrapper of package.el"
-  :ensure t
-  :config
-  (let ((inhibit-message t)
-        (message-log-max nil))
-    (paradox-enable)))
 
 ;; powerline
 ;; http://shibayu36.hatenablog.com/entry/2014/02/11/160945
@@ -1255,6 +1356,26 @@
   :require t
   :config
   (which-key-mode))
+
+;;
+;; Skip heavy packages
+;;
+
+(defvar my/skip nil)
+(unless my/skip
+
+  (leaf dashboard
+    :ensure t
+    :config
+    (dashboard-setup-startup-hook))
+
+  (leaf paradox
+    :doc "wrapper of package.el"
+    :ensure t
+    :config
+    (let ((inhibit-message t)
+          (message-log-max nil))
+      (paradox-enable))))
 
 ;; Profiler (end)
 (when my/enable-profiler
