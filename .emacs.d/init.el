@@ -4,43 +4,26 @@
 
 ;;; Code:
 
-;;
-;; Personal settings
-;;
-
-(custom-set-variables '(user-full-name "Hiroshi Umemoto"))
-(defvar my/enable-setup-tracker t)
-
-;; (defvar my/enable-profiler t)
-;; (defvar my/fonts-family "HackGenNerd Console")
-;; (custom-set-variables '(gcmh-verbose t))
-
-;; Enable when running on dynabook
-(when (string-equal (getenv "EMACS_MACHINE_NAME") "dynabook")
-  (defvar my/fonts-height 105)
-  (defvar my/battery t)
-  (defvar my/modus-themes 'modus-vivendi)
-  (defvar my/modus-themes-region '(accented no-extend))
-  (custom-set-faces
-   '(fill-column-indicator ((t (:foreground "dim gray"))))
-   '(doom-modeline-bar-inactive ((t (:box (:line-width (2 . 2)))))))
-  (custom-set-variables
-   '(highlight-indent-guides-auto-character-face-perc 30)
-   '(highlight-indent-guides-auto-top-character-face-perc 50))
-  (defvar my/skip t)
-  )
-
 ;; Faster startup (start)
 (defconst my-saved-file-name-handler-alist file-name-handler-alist)
 (setq file-name-handler-alist nil)
+(setq gc-cons-threshold most-positive-fixnum)
 
 ;; Load private settings
 (let ((my-private (locate-user-emacs-file "my-private.el")))
   (when (file-exists-p my-private)
     (load my-private)))
 
+(defvar my/dynabook-p nil)
+(when my/dynabook-p
+  (defvar my/fonts-height 105)
+  (defvar my/battery t)
+  (defvar my/modus-themes 'modus-vivendi)
+  (defvar my/accent-modus-themes t)
+  (defvar my/skip t))
+
 ;; Setup tracker
-(defvar my/enable-setup-tracker nil)
+(defvar my/enable-setup-tracker t)
 (when my/enable-setup-tracker
   (message "Running setup tracker")
   (defvar setup-tracker--level 0)
@@ -104,9 +87,11 @@
 (eval-and-compile
   (customize-set-variable
    'package-archives
-   '(("org"   . "https://orgmode.org/elpa/")
-     ("melpa" . "https://melpa.org/packages/")
-     ("gnu"   . "https://elpa.gnu.org/packages/")))
+   '(("gnu"    . "https://elpa.gnu.org/packages/")
+     ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+     ("melpa"  . "https://melpa.org/packages/")
+     ("org"    . "https://orgmode.org/elpa/")))
+
   (package-initialize)
   (unless (package-installed-p 'leaf)
     (package-refresh-contents)
@@ -143,7 +128,7 @@
            (evil-want-fine-undo  . t)
            (evil-want-minibuffer . t))
   :global-minor-mode evil-mode
-  :defun evil-global-set-key
+  :defun evil-global-set-key evil-set-initial-state
   :config
   (evil-global-set-key 'motion (kbd "SPC")   'evil-scroll-page-down)
   (evil-global-set-key 'motion (kbd "S-SPC") 'evil-scroll-page-up)
@@ -246,14 +231,15 @@
 
 (leaf neotree
   :ensure t
+  :custom (neo-show-hidden-files . t)
   :defvar neotree-mode-map
   :config
   (declare-function evil-define-key "evil-core")
   (evil-define-key 'normal neotree-mode-map
-    "g" 'neotree-refresh
     "n" 'neotree-next-line
     "p" 'neotree-previous-line
     "q" 'neotree-hide
+    "r" 'neotree-refresh
     "v" 'neotree-quick-look
     "A" 'neotree-stretch-toggle
     "H" 'neotree-hidden-file-toggle))
@@ -262,6 +248,8 @@
 ;; Personal enhancements
 ;;
 
+(defvar my/fonts-family "HackGen35Nerd Console")
+(defvar my/fonts-height 120)
 (leaf japanese
   :init
   (set-language-environment "Japanese")
@@ -275,8 +263,6 @@
   ;; "PlemolJP35Console"
   ;; "UDEV Gothic"
   ;; "HackGen35Nerd Console"
-  (defvar my/fonts-family "HackGen35Nerd Console")
-  (defvar my/fonts-height 120)
   (set-face-attribute
    'default nil :family my/fonts-family :height my/fonts-height)
 )
@@ -470,8 +456,6 @@ The following %-sequences are provided:
 ;; (define-key global-map [165] [92]) ;; 165が¥（円マーク） , 92が\（バックスラッシュ）を表す
 
 (leaf startup-performance
-  ;; The default is 800 kilobytes.  Measured in bytes.
-  :custom (gc-cons-threshold . `,(* 50 1000 1000)) ;; 50 megabytes
   :init
   (defun my/display-startup-time ()
     "Report startup performance."
@@ -493,6 +477,8 @@ The following %-sequences are provided:
   (xterm-mouse-mode 1)
   (global-set-key (kbd "<mouse-4>") 'scroll-down-line)
   (global-set-key (kbd "<mouse-5>") 'scroll-up-line)
+  ;; no blink cursor
+  (customize-set-variable 'visible-cursor nil)
   ;; scroll bar
   ;(global-yascroll-bar-mode 1)
   ;(setq yascroll:delay-to-hide nil)
@@ -502,8 +488,8 @@ The following %-sequences are provided:
     (when (getenv "TMUX")
       (setq env-display "env $(tmux showenv DISPLAY) "))
 
-    ;;(setq interprogram-cut-function   'xsel-cut-function)
-    ;;(setq interprogram-paste-function 'xsel-paste-function)
+    (setq interprogram-cut-function   'xsel-cut-function)
+    (setq interprogram-paste-function 'xsel-paste-function)
     ;; use Ctrl+Shift+V to paste with system clipboard
 
     (defun xsel-cut-function (text &optional _push)
@@ -530,6 +516,12 @@ The following %-sequences are provided:
       (if (eq interprogram-paste-function 'xsel-paste-function)
           (setq interprogram-paste-function 'gui-selection-value)
         (setq interprogram-paste-function 'xsel-paste-function)))))
+
+(leaf corfu-terminal
+  :ensure t
+  :config
+  (unless (display-graphic-p)
+    (corfu-terminal-mode +1)))
 
 (leaf evil-terminal-cursor-changer
   :doc "Change cursor shape and color by evil state in terminal"
@@ -598,7 +590,7 @@ The following %-sequences are provided:
     ;; (debug-on-error . t)
     (enable-recursive-minibuffers . t)
     (frame-resize-pixelwise . t)
-    (garbage-collection-messages . t)
+    ;; (garbage-collection-messages . t)
     (history-delete-duplicates . t)
     (history-length . 1000)
     (indent-tabs-mode . nil)
@@ -731,7 +723,18 @@ The following %-sequences are provided:
 (leaf simple
   :custom ((kill-whole-line  . t)
            (next-line-add-newlines . nil))
-  :global-minor-mode global-visual-line-mode)
+  :preface
+  (defun my/disable-visual-line ()
+    (visual-line-mode 0))
+  :global-minor-mode global-visual-line-mode
+  :hook
+  ((dired-mode-hook   . my/disable-visual-line)
+   (imenu-list-major-mode-hook . my/disable-visual-line)
+   (neotree-mode-hook . my/disable-visual-line)
+   (yaml-mode-hook    . my/disable-visual-line)))
+
+(leaf tab-bar
+  :global-minor-mode tab-bar-mode)
 
 (leaf text-scale
   :doc "Magnify and demagnify texts"
@@ -746,8 +749,19 @@ The following %-sequences are provided:
          ("C--" . text-scale-decrease)
          ("C-0" . text-scale-reset)))
 
+(defvar my/accent-modus-themes nil)
+(when my/accent-modus-themes
+  (defvar my/modus-themes-region '(accented no-extend))
+  (custom-set-faces
+   '(fill-column-indicator ((t (:foreground "dim gray"))))
+   '(mode-line-inactive ((t (:box (:line-width (1 . 1) :color "dim gray"))))))
+  (custom-set-variables
+   '(highlight-indent-guides-auto-character-face-perc 30)
+   '(highlight-indent-guides-auto-top-character-face-perc 50))
+  )
 (defvar my/modus-themes 'modus-operandi) ;; modus-vivendi
 (defvar my/modus-themes-region '(bg-only no-extend)) ;; accented
+
 (leaf themes/modus-themes
   :doc "highly accessible and customizable themes"
   :emacs>= 28
@@ -841,8 +855,7 @@ The following %-sequences are provided:
 
 (leaf orderless
   :ensure t
-  :custom
-  ((completion-styles . '(orderless))))
+  :custom (completion-styles . '(orderless)))
 
 (leaf vertico
   :ensure t
@@ -910,8 +923,13 @@ The following %-sequences are provided:
     :ensure t
     :custom (python-indent-guess-indent-offset-verbose . nil))
 
-  (leaf blacken :ensure t)
+  ;; Python black is required
+  (leaf blacken
+    :ensure t
+    :custom ((blacken-line-length . 79)
+             (blacken-skip-string-normalization . t)))
 
+  ;; Python isort is required
   (leaf py-isort :ensure t)
 
   (leaf pyvenv
@@ -1064,13 +1082,7 @@ The following %-sequences are provided:
    ;; (doom-modeline-irc . nil)
    ))
 
-(leaf emmet-mode :ensure t)
-
-(leaf google-this :ensure t)
-
-(leaf expand-region
-  :ensure t
-  :bind ("C-=" . er/expand-region))
+(leaf expand-region :ensure t)
 
 (leaf flycheck
   :disabled t
@@ -1287,43 +1299,6 @@ The following %-sequences are provided:
   :ensure t
   :bind (("M-=" . transient-dwim-dispatch)))
 
-(leaf tree-sitter
-  :disabled t
-  :ensure t
-  :hook (tree-sitter-after-on-hook . tree-sitter-hl-mode)
-  :global-minor-mode global-tree-sitter-mode
-  :config
-  (leaf tree-sitter-langs :ensure t))
-
-;; (leaf tree-sitter
-;;   :ensure (t tree-sitter-langs)
-;;   :require tree-sitter-langs
-;;   :config
-;;   (global-tree-sitter-mode)
-;;   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
-;;   ;; TSXの対応
-;;   (tree-sitter-require 'tsx)
-;;   (add-to-list 'tree-sitter-major-mode-language-alist '(typescript-tsx-mode . tsx))
-;;   ;; ハイライトの追加
-;;   (tree-sitter-hl-add-patterns 'tsx
-;;     [
-;;      ;; styled.div``
-;;      (call_expression
-;;       function: (member_expression
-;;                  object: (identifier) @function.call
-;;                  (.eq? @function.call "styled"))
-;;       arguments: ((template_string) @property.definition
-;;                   (.offset! @property.definition 0 1 0 -1)))
-;;      ;; styled(Component)``
-;;      (call_expression
-;;       function: (call_expression
-;;                  function: (identifier) @function.call
-;;                  (.eq? @function.call "styled"))
-;;       arguments: ((template_string) @property.definition
-;;                   (.offset! @property.definition 0 1 0 -1)))
-;;      ])
-;;   )
-
 (leaf typescript-mode
   :ensure t
   :init
@@ -1333,8 +1308,7 @@ The following %-sequences are provided:
 
 (leaf yaml-mode :ensure t)
 
-(leaf yasnippet
-  :ensure t)
+(leaf yasnippet :ensure t)
   ;; :init (yas-global-mode 1))
   ;; :custom
   ;; ((yas-snippet-dirs . '("`/.emacs.d/yasnippets"))))
@@ -1390,10 +1364,95 @@ The following %-sequences are provided:
 (defvar my/skip nil)
 (unless my/skip
 
+  (leaf all-the-icons
+    :ensure t
+    :if (display-graphic-p)
+    :config
+    (unless (file-exists-p
+             (file-name-concat
+              (getenv "HOME") ".local/share/fonts/all-the-icons.ttf"))
+      (all-the-icons-install-fonts))
+    (with-eval-after-load 'neotree
+      (defvar neo-theme)
+      (setq neo-theme 'icons)))
+
+  (leaf all-the-icons-dired
+    :ensure t
+    :after all-the-icons
+    :hook (dired-mode-hook . all-the-icons-dired-mode))
+
+  (leaf avy-mimemo
+    :el-get momomo5717/avy-migemo
+    :global-minor-mode avy-migemo-mode)
+
   (leaf dashboard
     :ensure t
     :config
     (dashboard-setup-startup-hook))
+
+  (leaf el-get :ensure t)
+
+  (leaf kind-icon
+    :ensure t
+    :after corfu
+    :defvar corfu-margin-formatters
+    :custom
+    (kind-icon-default-face . 'corfu-default)
+    :config
+    (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
+
+  ;; cmigemo is required
+  (leaf migemo
+    :ensure t
+    :require t
+    :if (executable-find "cmigemo")
+    :custom
+    (migemo-dictionary . "/usr/share/cmigemo/utf-8/migemo-dict")
+    :defun migemo-init
+    :config
+    (migemo-init))
+
+  (leaf orderless
+    :ensure t
+    :require t
+    :after migemo
+    :defun migemo-get-pattern
+    :preface
+    (defun orderless-migemo (component)
+      "Use migemo with orderless."
+      (let ((pattern (migemo-get-pattern component)))
+	      (condition-case nil
+            (progn (string-match-p pattern "") pattern)
+          (invalid-regexp nil))))
+    :defun orderless-define-completion-style orderless-matching-styles
+    :defvar (orderless-matching-styles
+             orderless-default-style
+             orderless-migemo-style)
+    :config
+    (orderless-define-completion-style orderless-default-style
+      (orderless-matching-styles '(orderless-initialism
+				                           orderless-literal
+				                           orderless-regexp)))
+    (orderless-define-completion-style orderless-migemo-style
+      (orderless-matching-styles '(orderless-initialism
+				                           orderless-literal
+				                           orderless-regexp
+				                           orderless-migemo)))
+    (defvar completion-category-overrides)
+    (setq completion-category-overrides
+          '((command (styles orderless-default-style))
+            (file (styles orderless-migemo-style))
+            (buffer (styles orderless-migemo-style))
+            (symbol (styles orderless-default-style))
+            (consult-location (styles orderless-migemo-style))
+            (consult-multi (styles orderless-migemo-style))
+            (org-roam-node (styles orderless-migemo-style))
+            (unicode-name (styles orderless-migemo-style))
+            (variable (styles orderless-default-style))))
+    (setq orderless-matching-styles
+          '(orderless-literal orderless-regexp orderless-migemo))
+    :custom
+    (completion-styles . '(orderless basic)))
 
   (leaf paradox
     :doc "wrapper of package.el"
@@ -1401,7 +1460,55 @@ The following %-sequences are provided:
     :config
     (let ((inhibit-message t)
           (message-log-max nil))
-      (paradox-enable))))
+      (paradox-enable)))
+
+  ;; (leaf flymake
+  ;;   :hook (markdown-mode-hook org-mode-hook text-mode-hook))
+
+  ;; TODO
+  (leaf flymake-textlint
+    :el-get iquiw/flymake-textlint
+    :hook ((markdown-mode-hook
+            org-mode-hook
+            text-mode-hook)
+           . flymake-textlint-setup))
+
+  (leaf tree-sitter
+    :ensure t
+    :hook (tree-sitter-after-on-hook . tree-sitter-hl-mode)
+    :global-minor-mode global-tree-sitter-mode
+    :config
+    (leaf tree-sitter-langs :ensure t))
+
+  ;; (leaf tree-sitter
+  ;;   :ensure (t tree-sitter-langs)
+  ;;   :require tree-sitter-langs
+  ;;   :config
+  ;;   (global-tree-sitter-mode)
+  ;;   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+  ;;   ;; TSXの対応
+  ;;   (tree-sitter-require 'tsx)
+  ;;   (add-to-list 'tree-sitter-major-mode-language-alist '(typescript-tsx-mode . tsx))
+  ;;   ;; ハイライトの追加
+  ;;   (tree-sitter-hl-add-patterns 'tsx
+  ;;     [
+  ;;      ;; styled.div``
+  ;;      (call_expression
+  ;;       function: (member_expression
+  ;;                  object: (identifier) @function.call
+  ;;                  (.eq? @function.call "styled"))
+  ;;       arguments: ((template_string) @property.definition
+  ;;                   (.offset! @property.definition 0 1 0 -1)))
+  ;;      ;; styled(Component)``
+  ;;      (call_expression
+  ;;       function: (call_expression
+  ;;                  function: (identifier) @function.call
+  ;;                  (.eq? @function.call "styled"))
+  ;;       arguments: ((template_string) @property.definition
+  ;;                   (.offset! @property.definition 0 1 0 -1)))
+  ;;      ])
+  ;;   )
+  )
 
 ;; Profiler (end)
 (when my/enable-profiler
@@ -1412,6 +1519,7 @@ The following %-sequences are provided:
 
 ;; Faster startup (end)
 (setq file-name-handler-alist my-saved-file-name-handler-alist)
+(setq gc-cons-threshold 16777216) ; 16mb
 
 (provide 'init)
 

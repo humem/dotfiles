@@ -4,6 +4,11 @@
 
 ;;; Code:
 
+;; (custom-set-variables
+;;  '(user-full-name "**** ****")
+;;  '(user-mail-address "****@****"))
+;; (defvar my/dynabook-p t)
+;; (defvar my/deepl-auth-key "*******-****-****-****-**********:**")
 
 (provide 'my-private)
 
