@@ -128,6 +128,8 @@
            (evil-want-fine-undo  . t)
            (evil-want-minibuffer . t))
   :global-minor-mode evil-mode
+  :hook ((image-mode-hook)
+         . (lambda () (evil-mode -1)))
   :defun evil-global-set-key evil-set-initial-state
   :config
   (evil-global-set-key 'motion (kbd "SPC")   'evil-scroll-page-down)
@@ -488,8 +490,9 @@ The following %-sequences are provided:
     (when (getenv "TMUX")
       (setq env-display "env $(tmux showenv DISPLAY) "))
 
-    (setq interprogram-cut-function   'xsel-cut-function)
-    (setq interprogram-paste-function 'xsel-paste-function)
+    (when (wsl-p)
+      (setq interprogram-cut-function   'xsel-cut-function)
+      (setq interprogram-paste-function 'xsel-paste-function))
     ;; use Ctrl+Shift+V to paste with system clipboard
 
     (defun xsel-cut-function (text &optional _push)
@@ -723,15 +726,18 @@ The following %-sequences are provided:
 (leaf simple
   :custom ((kill-whole-line  . t)
            (next-line-add-newlines . nil))
-  :preface
-  (defun my/disable-visual-line ()
-    (visual-line-mode 0))
   :global-minor-mode global-visual-line-mode
   :hook
-  ((dired-mode-hook   . my/disable-visual-line)
-   (imenu-list-major-mode-hook . my/disable-visual-line)
-   (neotree-mode-hook . my/disable-visual-line)
-   (yaml-mode-hook    . my/disable-visual-line)))
+  ((dired-mode-hook
+    imenu-list-major-mode-hook
+    magit-status-mode-hook
+    neotree-mode-hook
+    package-menu-mode-hook
+    paradox-menu-mode-hook
+    yaml-mode-hook)
+   . (lambda () (progn
+                  (visual-line-mode -1)
+                  (toggle-truncate-lines +1)))))
 
 (leaf tab-bar
   :global-minor-mode tab-bar-mode)
@@ -1379,10 +1385,15 @@ The following %-sequences are provided:
   (leaf all-the-icons-dired
     :ensure t
     :after all-the-icons
-    :hook (dired-mode-hook . all-the-icons-dired-mode))
+    :hook (dired-mode-hook
+           . (lambda ()
+               (if (display-graphic-p)
+                   (all-the-icons-dired-mode +1)
+                 (all-the-icons-dired-mode -1)))))
 
-  (leaf avy-mimemo
+  (leaf avy-migemo
     :el-get momomo5717/avy-migemo
+    :after migeo
     :global-minor-mode avy-migemo-mode)
 
   (leaf dashboard
