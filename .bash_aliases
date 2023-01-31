@@ -66,7 +66,7 @@ if [ $WSL_DISTRO_NAME ]; then
     # WSL1
     #export DISPLAY="localhost:0.0"
     # WSL2
-    #export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0.0
+    export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0.0
     # Emacs to fix for dbind-WARINING
     export NO_AT_BRIDGE=1
 fi

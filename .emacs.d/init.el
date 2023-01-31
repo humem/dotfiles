@@ -16,7 +16,6 @@
 
 (defvar my/dynabook-p nil)
 (when my/dynabook-p
-  (defvar my/fonts-height 105)
   (defvar my/battery t)
   (defvar my/modus-themes 'modus-vivendi)
   (defvar my/accent-modus-themes t)
@@ -57,12 +56,6 @@
             (push v setup-tracker--parents)
             (push (current-time) setup-tracker--times)
             (setq setup-tracker--level (1+ setup-tracker--level)))))))
-
-;; Profiler (start)
-(defvar my/enable-profiler nil)
-(when my/enable-profiler
-  (require 'profiler)
-  (profiler-start 'cpu))
 
 ;; Initialize local emacs-lisp repository
 ;; https://qiita.com/tadsan/items/431899f76f3765892abd
@@ -456,6 +449,12 @@ The following %-sequences are provided:
 
 ;; ;; Type backslash instead of yen mark
 ;; (define-key global-map [165] [92]) ;; 165が¥（円マーク） , 92が\（バックスラッシュ）を表す
+
+(leaf profiler)
+;; (profiler-start 'cpu)
+;; ...
+;; (profiler-report)
+;; (profiler-stop)
 
 (leaf startup-performance
   :init
@@ -945,7 +944,7 @@ The following %-sequences are provided:
 
 ;; ??Note: pyrightconfig.json is required for venv
 (leaf eglot
-  :disabled nil
+  :disabled t
   :ensure t
   :hook ((python-mode-hook . eglot-ensure))
   :custom ((eldoc-echo-area-use-multiline-p . nil)))
@@ -983,7 +982,7 @@ The following %-sequences are provided:
 
 ;; Note: work with corfu instead company
 (leaf lsp-mode
-  :disabled t
+  :disabled nil
   :ensure t
   :commands (lsp lsp-deferred)
   :config
@@ -1030,27 +1029,35 @@ The following %-sequences are provided:
 
   (leaf python-mode
     :ensure t
-    :hook (python-mode-hook . lsp-deferred)
-    :custom
-    ;; NOTE: Set these if Python 3 is called "python3" on your system!
-    ;; (python-shell-interpreter "python3")
-    ;; (dap-python-executable "python3")
-    (dap-python-debugger . 'debugpy)
-    :config
-    (require 'dap-python))
+    :hook (python-mode-hook . lsp-deferred))
 
   (leaf dap-mode
     :ensure t
     :commands dap-debug
-    :custom
-    (lsp-enable-dap-auto-configure . nil)
+    ;; :custom
+    ;; (lsp-enable-dap-auto-configure . nil)
     :config
+    (unless (display-graphic-p)
+
+      (setq dap-auto-configure-features '(sessions locals breakpoints expressions tooltip)))
+      ;; (setq dap-auto-configure-features (remove 'controls dap-auto-configure-features))
     (dap-ui-mode 1)
     (require 'dap-node)
     (dap-node-setup)
+    (require 'dap-python)
+    (setq dap-python-debugger 'debugpy)
     (general-define-key
      :keymaps 'lsp-mode-map :prefix lsp-keymap-prefix "d"
-     '(dap-hydra t :wk "debugger"))))
+     '(dap-hydra t :wk "debugger"))
+    (unless (display-graphic-p)
+      ;;  An orange background for the line to execute
+      (set-face-background 'dap-ui-marker-face "orange") ;; "color-166")
+      ;; Do not inherit other styles
+      (set-face-attribute 'dap-ui-marker-face nil :inherit nil)
+      ;; Blue background for breakpoints line
+      (set-face-background 'dap-ui-pending-breakpoint-face "light blue")
+      (set-face-attribute 'dap-ui-verified-breakpoint-face nil
+                          :inherit 'dap-ui-pending-breakpoint-face))))
 
 ;;
 ;; Initialize other external packages
@@ -1520,13 +1527,6 @@ The following %-sequences are provided:
   ;;      ])
   ;;   )
   )
-
-;; Profiler (end)
-(when my/enable-profiler
-  (declare-function profiler-report "subr")
-  (declare-function profiler-stop "subr")
-  (profiler-report)
-  (profiler-stop))
 
 ;; Faster startup (end)
 (setq file-name-handler-alist my-saved-file-name-handler-alist)
