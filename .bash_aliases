@@ -2,6 +2,7 @@
 
 # Aliases
 alias a='alias'
+alias ak='autokey 2>/dev/null &'
 alias ch='google-chrome >/dev/null 2>&1 &'
 alias d='docker'
 alias docker_start='sudo service docker start'

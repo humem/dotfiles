@@ -121,8 +121,7 @@
            (evil-want-fine-undo  . t)
            (evil-want-minibuffer . t))
   :global-minor-mode evil-mode
-  :hook ((image-mode-hook)
-         . (lambda () (evil-mode -1)))
+  :hook (image-mode-hook . turn-off-evil-mode)
   :defun evil-global-set-key evil-set-initial-state
   :config
   (evil-global-set-key 'motion (kbd "SPC")   'evil-scroll-page-down)
@@ -203,6 +202,7 @@
     "n" 'display-line-numbers-mode
     "o" 'other-window-or-split
     "q" 'delete-next-window
+    "r" 'lsp-rename
     "s" 'save-buffer
     "t" 'gts-do-translate
     "u" 'undo-tree-visualize
@@ -469,6 +469,7 @@ The following %-sequences are provided:
   (declare-function my/display-startup-time "init")
   (add-hook 'emacs-startup-hook #'my/display-startup-time))
 
+(defvar my/use-xsel nil)
 (leaf terminal-emacs
   :doc "settings for terminal emacs"
   :unless (display-graphic-p)
@@ -489,7 +490,7 @@ The following %-sequences are provided:
     (when (getenv "TMUX")
       (setq env-display "env $(tmux showenv DISPLAY) "))
 
-    (when (wsl-p)
+    (when (or (wsl-p) my/use-xsel)
       (setq interprogram-cut-function   'xsel-cut-function)
       (setq interprogram-paste-function 'xsel-paste-function))
     ;; use Ctrl+Shift+V to paste with system clipboard
@@ -632,6 +633,7 @@ The following %-sequences are provided:
 (leaf autorevert
   :doc "revert buffers when files on disk change"
   :tag "builtin"
+  :custom (auto-revert-verbose . nil)
   :global-minor-mode global-auto-revert-mode)
 
 (leaf bytecomp
@@ -645,8 +647,8 @@ The following %-sequences are provided:
   :custom
   ((desktop-files-not-to-save
     . "\\(\\`/[^/:]*:\\|(ftp)\\'\\|\\.gz\\'\\|\\.jpg\\'\\|\\.png\\'|\\.tif\\'\\)")
-   (desktop-lazy-verbose . nil)
-   (desktop-restore-eager . 0))
+   (desktop-lazy-verbose . nil))
+   ;; (desktop-restore-eager . 0))
   :config
   (desktop-save-mode 1))
 
@@ -759,7 +761,9 @@ The following %-sequences are provided:
   (defvar my/modus-themes-region '(accented no-extend))
   (custom-set-faces
    '(fill-column-indicator ((t (:foreground "dim gray"))))
-   '(mode-line-inactive ((t (:box (:line-width (1 . 1) :color "dim gray"))))))
+   ;; '(mode-line-inactive ((t (:box (:line-width (1 . 1) :color "dim gray"))))))
+   '(mode-line-inactive ((t (:background "gray20"))))
+   '(mode-line ((t (:background "gray25")))))
   (custom-set-variables
    '(highlight-indent-guides-auto-character-face-perc 30)
    '(highlight-indent-guides-auto-top-character-face-perc 50))
@@ -920,6 +924,12 @@ The following %-sequences are provided:
 ;; lsp: select among eglot, lsp-bridge and lsp-mode
 ;;
 
+(defvar my/lsp 'lsp-mode)
+(defvar my/lsp-rename
+  (cond ((eq my/lsp 'eglot) 'eglot-rename)
+        ((eq my/lsp 'lsp-mode) 'lsp-rename)
+        (t nil)))
+
 (leaf python
   :custom (display-fill-column-indicator-column . 79)
   :hook (python-mode-hook . display-fill-column-indicator-mode)
@@ -944,14 +954,14 @@ The following %-sequences are provided:
 
 ;; ??Note: pyrightconfig.json is required for venv
 (leaf eglot
-  :disabled t
+  :disabled (not (eq my/lsp 'eglot))
   :ensure t
   :hook ((python-mode-hook . eglot-ensure))
   :custom ((eldoc-echo-area-use-multiline-p . nil)))
 
 ;; Note: company and corfu should be disabled; acm is used
 (leaf lsp-bridge
-  :disabled t
+  :disabled (not (eq my/lsp 'lsp-bridge))
   :config
   (defvar root_dir (file-name-concat (getenv "HOME") "distfiles"))
   (defvar lsp-bridge-path (file-name-concat root_dir "lsp-bridge"))
@@ -982,7 +992,7 @@ The following %-sequences are provided:
 
 ;; Note: work with corfu instead company
 (leaf lsp-mode
-  :disabled nil
+  :disabled (not (eq my/lsp 'lsp-mode))
   :ensure t
   :commands (lsp lsp-deferred)
   :config

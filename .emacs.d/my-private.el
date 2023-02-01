@@ -7,6 +7,9 @@
 ;; (custom-set-variables
 ;;  '(user-full-name "**** ****")
 ;;  '(user-mail-address "****@****"))
+;; (defvar my/modus-themes 'modus-vivendi)
+;; (defvar my/accent-modus-themes t)
+;; (defvar my/use-xsel t)
 ;; (defvar my/dynabook-p t)
 ;; (defvar my/deepl-auth-key "*******-****-****-****-**********:**")
 
