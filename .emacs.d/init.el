@@ -181,64 +181,6 @@
     :hook (dired-mode-hook . undo-tree-mode)
     :global-minor-mode global-undo-tree-mode))
 
-(leaf general
-  :ensure t
-  :require t
-  :config
-  (declare-function my/leader-keys "init")
-  (general-create-definer my/leader-keys
-    :keymaps '(normal insert visual emacs)
-    :prefix ","
-    :global-prefix "C-,")
-  (my/leader-keys
-    "a" 'avy-goto-char-timer
-    "b" 'switch-to-buffer
-    "e" 'eval-region
-    "d" 'dired
-    "f" 'find-file
-    "g" 'magit-status
-    "j" 'dired-jump
-    "k" 'kill-buffer
-    "n" 'display-line-numbers-mode
-    "o" 'other-window-or-split
-    "q" 'delete-next-window
-    "r" 'lsp-rename
-    "s" 'save-buffer
-    "t" 'gts-do-translate
-    "u" 'undo-tree-visualize
-    "x" 'execute-extended-command
-    "v" 'visual-line-mode
-    "w" 'evil-window-prev
-    "0" 'delete-window
-    "1" 'delete-other-windows
-    "2" 'split-window-vertically
-    "3" 'split-window-horizontally
-    "4" 'switch-to-buffer-other-window
-    "5" 'split-side-window
-    "=" 'er/expand-region
-    ";" 'comment-dwim
-    "'" 'ace-window
-    "," 'xref-pop-marker-stack
-    "." 'xref-find-definitions
-    "/" 'xref-find-references
-    "SPC" 'set-mark-command
-    ))
-
-(leaf neotree
-  :ensure t
-  :custom (neo-show-hidden-files . t)
-  :defvar neotree-mode-map
-  :config
-  (declare-function evil-define-key "evil-core")
-  (evil-define-key 'normal neotree-mode-map
-    "n" 'neotree-next-line
-    "p" 'neotree-previous-line
-    "q" 'neotree-hide
-    "r" 'neotree-refresh
-    "v" 'neotree-quick-look
-    "A" 'neotree-stretch-toggle
-    "H" 'neotree-hidden-file-toggle))
-
 ;;
 ;; Personal enhancements
 ;;
@@ -520,12 +462,6 @@ The following %-sequences are provided:
           (setq interprogram-paste-function 'gui-selection-value)
         (setq interprogram-paste-function 'xsel-paste-function)))))
 
-(leaf corfu-terminal
-  :ensure t
-  :config
-  (unless (display-graphic-p)
-    (corfu-terminal-mode +1)))
-
 (leaf evil-terminal-cursor-changer
   :doc "Change cursor shape and color by evil state in terminal"
   :ensure t
@@ -799,129 +735,7 @@ The following %-sequences are provided:
            (vc-handled-backends . '(Git))))
 
 ;;
-;; Initialize completions
-;;
-
-(leaf company
-  :disabled t
-  :doc "Modular text completion framework"
-  :req "emacs-24.3"
-  :tag "matching" "convenience" "abbrev" "emacs>=24.3"
-  :url "http://company-mode.github.io/"
-  :emacs>= 24.3
-  :ensure t
-  :blackout t
-  :leaf-defer nil
-  :config
-  ;; (add-to-list 'company-backends 'company-yasnippet)
-  :bind ((company-active-map
-          ("M-n" . nil)
-          ("M-p" . nil)
-          ("C-s" . company-filter-candidates)
-          ("C-n" . company-select-next)
-          ("C-p" . company-select-previous)
-          ("<tab>" . company-complete-selection))
-         (company-search-map
-          ("C-n" . company-select-next)
-          ("C-p" . company-select-previous)))
-  :custom ((company-idle-delay . 0)
-           (company-minimum-prefix-length . 1)
-           (company-transformers . '(company-sort-by-occurrence)))
-  :global-minor-mode global-company-mode)
-
-(leaf corfu
-  :disabled nil
-  :ensure t
-  :custom (corfu-auto . t)
-  :global-minor-mode global-corfu-mode)
-
-(leaf consult
-  :ensure t
-  :bind (([remap goto-line] . consult-goto-line)
-         ([remap switch-to-buffer] . consult-buffer)
-         ([remap isearch-forward] . my-consult-line))
-  :defvar xref-show-xrefs-function xref-show-definitions-function
-  :config
-  (setq xref-show-xrefs-function #'consult-xref
-        xref-show-definitions-function #'consult-xref)
-  :preface
-  ;; C-uを付けるとカーソル位置の文字列を使うmy-consult-lineコマンドを定義する
-  (defun my-consult-line (&optional at-point)
-    "Consult-line thing-at-point if AT-POINT is non-nil."
-    (interactive "P")
-    (if at-point
-        (consult-line (thing-at-point 'symbol))
-      (consult-line))))
-
-;; ;; embark-consultを読み込む
-;; (with-eval-after-load 'consult
-;;   (with-eval-after-load 'embark
-;;     (require 'embark-consult)))
-
-(leaf marginalia
-  :ensure t
-  :hook ((after-init-hook . marginalia-mode)))
-
-(leaf orderless
-  :ensure t
-  :custom (completion-styles . '(orderless)))
-
-(leaf vertico
-  :ensure t
-  :custom
-  ;; 補完候補を最大20行まで表示する
-  (vertico-count . 20)
-  :bind
-  (:vertico-map
-   (("C-l" . filename-upto-parent)
-    ;; ;; C-s/C-rで行を移動できるようにする
-    ;; ("C-r" . vertico-previous)
-    ;; ("C-s" . vertico-next)
-    ;; evil-want-minibuffer対応
-    ;; C-n/p, jkで選択移動を有効化
-    ([remap next-window-line]     . vertico-next)
-    ([remap previous-window-line] . vertico-previous)
-    ([remap evil-complete-next]     . vertico-next)
-    ([remap evil-complete-previous] . vertico-previous)
-    ([remap evil-paste-pop]     . vertico-previous)
-    ([remap evil-next-line]     . vertico-next)
-    ([remap evil-previous-line] . vertico-previous)
-    ([remap evil-next-visual-line]     . vertico-next)
-    ([remap evil-previous-visual-line] . vertico-previous)
-    ;; C-f/bで選択ページ送りを有効化
-    ([remap forward-char]  . vertico-scroll-up)
-    ([remap backward-char] . vertico-scroll-down)
-    ([remap evil-jump-forward]  . vertico-scroll-up)
-    ([remap evil-jump-backward] . vertico-scroll-down)
-    ([remap evil-scroll-page-down] . vertico-scroll-up)
-    ([remap evil-scroll-page-up]   . vertico-scroll-down)
-    ;; RETで選択確定を有効化
-    ([remap evil-ret] . vertico-exit)
-    ;; TAB, C-i, C-j: 補完
-    ("C-j" . vertico-insert)
-    ))
-  :hook ((after-init-hook . vertico-mode)
-         ;; savehist-modeを使ってVerticoの順番を永続化する
-         (after-init-hook . savehist-mode))
-  :preface
-  (defun filename-upto-parent ()
-    "Move to parent directory like \"cd ..\" in find-file."
-    (interactive)
-    (let ((sep (eval-when-compile (regexp-opt '("/" "\\")))))
-      (save-excursion
-        (left-char 1)
-        (when (looking-at-p sep)
-          (delete-char 1)))
-      (save-match-data
-        (when (search-backward-regexp sep nil t)
-          (right-char 1)
-          (filter-buffer-substring
-           (point)
-           (save-excursion (end-of-line) (point))
-           #'delete))))))
-
-;;
-;; lsp: select among eglot, lsp-bridge and lsp-mode
+;; lsp: eglot lsp-bridge lsp-mode
 ;;
 
 (defvar my/lsp 'lsp-mode)
@@ -930,30 +744,8 @@ The following %-sequences are provided:
         ((eq my/lsp 'lsp-mode) 'lsp-rename)
         (t nil)))
 
-(leaf python
-  :custom (display-fill-column-indicator-column . 79)
-  :hook (python-mode-hook . display-fill-column-indicator-mode)
-  :config
-  (leaf python-mode
-    :ensure t
-    :custom (python-indent-guess-indent-offset-verbose . nil))
-
-  ;; Python black is required
-  (leaf blacken
-    :ensure t
-    :custom ((blacken-line-length . 79)
-             (blacken-skip-string-normalization . t)))
-
-  ;; Python isort is required
-  (leaf py-isort :ensure t)
-
-  (leaf pyvenv
-    :disabled t
-    :ensure t
-    :hook (python-mode-hook . pyvenv-mode)))
-
-;; ??Note: pyrightconfig.json is required for venv
 (leaf eglot
+  :defvar my/lsp
   :disabled (not (eq my/lsp 'eglot))
   :ensure t
   :hook ((python-mode-hook . eglot-ensure))
@@ -1070,6 +862,196 @@ The following %-sequences are provided:
                           :inherit 'dap-ui-pending-breakpoint-face))))
 
 ;;
+;; Initialize completions
+;;
+
+(leaf company
+  :disabled t
+  :doc "Modular text completion framework"
+  :req "emacs-24.3"
+  :tag "matching" "convenience" "abbrev" "emacs>=24.3"
+  :url "http://company-mode.github.io/"
+  :emacs>= 24.3
+  :ensure t
+  :blackout t
+  :leaf-defer nil
+  :config
+  ;; (add-to-list 'company-backends 'company-yasnippet)
+  :bind ((company-active-map
+          ("M-n" . nil)
+          ("M-p" . nil)
+          ("C-s" . company-filter-candidates)
+          ("C-n" . company-select-next)
+          ("C-p" . company-select-previous)
+          ("<tab>" . company-complete-selection))
+         (company-search-map
+          ("C-n" . company-select-next)
+          ("C-p" . company-select-previous)))
+  :custom ((company-idle-delay . 0)
+           (company-minimum-prefix-length . 1)
+           (company-transformers . '(company-sort-by-occurrence)))
+  :global-minor-mode global-company-mode)
+
+(leaf corfu
+  :disabled (not (eq my/lsp 'lsp-bridge))
+  :ensure t
+  :custom (corfu-auto . t)
+  :global-minor-mode global-corfu-mode
+  :config
+  (leaf corfu-terminal
+    :ensure t
+    :config
+    (unless (display-graphic-p)
+      (corfu-terminal-mode +1))))
+
+(leaf consult
+  :ensure t
+  :bind (([remap goto-line] . consult-goto-line)
+         ([remap switch-to-buffer] . consult-buffer)
+         ([remap isearch-forward] . my-consult-line))
+  :defvar xref-show-xrefs-function xref-show-definitions-function
+  :config
+  (setq xref-show-xrefs-function #'consult-xref
+        xref-show-definitions-function #'consult-xref)
+  :preface
+  ;; C-uを付けるとカーソル位置の文字列を使うmy-consult-lineコマンドを定義する
+  (defun my-consult-line (&optional at-point)
+    "Consult-line thing-at-point if AT-POINT is non-nil."
+    (interactive "P")
+    (if at-point
+        (consult-line (thing-at-point 'symbol))
+      (consult-line))))
+
+;; ;; embark-consultを読み込む
+;; (with-eval-after-load 'consult
+;;   (with-eval-after-load 'embark
+;;     (require 'embark-consult)))
+
+(leaf marginalia
+  :ensure t
+  :hook ((after-init-hook . marginalia-mode)))
+
+(leaf orderless
+  :ensure t
+  :custom (completion-styles . '(orderless)))
+
+(leaf vertico
+  :ensure t
+  :custom
+  ;; 補完候補を最大20行まで表示する
+  (vertico-count . 20)
+  :bind
+  (:vertico-map
+   (("C-l" . filename-upto-parent)
+    ;; ;; C-s/C-rで行を移動できるようにする
+    ;; ("C-r" . vertico-previous)
+    ;; ("C-s" . vertico-next)
+    ;; evil-want-minibuffer対応
+    ;; C-n/p, jkで選択移動を有効化
+    ([remap next-window-line]     . vertico-next)
+    ([remap previous-window-line] . vertico-previous)
+    ([remap evil-complete-next]     . vertico-next)
+    ([remap evil-complete-previous] . vertico-previous)
+    ([remap evil-paste-pop]     . vertico-previous)
+    ([remap evil-next-line]     . vertico-next)
+    ([remap evil-previous-line] . vertico-previous)
+    ([remap evil-next-visual-line]     . vertico-next)
+    ([remap evil-previous-visual-line] . vertico-previous)
+    ;; C-f/bで選択ページ送りを有効化
+    ([remap forward-char]  . vertico-scroll-up)
+    ([remap backward-char] . vertico-scroll-down)
+    ([remap evil-jump-forward]  . vertico-scroll-up)
+    ([remap evil-jump-backward] . vertico-scroll-down)
+    ([remap evil-scroll-page-down] . vertico-scroll-up)
+    ([remap evil-scroll-page-up]   . vertico-scroll-down)
+    ;; RETで選択確定を有効化
+    ([remap evil-ret] . vertico-exit)
+    ;; TAB, C-i, C-j: 補完
+    ("C-j" . vertico-insert)
+    ))
+  :hook ((after-init-hook . vertico-mode)
+         ;; savehist-modeを使ってVerticoの順番を永続化する
+         (after-init-hook . savehist-mode))
+  :preface
+  (defun filename-upto-parent ()
+    "Move to parent directory like \"cd ..\" in find-file."
+    (interactive)
+    (let ((sep (eval-when-compile (regexp-opt '("/" "\\")))))
+      (save-excursion
+        (left-char 1)
+        (when (looking-at-p sep)
+          (delete-char 1)))
+      (save-match-data
+        (when (search-backward-regexp sep nil t)
+          (right-char 1)
+          (filter-buffer-substring
+           (point)
+           (save-excursion (end-of-line) (point))
+           #'delete))))))
+
+;;
+;; Keybindings
+;;
+
+(leaf general
+  :ensure t
+  :require t
+  :config
+  (declare-function my/leader-keys "init")
+  (general-create-definer my/leader-keys
+    :keymaps '(normal insert visual emacs)
+    :prefix ","
+    :global-prefix "C-,")
+  `(my/leader-keys
+     "a" 'avy-goto-char-timer
+     "b" 'switch-to-buffer
+     "e" 'eval-region
+     "d" 'dired
+     "f" 'find-file
+     "g" 'magit-status
+     "j" 'dired-jump
+     "k" 'kill-buffer
+     "n" 'display-line-numbers-mode
+     "o" 'other-window-or-split
+     "q" 'delete-next-window
+     "r" ',my/lsp-rename
+     "s" 'save-buffer
+     "t" 'gts-do-translate
+     "u" 'undo-tree-visualize
+     "x" 'execute-extended-command
+     "v" 'visual-line-mode
+     "w" 'evil-window-prev
+     "0" 'delete-window
+     "1" 'delete-other-windows
+     "2" 'split-window-vertically
+     "3" 'split-window-horizontally
+     "4" 'switch-to-buffer-other-window
+     "5" 'split-side-window
+     "=" 'er/expand-region
+     ";" 'comment-dwim
+     "'" 'ace-window
+     "," 'xref-pop-marker-stack
+     "." 'xref-find-definitions
+     "/" 'xref-find-references
+     "SPC" 'set-mark-command
+     ))
+
+(leaf neotree
+  :ensure t
+  :custom (neo-show-hidden-files . t)
+  :defvar neotree-mode-map
+  :config
+  (declare-function evil-define-key "evil-core")
+  (evil-define-key 'normal neotree-mode-map
+    "n" 'neotree-next-line
+    "p" 'neotree-previous-line
+    "q" 'neotree-hide
+    "r" 'neotree-refresh
+    "v" 'neotree-quick-look
+    "A" 'neotree-stretch-toggle
+    "H" 'neotree-hidden-file-toggle))
+
+;;
 ;; Initialize other external packages
 ;;
 
@@ -1134,6 +1116,12 @@ The following %-sequences are provided:
   ;; :ensure t
   :hook (emacs-lisp-mode-hook lisp-interaction-mode-hook)
   :defer-config
+
+  (leaf flymake-aspell
+    :ensure t
+    :after flymake
+    :hook (text-mode-hook . flymake-aspell-setup))
+
   (leaf flymake-diagnostic-at-point
     :ensure t
     :after flymake
@@ -1283,6 +1271,27 @@ The following %-sequences are provided:
   (defpowerline powerline-process "")
   (defpowerline powerline-minor-modes minions-mode-line-modes)
   )
+
+(leaf python
+  ;; pip install black debugpy isort pyright
+  :custom (display-fill-column-indicator-column . 79)
+  :hook (python-mode-hook . display-fill-column-indicator-mode)
+  :config
+  (leaf python-mode
+    :ensure t
+    :custom (python-indent-guess-indent-offset-verbose . nil))
+
+  (leaf blacken
+    :ensure t
+    :custom ((blacken-line-length . 79)
+             (blacken-skip-string-normalization . t)))
+
+  (leaf py-isort :ensure t)
+
+  (leaf pyvenv
+    :disabled t
+    :ensure t
+    :hook (python-mode-hook . pyvenv-mode)))
 
 (leaf rainbow-delimiters
   :ensure t
