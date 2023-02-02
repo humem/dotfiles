@@ -121,7 +121,7 @@
            (evil-want-fine-undo  . t)
            (evil-want-minibuffer . t))
   :global-minor-mode evil-mode
-  :hook (image-mode-hook . turn-off-evil-mode)
+  :hook (image-minor-mode-hook . turn-off-evil-mode)
   :defun evil-global-set-key evil-set-initial-state
   :config
   (evil-global-set-key 'motion (kbd "SPC")   'evil-scroll-page-down)
@@ -651,9 +651,6 @@ The following %-sequences are provided:
   :custom ((show-paren-delay . 0))
   :global-minor-mode show-paren-mode)
 
-(leaf pixel-scroll
-  :global-minor-mode pixel-scroll-mode)
-
 (leaf recentf
   :custom
   ((recentf-exclude . '("\\.gz\\'" "\\.jpg\\'" "\\.png\\'" "\\.tif\\'"))
@@ -698,8 +695,8 @@ The following %-sequences are provided:
   (custom-set-faces
    '(fill-column-indicator ((t (:foreground "dim gray"))))
    ;; '(mode-line-inactive ((t (:box (:line-width (1 . 1) :color "dim gray"))))))
-   '(mode-line-inactive ((t (:background "gray20"))))
-   '(mode-line ((t (:background "gray25")))))
+   '(mode-line-inactive ((t (:background "gray30"))))
+   '(mode-line ((t (:background "gray35")))))
   (custom-set-variables
    '(highlight-indent-guides-auto-character-face-perc 30)
    '(highlight-indent-guides-auto-top-character-face-perc 50))
@@ -798,6 +795,9 @@ The following %-sequences are provided:
            (lsp-completion-provider . :none))
   :hook (lsp-mode-hook . lsp-headerline-breadcrumb-mode)
   :init
+  (when (display-graphic-p)
+    (customize-set-variable
+     'lsp-headerline-breadcrumb-icons-enable nil))
   (leaf lsp-ui
     :ensure t
     :after lsp-mode
@@ -893,7 +893,7 @@ The following %-sequences are provided:
   :global-minor-mode global-company-mode)
 
 (leaf corfu
-  :disabled (not (eq my/lsp 'lsp-bridge))
+  :disabled (eq my/lsp 'lsp-bridge)
   :ensure t
   :custom (corfu-auto . t)
   :global-minor-mode global-corfu-mode
@@ -1116,11 +1116,6 @@ The following %-sequences are provided:
   ;; :ensure t
   :hook (emacs-lisp-mode-hook lisp-interaction-mode-hook)
   :defer-config
-
-  (leaf flymake-aspell
-    :ensure t
-    :after flymake
-    :hook (text-mode-hook . flymake-aspell-setup))
 
   (leaf flymake-diagnostic-at-point
     :ensure t
@@ -1389,6 +1384,14 @@ The following %-sequences are provided:
   :config
   (which-key-mode))
 
+(leaf yascroll
+  :ensure t
+  :custom ((yascroll:delay-to-hide . 3.0)
+           (yascroll:disabled-modes . '(dashboard-mode image-mode)))
+  :config
+  (unless (display-graphic-p)
+    (global-yascroll-bar-mode 1)))
+
 ;;
 ;; Skip heavy packages
 ;;
@@ -1428,6 +1431,20 @@ The following %-sequences are provided:
     (dashboard-setup-startup-hook))
 
   (leaf el-get :ensure t)
+
+  ;; TODO
+  (leaf flymake-aspell
+    :ensure t
+    :after flymake
+    :hook (text-mode-hook . flymake-aspell-setup))
+
+  ;; TODO
+  (leaf flymake-textlint
+    :el-get iquiw/flymake-textlint
+    :hook ((markdown-mode-hook
+            org-mode-hook
+            text-mode-hook)
+           . flymake-textlint-setup))
 
   (leaf kind-icon
     :ensure t
@@ -1499,16 +1516,8 @@ The following %-sequences are provided:
           (message-log-max nil))
       (paradox-enable)))
 
-  ;; (leaf flymake
-  ;;   :hook (markdown-mode-hook org-mode-hook text-mode-hook))
-
-  ;; TODO
-  (leaf flymake-textlint
-    :el-get iquiw/flymake-textlint
-    :hook ((markdown-mode-hook
-            org-mode-hook
-            text-mode-hook)
-           . flymake-textlint-setup))
+  (leaf pixel-scroll
+    :global-minor-mode pixel-scroll-mode)
 
   (leaf tree-sitter
     :ensure t
