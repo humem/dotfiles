@@ -423,9 +423,7 @@ The following %-sequences are provided:
   (global-set-key (kbd "<mouse-5>") 'scroll-up-line)
   ;; no blink cursor
   (customize-set-variable 'visible-cursor nil)
-  ;; scroll bar
-  ;(global-yascroll-bar-mode 1)
-  ;(setq yascroll:delay-to-hide nil)
+
   ;; sync with x clipboard
   (when (file-exists-p "/usr/bin/xsel")
     (defvar env-display "")
@@ -521,7 +519,6 @@ The following %-sequences are provided:
   (defun c/redraw-frame nil
     (interactive)
     (redraw-frame))
-
   :bind (("M-ESC ESC" . c/redraw-frame))
   :custom
   '((auto-save-list-file-prefix . nil) ;; startup.el
@@ -536,6 +533,7 @@ The following %-sequences are provided:
     (inhibit-startup-screen . t) ;; startup.el
     (init-file-debug . t) ;; startup.el
     (menu-bar-mode . nil)
+    (read-process-output-max . `,(* 1024 1024)) ;; 1mb
     (ring-bell-function . 'ignore)
     ;; (scroll-bar-mode . nil) ;; scroll-bar
     (scroll-conservatively . 100)
@@ -553,7 +551,7 @@ The following %-sequences are provided:
   (defalias 'yes-or-no-p 'y-or-n-p))
 
 ;; startup.el
-(eval '(setq inhibit-startup-echo-area-message "umemoto"))
+(eval '(setq inhibit-startup-echo-area-message user-login-name))
 
 (leaf ansi-color
   :hook ((compilation-filter-hook . ansi-color-apply-on-buffer)
@@ -701,6 +699,7 @@ The following %-sequences are provided:
    '(highlight-indent-guides-auto-character-face-perc 30)
    '(highlight-indent-guides-auto-top-character-face-perc 50))
   )
+
 (defvar my/modus-themes 'modus-operandi) ;; modus-vivendi
 (defvar my/modus-themes-region '(bg-only no-extend)) ;; accented
 
@@ -740,48 +739,30 @@ The following %-sequences are provided:
   (cond ((eq my/lsp 'eglot) 'eglot-rename)
         ((eq my/lsp 'lsp-mode) 'lsp-rename)
         (t nil)))
+(defun my/lsp-disabled (lsp)
+  "Return t if LSP is disabled."
+  (not (eq my/lsp lsp)))
 
 (leaf eglot
-  :defvar my/lsp
-  :disabled (not (eq my/lsp 'eglot))
+  :disabled (my/lsp-disabled 'eglot)
   :ensure t
   :hook ((python-mode-hook . eglot-ensure))
   :custom ((eldoc-echo-area-use-multiline-p . nil)))
 
 ;; Note: company and corfu should be disabled; acm is used
 (leaf lsp-bridge
-  :disabled (not (eq my/lsp 'lsp-bridge))
+  :disabled (my/lsp-disabled 'lsp-bridge)
+  :el-get manateelazycat/lsp-bridge
+  :global-minor-mode global-lsp-bridge-mode
   :config
-  (defvar root_dir (file-name-concat (getenv "HOME") "distfiles"))
-  (defvar lsp-bridge-path (file-name-concat root_dir "lsp-bridge"))
-  (when (file-directory-p lsp-bridge-path)
-    (add-to-list 'load-path lsp-bridge-path)
-    ;; (require 'yasnippet)
-    ;; (yas-global-mode 1)
-    (require 'lsp-bridge)
-    (global-lsp-bridge-mode)
-    (define-key acm-mode-map (kbd "RET") 'newline))
-
-  (unless (display-graphic-p)
-    (defvar acm-terminal-path (file-name-concat root_dir, "acm-terminal"))
-    (when (file-directory-p lsp-bridge-path)
-      (add-to-list 'load-path acm-terminal-path)
-      (with-eval-after-load 'acm
-        (require 'acm-terminal))))
-  ;; (add-hook 'python-mode-hook 'lsp-bridge-mode)
-  ;; (setq lsp-bridge-enable-mode-line nil)
-  ;; (define-key acm-mode-map [remap evil-complete-next] 'acm-select-next)
-  ;; (define-key acm-mode-map [remap evil-complete-previous] 'acm-select-prev)
-  ;; (setq acm-candidate-match-function 'orderless-flex)
-  ;; (setq lsp-bridge-complete-manually t)
-  ;; (add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-next")
-  ;; (add-to-list 'lsp-bridge-completion-stop-commands "evil-complete-previous")
-  ;; (add-to-list 'lsp-bridge-completion-stop-commands "dabbrev-expand")
-  )
+  (leaf acm-terminal
+    :unless (display-graphic-p)
+    :after lsp-bridge
+    :el-get twlz0ne/acm-terminal))
 
 ;; Note: work with corfu instead company
 (leaf lsp-mode
-  :disabled (not (eq my/lsp 'lsp-mode))
+  :disabled (my/lsp-disabled 'lsp-mode)
   :ensure t
   :commands (lsp lsp-deferred)
   :config
@@ -791,13 +772,16 @@ The following %-sequences are provided:
            (lsp-document-sync-method . 2)
            (lsp-response-timeout     . 5)
            (lsp-enable-file-watchers . nil)
+           (lsp-client-packages . '(lsp-pyright))
+           (lsp-diagnostics-provider . :flymake)
            ;; use corfu instead of company
            (lsp-completion-provider . :none))
   :hook (lsp-mode-hook . lsp-headerline-breadcrumb-mode)
   :init
-  (when (display-graphic-p)
+  (unless (display-graphic-p)
     (customize-set-variable
      'lsp-headerline-breadcrumb-icons-enable nil))
+
   (leaf lsp-ui
     :ensure t
     :after lsp-mode
@@ -812,16 +796,14 @@ The following %-sequences are provided:
              (lsp-ui-peek-enable           . t)
              (lsp-ui-peek-peek-height      . 20)
              (lsp-ui-peek-list-width       . 50))
-    :bind ((lsp-ui-mode-map ([remap xref-find-definitions] .
-                             lsp-ui-peek-find-definitions)
-                            ([remap xref-find-references] .
-                             lsp-ui-peek-find-references))
-           (lsp-mode-map ("C-c s" . lsp-ui-sideline-mode)
-                         ("C-c d" . lsp-ui-doc-mode)))
-    :hook ((lsp-mode-hook . lsp-ui-mode)))
-  :config
+    :bind (lsp-ui-mode-map
+           ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
+           ([remap xref-find-references]  . lsp-ui-peek-find-references))
+    :hook (lsp-mode-hook . lsp-ui-mode))
+
   (leaf lsp-treemacs :ensure t)
 
+  ;; Prerequisite: pip install pyright
   (leaf lsp-pyright
     :ensure t
     :custom (lsp-pyright-venv-path . `,(getenv "HOME"))
@@ -829,10 +811,7 @@ The following %-sequences are provided:
                                 (require 'lsp-pyright)
                                 (lsp-deferred))))
 
-  (leaf python-mode
-    :ensure t
-    :hook (python-mode-hook . lsp-deferred))
-
+  ;; Prerequisite: pip install debugpy
   (leaf dap-mode
     :ensure t
     :commands dap-debug
@@ -840,9 +819,10 @@ The following %-sequences are provided:
     ;; (lsp-enable-dap-auto-configure . nil)
     :config
     (unless (display-graphic-p)
-
-      (setq dap-auto-configure-features '(sessions locals breakpoints expressions tooltip)))
-      ;; (setq dap-auto-configure-features (remove 'controls dap-auto-configure-features))
+      (setq dap-auto-configure-features
+            '(sessions locals breakpoints expressions tooltip)))
+    ;; (setq dap-auto-configure-features
+    ;;       (remove 'controls dap-auto-configure-features))
     (dap-ui-mode 1)
     (require 'dap-node)
     (dap-node-setup)
@@ -852,12 +832,12 @@ The following %-sequences are provided:
      :keymaps 'lsp-mode-map :prefix lsp-keymap-prefix "d"
      '(dap-hydra t :wk "debugger"))
     (unless (display-graphic-p)
-      ;;  An orange background for the line to execute
-      (set-face-background 'dap-ui-marker-face "orange") ;; "color-166")
+      ;;  An orange background for the line to execute ;; "color-166"
+      (set-face-background 'dap-ui-marker-face "orange")
       ;; Do not inherit other styles
       (set-face-attribute 'dap-ui-marker-face nil :inherit nil)
-      ;; Blue background for breakpoints line
-      (set-face-background 'dap-ui-pending-breakpoint-face "light blue")
+      ;; Blue background for breakpoints line ;; "light blue"
+      (set-face-background 'dap-ui-pending-breakpoint-face "dark blue")
       (set-face-attribute 'dap-ui-verified-breakpoint-face nil
                           :inherit 'dap-ui-pending-breakpoint-face))))
 
@@ -929,7 +909,7 @@ The following %-sequences are provided:
 
 (leaf marginalia
   :ensure t
-  :hook ((after-init-hook . marginalia-mode)))
+  :hook (after-init-hook . marginalia-mode))
 
 (leaf orderless
   :ensure t
@@ -1233,7 +1213,6 @@ The following %-sequences are provided:
   :init
   (evil-global-set-key 'motion (kbd "C-e") 'mwim-end))
 
-;; Note: slower startup
 (leaf org-modern :ensure t)
   ;; :global-minor-mode global-org-modern-mode)
 
@@ -1264,17 +1243,15 @@ The following %-sequences are provided:
   ;; (add-hook 'desktop-after-read-hook 'powerline-reset)
   (defpowerline powerline-major-mode "")
   (defpowerline powerline-process "")
-  (defpowerline powerline-minor-modes minions-mode-line-modes)
-  )
+  (defpowerline powerline-minor-modes minions-mode-line-modes))
 
-(leaf python
-  ;; pip install black debugpy isort pyright
-  :custom (display-fill-column-indicator-column . 79)
+;; Prerequisite: pip install black isort
+(leaf python-mode
+  :ensure t
+  :custom ((display-fill-column-indicator-column . 79)
+           (python-indent-guess-indent-offset-verbose . nil))
   :hook (python-mode-hook . display-fill-column-indicator-mode)
   :config
-  (leaf python-mode
-    :ensure t
-    :custom (python-indent-guess-indent-offset-verbose . nil))
 
   (leaf blacken
     :ensure t
@@ -1290,15 +1267,16 @@ The following %-sequences are provided:
 
 (leaf rainbow-delimiters
   :ensure t
-  :hook
-  ((prog-mode-hook       . rainbow-delimiters-mode)))
+  :hook (prog-mode-hook . rainbow-delimiters-mode))
 
 (leaf restart-emacs :ensure t)
 
+;; Prerequisite: rustup
 (leaf rust-mode
   :ensure t
-  :custom ((rust-format-on-save . t))
+  :custom (rust-format-on-save . t)
   :config
+
   (leaf cargo
     :ensure t
     :commands cargo-minor-mode
@@ -1311,12 +1289,7 @@ The following %-sequences are provided:
   :require smartparens-config
   :custom ((electric-pair-mode . nil))) ; electirc-pair-modeを無効化
 
-(leaf super-save
-  :ensure t
-  ;; :require t
-  ;; :config
-  ;; (super-save-mode 1)
-  )
+(leaf super-save :ensure t)
 
 (leaf topsy
   :ensure t
@@ -1380,17 +1353,15 @@ The following %-sequences are provided:
 
 (leaf which-key
   :ensure t
-  :require t
-  :config
-  (which-key-mode))
+  :global-minor-mode which-key-mode)
 
 (leaf yascroll
   :ensure t
   :custom ((yascroll:delay-to-hide . 3.0)
-           (yascroll:disabled-modes . '(dashboard-mode image-mode)))
-  :config
-  (unless (display-graphic-p)
-    (global-yascroll-bar-mode 1)))
+           (yascroll:disabled-modes . '(dashboard-mode image-minor-mode))))
+  ;; :config
+  ;; (unless (display-graphic-p)
+  ;;   (global-yascroll-bar-mode 1)))
 
 ;;
 ;; Skip heavy packages
@@ -1455,7 +1426,7 @@ The following %-sequences are provided:
     :config
     (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
-  ;; cmigemo is required
+  ;; Prerequisite: apt install cmigemo
   (leaf migemo
     :ensure t
     :require t
@@ -1558,7 +1529,7 @@ The following %-sequences are provided:
 
 ;; Faster startup (end)
 (setq file-name-handler-alist my-saved-file-name-handler-alist)
-(setq gc-cons-threshold 16777216) ; 16mb
+(setq gc-cons-threshold (* 100 1024 1024)) ;; 100mb
 
 (provide 'init)
 
