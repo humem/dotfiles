@@ -48,6 +48,7 @@
               (with-current-buffer (get-buffer-create "*setup-tracker*")
                 (save-excursion
                   (goto-char (point-min))
+                  (insert (number-to-string elapsed) " ")
                   (dotimes (_ setup-tracker--level) (insert "> "))
                   (insert
                    (file-name-nondirectory (pop setup-tracker--parents))
@@ -471,12 +472,14 @@ The following %-sequences are provided:
 (leaf web-browser-for-wsl
   :if (wsl-p)
   :init
-  (let ((cmd-exe "/mnt/c/Windows/System32/cmd.exe")
-        (cmd-args '("/c" "start")))
-    (when (file-exists-p cmd-exe)
-      (setq browse-url-browser-function 'browse-url-generic
-            browse-url-generic-program cmd-exe
-            browse-url-generic-args cmd-args))))
+  ;; (let ((cmd-exe "/mnt/c/Windows/System32/cmd.exe")
+  ;;       (cmd-args '("/c" "start")))
+  ;;   (when (file-exists-p cmd-exe)
+  (let ((cmd-exe "open")
+        (cmd-args nil))
+    (setq browse-url-browser-function 'browse-url-generic
+          browse-url-generic-program cmd-exe
+          browse-url-generic-args cmd-args)))
 
 (leaf window
   :bind (("C-;"    . 'other-window-or-split)
@@ -550,8 +553,8 @@ The following %-sequences are provided:
   ;; (keyboard-translate ?\C-h ?\C-?)
   (defalias 'yes-or-no-p 'y-or-n-p))
 
-;; startup.el
-(eval '(setq inhibit-startup-echo-area-message user-login-name))
+;; ;; startup.el
+;; (eval '(setq inhibit-startup-echo-area-message "xxx"))
 
 (leaf ansi-color
   :hook ((compilation-filter-hook . ansi-color-apply-on-buffer)
@@ -590,9 +593,11 @@ The following %-sequences are provided:
   :custom
   ((dired-dwim-target . t)
    (dired-listing-switches . "-aho")
-   (dired-use-ls-dired . t)
-   ;; dired-x
-   (dired-guess-shell-alist-user . '(("\\.*" "open")))))
+   (dired-use-ls-dired . t))
+  :config
+  (leaf dired-x
+    :require t
+    :custom (dired-guess-shell-alist-user . '(("\\.*" "open")))))
 
 (leaf display-line-numbers
   :global-minor-mode global-display-line-numbers-mode)
@@ -637,6 +642,9 @@ The following %-sequences are provided:
   :disabled t
   :global-minor-mode global-hl-line-mode)
 
+(leaf indent
+  :custom (tab-always-indent . 'complete))
+
 (leaf js
   :custom (js-indent-level . 2))
 
@@ -657,7 +665,9 @@ The following %-sequences are provided:
 
 (leaf simple
   :custom ((kill-whole-line  . t)
-           (next-line-add-newlines . nil))
+           (next-line-add-newlines . nil)
+           ;; Repeat poppoing marks by C-u C-SPC C-SPC ..
+           (set-mark-command-repeat-pop . t))
   :global-minor-mode global-visual-line-mode
   :hook
   ((dired-mode-hook
@@ -737,6 +747,7 @@ The following %-sequences are provided:
 (defvar my/lsp 'lsp-mode)
 (defvar my/lsp-rename
   (cond ((eq my/lsp 'eglot) 'eglot-rename)
+        ((eq my/lsp 'lsp-bridge) 'lsp-bridge-rename)
         ((eq my/lsp 'lsp-mode) 'lsp-rename)
         (t nil)))
 (defun my/lsp-disabled (lsp)
@@ -750,14 +761,21 @@ The following %-sequences are provided:
   :custom ((eldoc-echo-area-use-multiline-p . nil)))
 
 ;; Note: company and corfu should be disabled; acm is used
+;; Prerequisite: pip install epc orjson sexpdata six
 (leaf lsp-bridge
   :disabled (my/lsp-disabled 'lsp-bridge)
   :el-get manateelazycat/lsp-bridge
-  :global-minor-mode global-lsp-bridge-mode
+  :require (t posframe markdown-mode yasnippet)
+  :hook (python-mode-hook . lsp-bridge-mode)
+  :bind (lsp-bridge-mode-map
+         ([remap xref-pop-marker-stack] . lsp-bridge-find-def-return)
+         ([remap xref-find-definitions] . lsp-bridge-find-def)
+         ([remap xref-find-references]  . lsp-bridge-find-references))
   :config
   (leaf acm-terminal
     :unless (display-graphic-p)
     :after lsp-bridge
+    :require (t popon)
     :el-get twlz0ne/acm-terminal))
 
 ;; Note: work with corfu instead company
@@ -875,14 +893,62 @@ The following %-sequences are provided:
 (leaf corfu
   :disabled (eq my/lsp 'lsp-bridge)
   :ensure t
-  :custom (corfu-auto . t)
+  :custom ((corfu-auto . t)
+           (corfu-cycle . t))
   :global-minor-mode global-corfu-mode
+  :bind (corfu-map ("RET" . corfu-quit))
   :config
+  (evil-global-set-key
+   'insert [remap indent-for-tab-command] 'completion-at-point)
+
   (leaf corfu-terminal
     :ensure t
     :config
     (unless (display-graphic-p)
-      (corfu-terminal-mode +1))))
+      (corfu-terminal-mode +1)))
+
+  ;; (leaf company :ensure t)
+
+  (leaf cape
+    :ensure t
+    :hook ((prog-mode-hook . my/set-basic-capf)
+           (text-mode-hook . my/set-basic-capf))
+           ;; (lsp-completion-mode-hook . my/set-lsp-capf))
+    :config
+    (defun my/convert-super-capf (arg-capf)
+      (list (cape-capf-case-fold
+             (cape-super-capf arg-capf))
+                              ;; (cape-company-to-capf #'company-yasnippet)))
+            #'cape-file
+            #'cape-dabbrev))
+
+    (defun my/set-basic-capf ()
+      (setq-local completion-at-point-functions
+                  (my/convert-super-capf
+                   (car completion-at-point-functions))))
+
+    (defun my/set-lsp-capf ()
+      (setq-local completion-at-point-functions
+                  (my/convert-super-capf
+                   #'lsp-completion-at-point)))
+
+    (add-to-list 'completion-at-point-functions #'cape-file t)
+    (add-to-list 'completion-at-point-functions #'cape-tex t)
+    (add-to-list 'completion-at-point-functions #'cape-dabbrev t)
+    (add-to-list 'completion-at-point-functions #'cape-keyword t)))
+  ;;(add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  ;;(add-to-list 'completion-at-point-functions #'cape-file)
+  ;;(add-to-list 'completion-at-point-functions #'cape-history)
+  ;;(add-to-list 'completion-at-point-functions #'cape-keyword)
+  ;;(add-to-list 'completion-at-point-functions #'cape-tex)
+  ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
+  ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
+  ;;(add-to-list 'completion-at-point-functions #'cape-abbrev)
+  ;;(add-to-list 'completion-at-point-functions #'cape-ispell)
+  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
+  ;;(add-to-list 'completion-at-point-functions #'cape-symbol)
+  ;;(add-to-list 'completion-at-point-functions #'cape-line)
+
 
 (leaf consult
   :ensure t
@@ -1245,19 +1311,19 @@ The following %-sequences are provided:
   (defpowerline powerline-process "")
   (defpowerline powerline-minor-modes minions-mode-line-modes))
 
-;; Prerequisite: pip install black isort
-(leaf python-mode
-  :ensure t
+(leaf python
   :custom ((display-fill-column-indicator-column . 79)
            (python-indent-guess-indent-offset-verbose . nil))
   :hook (python-mode-hook . display-fill-column-indicator-mode)
   :config
 
+  ;; Prerequisite: pip install black
   (leaf blacken
     :ensure t
     :custom ((blacken-line-length . 79)
              (blacken-skip-string-normalization . t)))
 
+  ;; Prerequisite: pip install isort
   (leaf py-isort :ensure t)
 
   (leaf pyvenv
@@ -1268,6 +1334,8 @@ The following %-sequences are provided:
 (leaf rainbow-delimiters
   :ensure t
   :hook (prog-mode-hook . rainbow-delimiters-mode))
+
+(leaf rainbow-mode :ensure t)
 
 (leaf restart-emacs :ensure t)
 
@@ -1308,10 +1376,20 @@ The following %-sequences are provided:
 
 (leaf yaml-mode :ensure t)
 
-(leaf yasnippet :ensure t)
-  ;; :init (yas-global-mode 1))
+(leaf yasnippet
+  :ensure t
   ;; :custom
-  ;; ((yas-snippet-dirs . '("`/.emacs.d/yasnippets"))))
+  ;; (yas-snippet-dirs . '("`/.emacs.d/yasnippets"))
+  :global-minor-mode yas-global-mode
+  :config
+
+  (leaf yasnippet-snippets
+    :ensure t
+    :after yasnippet)
+
+  (leaf consult-yasnippet
+    :ensure t
+    :after yasnippet))
 
 ;; ;; web-mode
 ;; (add-to-list 'auto-mode-alist '("\\.?html$" . web-mode))
@@ -1425,6 +1503,32 @@ The following %-sequences are provided:
     (kind-icon-default-face . 'corfu-default)
     :config
     (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
+
+  ;; Prerequisite: gem install commonmarker
+  (leaf markdown-mode
+    :ensure t
+    :commands (markdown-mode gfm-mode)
+    :mode (("\\.md\\'" . gfm-mode)
+           ("\\.markdown\\'" . gfm-mode))
+    :custom
+    ((markdown-command . "commonmarker --extension=tagfilter,autolink,table,strikethrough")
+     (markdown-css-paths . '("https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css"
+                             "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/styles/github.min.css"))
+     (markdown-xhtml-header-content . "<script src=\"https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/highlight.min.js\"></script><script>hljs.initHighlightingOnLoad();</script>")
+     (markdown-xhtml-body-preamble . "<div class=\"markdown-body\">")
+     (markdown-xhtml-body-epilogue . "</div>"))
+    :config
+
+    (leaf markdown-preview-mode
+      :ensure t
+      :after markdown-mode
+      :config
+      (define-key markdown-mode-command-map (kbd "C-p") 'markdown-preview-mode)
+      ;; (setq markdown-preview-stylesheets (list "github.css"))
+      (setq markdown-preview-stylesheets (list "//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css"))
+      (setq markdown-preview-javascript (list "//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"))
+      (setq markdown-preview-script-onupdate "hljs.highlightAll();")
+      ))
 
   ;; Prerequisite: apt install cmigemo
   (leaf migemo
