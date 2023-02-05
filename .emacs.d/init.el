@@ -160,6 +160,17 @@
       "0" 'evil-beginning-of-line ; 'text-scale-adjust
       ))
 
+  (leaf evil-commentary
+    :ensure t
+    :global-minor-mode evil-commentary-mode)
+
+  (leaf evil-matchit
+    :ensure t
+    :global-minor-mode global-evil-matchit-mode)
+
+  (leaf evil-org
+    :ensure t)
+
   (leaf evil-surround
     ;; https://blog.3qe.us/entry/2020/05/12/012958
     ;; b B r a: ) } ] >
@@ -186,24 +197,23 @@
 ;; Personal enhancements
 ;;
 
-(defvar my/fonts-family "HackGen35Nerd Console")
-(defvar my/fonts-height 120)
-(leaf japanese
-  :init
+(leaf mule-cmds
+  :config
   (set-language-environment "Japanese")
   (set-default-coding-systems 'utf-8-unix)
   (prefer-coding-system       'utf-8-unix)
   (setenv "LANG" "C.UTF-8")
-  (setq default-process-coding-system '(undecided-dos . utf-8-unix))
-  ;; プロセスが出力する文字コードを判定して、process-coding-system の DECODING の設定値を決定する
-  ;; ※ 設定値の car を "undecided-dos" にしておくと、Windows コマンドの出力にも柔軟に対応できます。
-  ;; デフォルト フォント
-  ;; "PlemolJP35Console"
-  ;; "UDEV Gothic"
-  ;; "HackGen35Nerd Console"
+  ;; C source code
+  (setq default-process-coding-system '(undecided-dos . utf-8-unix)))
+
+(defvar my/fonts-family "HackGen35Nerd Console")
+;; e.g. "PlemolJP35Console" "UDEV Gothic"
+(defvar my/fonts-height 120)
+(leaf faces
+  :if (display-graphic-p)
+  :config
   (set-face-attribute
-   'default nil :family my/fonts-family :height my/fonts-height)
-)
+   'default nil :family my/fonts-family :height my/fonts-height))
 
 (leaf mozc
   :doc "日本語入力"
@@ -219,33 +229,8 @@
   :bind ((("C-\\"  . 'toggle-input-method)
           ("C-SPC" . 'toggle-input-method)
           ("<f2>"  . 'toggle-input-method)))
-         ;; (isearch-mode-map
-         ;;  :package isearch
-         ;;  ("C-\\"  . 'toggle-input-method)
-         ;;  ("C-SPC" . 'toggle-input-method)
-         ;;  ("<f2>"  . 'toggle-input-method))
-         ;; (wdired-mode-map
-         ;;  :package wdired
-         ;;  ("C-\\"  . 'toggle-input-method)
-         ;;  ("C-SPC" . 'toggle-input-method)
-         ;;  ("<f2>"  . 'toggle-input-method)))
   :defun mozc-session-sendkey
   :config
-  ;; (defvar mozc-im-mode nil)
-  ;; (add-hook 'mozc-im-activate-hook (lambda () (setq mozc-im-mode t)))
-  ;; (add-hook 'mozc-im-deactivate-hook (lambda () (setq mozc-im-mode nil)))
-  ;; ;; isearch を利用する前後で IME の状態を維持するための対策
-  ;; (add-hook 'isearch-mode-hook (lambda () (setq im-state mozc-im-mode)))
-  ;; (add-hook 'isearch-mode-end-hook
-  ;;           (lambda ()
-  ;;             (unless (eq im-state mozc-im-mode)
-  ;;               (if im-state
-  ;;                   (activate-input-method default-input-method)
-  ;;                 (deactivate-input-method)))))
-  ;; ;; wdired 終了時に IME を OFF にする
-  ;; (advice-add 'wdired-finish-edit
-  ;;             :after (lambda (&rest args)
-  ;;                      (deactivate-input-method)))
   ;; Windows の mozc では、セッション接続直後 directモード になるので
   ;; hiraganaモード にする
   (when (wsl-p)
@@ -544,11 +529,12 @@ The following %-sequences are provided:
     (tab-width . 2)
     (text-quoting-style . 'straight)
     (tool-bar-mode . nil)
-    (transient-mark-mode . nil))
+    (transient-mark-mode . nil)
     ;; (truncate-lines . t)
     ;; (use-dialog-box . nil)
     ;; (use-file-dialog . nil)
-    (visible-bell . nil)
+    (use-short-answers . t)
+    (visible-bell . nil))
   :init
   ;; (keyboard-translate ?\C-h ?\C-?)
   (defalias 'yes-or-no-p 'y-or-n-p))
@@ -580,14 +566,14 @@ The following %-sequences are provided:
 (leaf dabbrev
   :custom (dabbrev-case-fold-search . nil))
 
-(leaf desktop
-  :custom
-  ((desktop-files-not-to-save
-    . "\\(\\`/[^/:]*:\\|(ftp)\\'\\|\\.gz\\'\\|\\.jpg\\'\\|\\.png\\'|\\.tif\\'\\)")
-   (desktop-lazy-verbose . nil))
-   ;; (desktop-restore-eager . 0))
-  :config
-  (desktop-save-mode 1))
+;; (leaf desktop
+;;   :custom
+;;   ((desktop-files-not-to-save
+;;     . "\\(\\`/[^/:]*:\\|(ftp)\\'\\|\\.gz\\'\\|\\.jpg\\'\\|\\.png\\'|\\.tif\\'\\)")
+;;    (desktop-lazy-verbose . nil))
+;;    ;; (desktop-restore-eager . 0))
+;;   :config
+;;   (desktop-save-mode 1))
 
 (leaf dired
   :custom
@@ -606,6 +592,9 @@ The following %-sequences are provided:
   :custom
   ((ediff-split-window-function . 'split-window-horizontally)
    (ediff-window-setup-function . 'ediff-setup-windows-plain)))
+
+(leaf elec-pair
+  :custom (electric-pair-mode . t))
 
 (leaf files
   :custom ((enable-local-variables . :safe)
@@ -662,6 +651,15 @@ The following %-sequences are provided:
   ((recentf-exclude . '("\\.gz\\'" "\\.jpg\\'" "\\.png\\'" "\\.tif\\'"))
    (recentf-max-saved-items . 100))
   :global-minor-mode recentf-mode)
+
+(leaf savehist
+  :global-minor-mode savehist-mode)
+
+(leaf saveplace
+  :global-minor-mode save-place-mode)
+
+(leaf server
+  :global-minor-mode server-mode)
 
 (leaf simple
   :custom ((kill-whole-line  . t)
@@ -907,7 +905,7 @@ The following %-sequences are provided:
     (unless (display-graphic-p)
       (corfu-terminal-mode +1)))
 
-  ;; (leaf company :ensure t)
+  (leaf company :ensure t)
 
   (leaf cape
     :ensure t
@@ -917,8 +915,8 @@ The following %-sequences are provided:
     :config
     (defun my/convert-super-capf (arg-capf)
       (list (cape-capf-case-fold
-             (cape-super-capf arg-capf))
-                              ;; (cape-company-to-capf #'company-yasnippet)))
+             (cape-super-capf arg-capf
+                              (cape-company-to-capf #'company-yasnippet)))
             #'cape-file
             #'cape-dabbrev))
 
@@ -977,21 +975,26 @@ The following %-sequences are provided:
   :ensure t
   :hook (after-init-hook . marginalia-mode))
 
-(leaf orderless
+;; (leaf orderless
+;;   :ensure t
+;;   :custom (completion-styles . '(orderless)))
+
+(leaf fussy
   :ensure t
-  :custom (completion-styles . '(orderless)))
+  :custom ((completion-styles . '(fussy))
+           (completion-category-defaults . nil)
+           (compleiton-category-overrides . nil)))
+
+(leaf prescient
+  :ensure t
+  :global-minor-mode prescient-persist-mode)
 
 (leaf vertico
   :ensure t
-  :custom
-  ;; 補完候補を最大20行まで表示する
-  (vertico-count . 20)
+  :custom (vertico-count . 20)
   :bind
   (:vertico-map
    (("C-l" . filename-upto-parent)
-    ;; ;; C-s/C-rで行を移動できるようにする
-    ;; ("C-r" . vertico-previous)
-    ;; ("C-s" . vertico-next)
     ;; evil-want-minibuffer対応
     ;; C-n/p, jkで選択移動を有効化
     ([remap next-window-line]     . vertico-next)
@@ -1015,9 +1018,7 @@ The following %-sequences are provided:
     ;; TAB, C-i, C-j: 補完
     ("C-j" . vertico-insert)
     ))
-  :hook ((after-init-hook . vertico-mode)
-         ;; savehist-modeを使ってVerticoの順番を永続化する
-         (after-init-hook . savehist-mode))
+  :global-minor-mode vertico-mode
   :preface
   (defun filename-upto-parent ()
     "Move to parent directory like \"cd ..\" in find-file."
@@ -1381,6 +1382,8 @@ The following %-sequences are provided:
   ;; :custom
   ;; (yas-snippet-dirs . '("`/.emacs.d/yasnippets"))
   :global-minor-mode yas-global-mode
+  :bind (yas-minor-mode-map
+         ("TAB" . nil))
   :config
 
   (leaf yasnippet-snippets
@@ -1476,6 +1479,11 @@ The following %-sequences are provided:
 
   (leaf dashboard
     :ensure t
+    :custom ((dashboard-center-content . t)
+             (dashboard-set-heading-icons . t)
+             (dashboard-set-file-icons . t)
+             (dashboard-set-navigator . t)
+             (dashboard-set-init-info . t))
     :config
     (dashboard-setup-startup-hook))
 
@@ -1580,8 +1588,7 @@ The following %-sequences are provided:
             (variable (styles orderless-default-style))))
     (setq orderless-matching-styles
           '(orderless-literal orderless-regexp orderless-migemo))
-    :custom
-    (completion-styles . '(orderless basic)))
+    (push 'orderless completion-styles))
 
   (leaf paradox
     :doc "wrapper of package.el"
@@ -1590,6 +1597,10 @@ The following %-sequences are provided:
     (let ((inhibit-message t)
           (message-log-max nil))
       (paradox-enable)))
+
+  (leaf pulsar
+    :ensure t
+    :global-minor-mode pulsar-global-mode)
 
   (leaf pixel-scroll
     :global-minor-mode pixel-scroll-mode)
@@ -1600,6 +1611,14 @@ The following %-sequences are provided:
     :global-minor-mode global-tree-sitter-mode
     :config
     (leaf tree-sitter-langs :ensure t))
+
+  (leaf valign
+    :ensure t
+    :hook (org-mode-hook markdown-mode-hook))
+
+  (leaf volatile-highlights
+    :ensure t
+    :global-minor-mode volatile-highlights-mode)
 
   ;; (leaf tree-sitter
   ;;   :ensure (t tree-sitter-langs)
