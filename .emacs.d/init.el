@@ -1477,6 +1477,20 @@ The following %-sequences are provided:
     :after migeo
     :global-minor-mode avy-migemo-mode)
 
+  (leaf epc :ensure t)
+
+  (leaf deferred :ensure t)
+
+  ;; Prerequisite: pip install epc playwright rich ...
+  (leaf chatgpt
+    :el-get joshcho/ChatGPT.el
+    :require (epc deferred python)
+    :init
+    (unless (boundp 'python-interpreter)
+      (defvaralias 'python-interpreter 'python-shell-interpreter))
+    (setq chatgpt-repo-path (locate-user-emacs-file "el-get/ChatGPT.el/"))
+    :bind ("C-c q" . chatgpt-query))
+
   (leaf dashboard
     :ensure t
     :custom ((dashboard-center-content . t)
