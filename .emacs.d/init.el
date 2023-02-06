@@ -16,7 +16,7 @@
 
 (defvar my/dynabook-p nil)
 (when my/dynabook-p
-  (defvar my/battery t)
+  ;; (defvar my/battery t)
   (defvar my/modus-themes 'modus-vivendi)
   (defvar my/accent-modus-themes t)
   (defvar my/skip t))
@@ -48,7 +48,7 @@
               (with-current-buffer (get-buffer-create "*setup-tracker*")
                 (save-excursion
                   (goto-char (point-min))
-                  (insert (number-to-string elapsed) " ")
+                  (insert (number-to-string elapsed) " \t")
                   (dotimes (_ setup-tracker--level) (insert "> "))
                   (insert
                    (file-name-nondirectory (pop setup-tracker--parents))
@@ -122,7 +122,6 @@
            (evil-want-fine-undo  . t)
            (evil-want-minibuffer . t))
   :global-minor-mode evil-mode
-  :hook (image-minor-mode-hook . turn-off-evil-mode)
   :defun evil-global-set-key evil-set-initial-state
   :config
   (evil-global-set-key 'motion (kbd "SPC")   'evil-scroll-page-down)
@@ -602,27 +601,25 @@ The following %-sequences are provided:
            (make-backup-files . nil)
            (require-final-newline . t))
   :config
-  (leaf save
-    :init
-    (defun execute-rsync ()
-      "Execute .rsync script file in the current directory if exists."
-      (interactive)
-      (let ((rsync-file
-             (file-name-concat default-directory ".rsync")))
-        (when (file-exists-p rsync-file)
-          (async-shell-command rsync-file))))
-    (declare-function execute-rsync "init")
-    ;; hide the buffer *Async Shell Command*
-    (add-to-list 'display-buffer-alist
-                 `(,shell-command-buffer-name-async
-                   display-buffer-no-window))
-    (add-hook 'before-save-hook
-              ;; simple.el
-              #'delete-trailing-whitespace)
-    (add-hook 'after-save-hook
-              #'execute-rsync
-              ;; executable.el
-              #'executable-make-buffer-file-executable-if-script-p)))
+  (defun execute-rsync ()
+    "Execute .rsync script file in the current directory if exists."
+    (interactive)
+    (let ((rsync-file
+           (file-name-concat default-directory ".rsync")))
+      (when (file-exists-p rsync-file)
+        (async-shell-command rsync-file))))
+  (declare-function execute-rsync "init")
+  ;; hide the buffer *Async Shell Command*
+  (add-to-list 'display-buffer-alist
+               `(,shell-command-buffer-name-async
+                 display-buffer-no-window))
+  (add-hook 'before-save-hook
+            ;; simple.el
+            #'delete-trailing-whitespace)
+  (add-hook 'after-save-hook #'execute-rsync)
+  ;; executable.el
+  (add-hook 'after-save-hook
+            #'executable-make-buffer-file-executable-if-script-p))
 
 (leaf frame
   :custom (blink-cursor-mode . nil))
@@ -648,9 +645,12 @@ The following %-sequences are provided:
 
 (leaf recentf
   :custom
-  ((recentf-exclude . '("\\.gz\\'" "\\.jpg\\'" "\\.png\\'" "\\.tif\\'"))
-   (recentf-max-saved-items . 100))
+  ;; ((recentf-exclude . '("\\.gz\\'" "\\.jpg\\'" "\\.png\\'" "\\.tif\\'"))
+  ((recentf-max-saved-items . 100)
+   (recentf-keep . nil))
   :global-minor-mode recentf-mode)
+
+(leaf recentf-ext :ensure t :require t)
 
 (leaf savehist
   :global-minor-mode savehist-mode)
@@ -894,59 +894,58 @@ The following %-sequences are provided:
   :custom ((corfu-auto . t)
            (corfu-cycle . t))
   :global-minor-mode global-corfu-mode
-  :bind (corfu-map ("RET" . corfu-quit))
+  ;; :bind (corfu-map ("RET" . corfu-quit))
   :config
-  (evil-global-set-key
-   'insert [remap indent-for-tab-command] 'completion-at-point)
+  ;; (evil-global-set-key
+  ;;  'insert [remap indent-for-tab-command] 'completion-at-point)
 
   (leaf corfu-terminal
     :ensure t
     :config
     (unless (display-graphic-p)
-      (corfu-terminal-mode +1)))
+      (corfu-terminal-mode +1))))
 
-  (leaf company :ensure t)
+  ;; (leaf company :ensure t)
 
-  (leaf cape
-    :ensure t
-    :hook ((prog-mode-hook . my/set-basic-capf)
-           (text-mode-hook . my/set-basic-capf))
-           ;; (lsp-completion-mode-hook . my/set-lsp-capf))
-    :config
-    (defun my/convert-super-capf (arg-capf)
-      (list (cape-capf-case-fold
-             (cape-super-capf arg-capf
-                              (cape-company-to-capf #'company-yasnippet)))
-            #'cape-file
-            #'cape-dabbrev))
+  ;; (leaf cape
+  ;;   :ensure t
+  ;;   :hook ((prog-mode-hook . my/set-basic-capf)
+  ;;          (text-mode-hook . my/set-basic-capf))
+  ;;          ;; (lsp-completion-mode-hook . my/set-lsp-capf))
+  ;;   :config
+  ;;   (defun my/convert-super-capf (arg-capf)
+  ;;     (list (cape-capf-case-fold
+  ;;            (cape-super-capf arg-capf
+  ;;                             (cape-company-to-capf #'company-yasnippet)))
+  ;;           #'cape-file
+  ;;           #'cape-dabbrev))
 
-    (defun my/set-basic-capf ()
-      (setq-local completion-at-point-functions
-                  (my/convert-super-capf
-                   (car completion-at-point-functions))))
+  ;;   (defun my/set-basic-capf ()
+  ;;     (setq-local completion-at-point-functions
+  ;;                 (my/convert-super-capf
+  ;;                  (car completion-at-point-functions))))
 
-    (defun my/set-lsp-capf ()
-      (setq-local completion-at-point-functions
-                  (my/convert-super-capf
-                   #'lsp-completion-at-point)))
+  ;;   (defun my/set-lsp-capf ()
+  ;;     (setq-local completion-at-point-functions
+  ;;                 (my/convert-super-capf
+  ;;                  #'lsp-completion-at-point)))
 
-    (add-to-list 'completion-at-point-functions #'cape-file t)
-    (add-to-list 'completion-at-point-functions #'cape-tex t)
-    (add-to-list 'completion-at-point-functions #'cape-dabbrev t)
-    (add-to-list 'completion-at-point-functions #'cape-keyword t)))
-  ;;(add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  ;;(add-to-list 'completion-at-point-functions #'cape-file)
-  ;;(add-to-list 'completion-at-point-functions #'cape-history)
-  ;;(add-to-list 'completion-at-point-functions #'cape-keyword)
-  ;;(add-to-list 'completion-at-point-functions #'cape-tex)
-  ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
-  ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
-  ;;(add-to-list 'completion-at-point-functions #'cape-abbrev)
-  ;;(add-to-list 'completion-at-point-functions #'cape-ispell)
-  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
-  ;;(add-to-list 'completion-at-point-functions #'cape-symbol)
-  ;;(add-to-list 'completion-at-point-functions #'cape-line)
-
+  ;;   (add-to-list 'completion-at-point-functions #'cape-file t)
+  ;;   (add-to-list 'completion-at-point-functions #'cape-tex t)
+  ;;   (add-to-list 'completion-at-point-functions #'cape-dabbrev t)
+  ;;   (add-to-list 'completion-at-point-functions #'cape-keyword t)))
+  ;; ;;(add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  ;; ;;(add-to-list 'completion-at-point-functions #'cape-file)
+  ;; ;;(add-to-list 'completion-at-point-functions #'cape-history)
+  ;; ;;(add-to-list 'completion-at-point-functions #'cape-keyword)
+  ;; ;;(add-to-list 'completion-at-point-functions #'cape-tex)
+  ;; ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
+  ;; ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
+  ;; ;;(add-to-list 'completion-at-point-functions #'cape-abbrev)
+  ;; ;;(add-to-list 'completion-at-point-functions #'cape-ispell)
+  ;; ;;(add-to-list 'completion-at-point-functions #'cape-dict)
+  ;; ;;(add-to-list 'completion-at-point-functions #'cape-symbol)
+  ;; ;;(add-to-list 'completion-at-point-functions #'cape-line)
 
 (leaf consult
   :ensure t
@@ -975,19 +974,19 @@ The following %-sequences are provided:
   :ensure t
   :hook (after-init-hook . marginalia-mode))
 
-;; (leaf orderless
+(leaf orderless
+  :ensure t
+  :custom (completion-styles . '(orderless)))
+
+;; (leaf fussy
 ;;   :ensure t
-;;   :custom (completion-styles . '(orderless)))
+;;   :custom ((completion-styles . '(fussy))
+;;            (completion-category-defaults . nil)
+;;            (compleiton-category-overrides . nil)))
 
-(leaf fussy
-  :ensure t
-  :custom ((completion-styles . '(fussy))
-           (completion-category-defaults . nil)
-           (compleiton-category-overrides . nil)))
-
-(leaf prescient
-  :ensure t
-  :global-minor-mode prescient-persist-mode)
+;; (leaf prescient
+;;   :ensure t
+;;   :global-minor-mode prescient-persist-mode)
 
 (leaf vertico
   :ensure t
@@ -1377,23 +1376,6 @@ The following %-sequences are provided:
 
 (leaf yaml-mode :ensure t)
 
-(leaf yasnippet
-  :ensure t
-  ;; :custom
-  ;; (yas-snippet-dirs . '("`/.emacs.d/yasnippets"))
-  :global-minor-mode yas-global-mode
-  :bind (yas-minor-mode-map
-         ("TAB" . nil))
-  :config
-
-  (leaf yasnippet-snippets
-    :ensure t
-    :after yasnippet)
-
-  (leaf consult-yasnippet
-    :ensure t
-    :after yasnippet))
-
 ;; ;; web-mode
 ;; (add-to-list 'auto-mode-alist '("\\.?html$" . web-mode))
 ;; (setq web-mode-engines-alist '(("\\.xhtml$" . "smarty")))
@@ -1439,7 +1421,7 @@ The following %-sequences are provided:
 (leaf yascroll
   :ensure t
   :custom ((yascroll:delay-to-hide . 3.0)
-           (yascroll:disabled-modes . '(dashboard-mode image-minor-mode))))
+           (yascroll:disabled-modes . '(dashboard-mode image--mode))))
   ;; :config
   ;; (unless (display-graphic-p)
   ;;   (global-yascroll-bar-mode 1)))
@@ -1625,6 +1607,23 @@ The following %-sequences are provided:
     :global-minor-mode global-tree-sitter-mode
     :config
     (leaf tree-sitter-langs :ensure t))
+
+  (leaf yasnippet
+    :ensure t
+    ;; :custom
+    ;; (yas-snippet-dirs . '("`/.emacs.d/yasnippets"))
+    :global-minor-mode yas-global-mode
+    ;; :bind (yas-minor-mode-map
+    ;;        ("TAB" . nil))
+    :config
+
+    (leaf yasnippet-snippets
+      :ensure t
+      :after yasnippet)
+
+    (leaf consult-yasnippet
+      :ensure t
+      :after yasnippet))
 
   (leaf valign
     :ensure t
