@@ -592,6 +592,11 @@ The following %-sequences are provided:
   ((ediff-split-window-function . 'split-window-horizontally)
    (ediff-window-setup-function . 'ediff-setup-windows-plain)))
 
+(leaf eldoc
+  :custom
+  ((eldoc-echo-area-use-multiline-p . nil)
+   (eldoc-echo-area-display-truncation-message . nil)))
+
 (leaf elec-pair
   :custom (electric-pair-mode . t))
 
@@ -600,7 +605,10 @@ The following %-sequences are provided:
            (find-file-visit-truename . t)
            (make-backup-files . nil)
            (require-final-newline . t))
-  :config
+  :hook ((before-save-hook . delete-trailing-whitespace) ;; simple.el
+         (prog-mode-hook . my/add-hook-after-save)
+         (text-mode-hook . my/add-hook-after-save))
+  :preface
   (defun execute-rsync ()
     "Execute .rsync script file in the current directory if exists."
     (interactive)
@@ -608,18 +616,17 @@ The following %-sequences are provided:
            (file-name-concat default-directory ".rsync")))
       (when (file-exists-p rsync-file)
         (async-shell-command rsync-file))))
-  (declare-function execute-rsync "init")
   ;; hide the buffer *Async Shell Command*
   (add-to-list 'display-buffer-alist
                `(,shell-command-buffer-name-async
                  display-buffer-no-window))
-  (add-hook 'before-save-hook
-            ;; simple.el
-            #'delete-trailing-whitespace)
-  (add-hook 'after-save-hook #'execute-rsync)
-  ;; executable.el
-  (add-hook 'after-save-hook
-            #'executable-make-buffer-file-executable-if-script-p))
+  ;; (declare-function execute-rsync "init")
+  (defun my/add-hook-after-save ()
+    "Add hook `execute-rsync' and `executable-..-p' to `after-save-hook'."
+    (add-hook 'after-save-hook 'execute-rsync nil t)
+    (add-hook 'after-save-hook
+              ;; executable.el
+              'executable-make-buffer-file-executable-if-script-p nil t)))
 
 (leaf frame
   :custom (blink-cursor-mode . nil))
@@ -788,11 +795,13 @@ The following %-sequences are provided:
            (lsp-document-sync-method . 2)
            (lsp-response-timeout     . 5)
            (lsp-enable-file-watchers . nil)
+           (lsp-eldoc-render-all . t)
+           (lsp-signature-doc-lines . 5)
            (lsp-client-packages . '(lsp-pyright))
            (lsp-diagnostics-provider . :flymake)
            ;; use corfu instead of company
            (lsp-completion-provider . :none))
-  :hook (lsp-mode-hook . lsp-headerline-breadcrumb-mode)
+  ;; :hook (lsp-mode-hook . lsp-headerline-breadcrumb-mode)
   :init
   (unless (display-graphic-p)
     (customize-set-variable
@@ -801,17 +810,20 @@ The following %-sequences are provided:
   (leaf lsp-ui
     :ensure t
     :after lsp-mode
-    :custom ((lsp-ui-doc-enable            . t)
-             (lsp-ui-doc-position          . 'at-point)
-             (lsp-ui-doc-header            . t)
+    :custom (;; (lsp-ui-doc-enable            . t)
+             ;; (lsp-ui-doc-position          . 'at-point)
+             ;; (lsp-ui-doc-show-with-cursor . t)
+             (lsp-ui-doc-header . t)
              (lsp-ui-doc-include-signature . t)
-             (lsp-ui-doc-max-width         . 150)
-             (lsp-ui-doc-max-height        . 30)
-             (lsp-ui-doc-use-childframe    . nil)
-             (lsp-ui-doc-use-webkit        . nil)
-             (lsp-ui-peek-enable           . t)
-             (lsp-ui-peek-peek-height      . 20)
-             (lsp-ui-peek-list-width       . 50))
+             ;; (lsp-ui-doc-alignment . 'window)
+             ;; (lsp-ui-doc-max-width         . 150)
+             ;; (lsp-ui-doc-max-height        . 30)
+             ;; (lsp-ui-doc-use-childframe    . nil)
+             ;; (lsp-ui-doc-use-webkit        . nil)
+             (lsp-ui-doc-delay . 0))
+             ;; (lsp-ui-peek-enable           . t)
+             ;; (lsp-ui-peek-peek-height      . 20)
+             ;; (lsp-ui-peek-list-width       . 50))
     :bind (lsp-ui-mode-map
            ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
            ([remap xref-find-references]  . lsp-ui-peek-find-references))
