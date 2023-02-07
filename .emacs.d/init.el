@@ -14,13 +14,6 @@
   (when (file-exists-p my-private)
     (load my-private)))
 
-(defvar my/dynabook-p nil)
-(when my/dynabook-p
-  ;; (defvar my/battery t)
-  (defvar my/modus-themes 'modus-vivendi)
-  (defvar my/accent-modus-themes t)
-  (defvar my/skip t))
-
 ;; Setup tracker
 (defvar my/enable-setup-tracker t)
 (when my/enable-setup-tracker
@@ -205,14 +198,16 @@
   ;; C source code
   (setq default-process-coding-system '(undecided-dos . utf-8-unix)))
 
-(defvar my/fonts-family "HackGen35Nerd Console")
+(defvar my/fonts-family "HackGenNerd Console")
+(defvar my/fonts-weight 'bold)
 ;; e.g. "PlemolJP35Console" "UDEV Gothic"
 (defvar my/fonts-height 120)
 (leaf faces
   :if (display-graphic-p)
   :config
   (set-face-attribute
-   'default nil :family my/fonts-family :height my/fonts-height))
+   'default nil :family my/fonts-family :height my/fonts-height
+   :weight my/fonts-weight))
 
 (leaf mozc
   :doc "日本語入力"
@@ -575,10 +570,10 @@ The following %-sequences are provided:
 ;;   (desktop-save-mode 1))
 
 (leaf dired
-  :custom
-  ((dired-dwim-target . t)
-   (dired-listing-switches . "-aho")
-   (dired-use-ls-dired . t))
+  :custom ((dired-auto-revert-buffer . t)
+           (dired-dwim-target . t)
+           (dired-listing-switches . "-aho")
+           (dired-use-ls-dired . t))
   :config
   (leaf dired-x
     :require t
@@ -631,8 +626,9 @@ The following %-sequences are provided:
 (leaf frame
   :custom (blink-cursor-mode . nil))
 
+(defvar my/disable-hl-line nil)
 (leaf hl-line
-  :disabled t
+  :disabled my/disable-hl-line
   :global-minor-mode global-hl-line-mode)
 
 (leaf indent
@@ -702,30 +698,33 @@ The following %-sequences are provided:
          ("C--" . text-scale-decrease)
          ("C-0" . text-scale-reset)))
 
-(defvar my/accent-modus-themes nil)
-(when my/accent-modus-themes
-  (defvar my/modus-themes-region '(accented no-extend))
-  (custom-set-faces
-   '(fill-column-indicator ((t (:foreground "dim gray"))))
-   ;; '(mode-line-inactive ((t (:box (:line-width (1 . 1) :color "dim gray"))))))
-   '(mode-line-inactive ((t (:background "gray30"))))
-   '(mode-line ((t (:background "gray35")))))
-  (custom-set-variables
-   '(highlight-indent-guides-auto-character-face-perc 30)
-   '(highlight-indent-guides-auto-top-character-face-perc 50))
-  )
-
-(defvar my/modus-themes 'modus-operandi) ;; modus-vivendi
+(defvar my/themes 'doom-zenburn) ;; modus-operandi modus-vivendi
 (defvar my/modus-themes-region '(bg-only no-extend)) ;; accented
+(defvar my/accent-dark-themes nil)
+(when my/accent-dark-themes
+  (custom-set-faces
+   '(fill-column-indicator ((t (:foreground "dim gray")))))
+  (when (eq my/themes 'modus-vivendi)
+    (defvar my/modus-themes-region '(accented no-extend))
+    (custom-set-faces
+     '(hl-line ((t (:background "gray25"))))
+     '(mode-line ((t (:background "gray35"))))
+     '(mode-line-inactive ((t (:background "gray30"))))
+     '(vertico-current ((t (:background "gray25")))))
+    (custom-set-variables
+     '(highlight-indent-guides-auto-character-face-perc 30)
+     '(highlight-indent-guides-auto-top-character-face-perc 50))))
 
-(leaf themes/modus-themes
-  :doc "highly accessible and customizable themes"
-  :emacs>= 28
+(leaf themes
   :custom (modus-themes-region . my/modus-themes-region)
   :config
+  (require-theme 'doom-themes)
   (require-theme 'modus-themes)
-  (load-theme my/modus-themes)
-  (global-set-key (kbd "<f5>") 'modus-themes-toggle))
+  (load-theme my/themes t nil)
+  (global-set-key (kbd "<f5>") 'modus-themes-toggle)
+  :init
+
+  (leaf doom-themes :ensure t))
 
 (leaf tramp
   :custom ((tramp-remote-path . '(tramp-own-remote-path))
@@ -750,6 +749,11 @@ The following %-sequences are provided:
 ;;
 
 (defvar my/lsp 'lsp-mode)
+(defvar my/lsp-doc
+  (cond ((eq my/lsp 'eglot) nil)
+        ((eq my/lsp 'lsp-bridge) 'nil)
+        ((eq my/lsp 'lsp-mode) 'lsp-ui-doc-toggle)
+        (t nil)))
 (defvar my/lsp-rename
   (cond ((eq my/lsp 'eglot) 'eglot-rename)
         ((eq my/lsp 'lsp-bridge) 'lsp-bridge-rename)
@@ -825,6 +829,7 @@ The following %-sequences are provided:
              ;; (lsp-ui-peek-peek-height      . 20)
              ;; (lsp-ui-peek-list-width       . 50))
     :bind (lsp-ui-mode-map
+           ("C-c i" . lsp-ui-doc-toggle)
            ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
            ([remap xref-find-references]  . lsp-ui-peek-find-references))
     :hook (lsp-mode-hook . lsp-ui-mode))
@@ -1067,6 +1072,7 @@ The following %-sequences are provided:
      "d" 'dired
      "f" 'find-file
      "g" 'magit-status
+     "i" ',my/lsp-doc
      "j" 'dired-jump
      "k" 'kill-buffer
      "n" 'display-line-numbers-mode
@@ -1442,8 +1448,8 @@ The following %-sequences are provided:
 ;; Skip heavy packages
 ;;
 
-(defvar my/skip nil)
-(unless my/skip
+(defvar my/skip-packages nil)
+(unless my/skip-packages
 
   (leaf all-the-icons
     :ensure t
@@ -1497,26 +1503,21 @@ The following %-sequences are provided:
 
   (leaf el-get :ensure t)
 
-  ;; TODO
   (leaf flymake-aspell
     :ensure t
     :after flymake
     :hook (text-mode-hook . flymake-aspell-setup))
 
-  ;; TODO
   (leaf flymake-textlint
     :el-get iquiw/flymake-textlint
-    :hook ((markdown-mode-hook
-            org-mode-hook
-            text-mode-hook)
+    :hook ((markdown-mode-hook org-mode-hook text-mode-hook)
            . flymake-textlint-setup))
 
   (leaf kind-icon
     :ensure t
     :after corfu
     :defvar corfu-margin-formatters
-    :custom
-    (kind-icon-default-face . 'corfu-default)
+    :custom (kind-icon-default-face . 'corfu-default)
     :config
     (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 
@@ -1527,10 +1528,13 @@ The following %-sequences are provided:
     :mode (("\\.md\\'" . gfm-mode)
            ("\\.markdown\\'" . gfm-mode))
     :custom
-    ((markdown-command . "commonmarker --extension=tagfilter,autolink,table,strikethrough")
-     (markdown-css-paths . '("https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css"
-                             "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/styles/github.min.css"))
-     (markdown-xhtml-header-content . "<script src=\"https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/highlight.min.js\"></script><script>hljs.initHighlightingOnLoad();</script>")
+    ((markdown-command
+      . "commonmarker --extension=tagfilter,autolink,table,strikethrough")
+     (markdown-css-paths
+      . '("https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css"
+          "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/styles/github.min.css"))
+     (markdown-xhtml-header-content
+      . "<script src=\"https://cdn.jsdelivr.net/gh/highlightjs/cdn-release/build/highlight.min.js\"></script><script>hljs.initHighlightingOnLoad();</script>")
      (markdown-xhtml-body-preamble . "<div class=\"markdown-body\">")
      (markdown-xhtml-body-epilogue . "</div>"))
     :config
@@ -1541,21 +1545,23 @@ The following %-sequences are provided:
       :config
       (define-key markdown-mode-command-map (kbd "C-p") 'markdown-preview-mode)
       ;; (setq markdown-preview-stylesheets (list "github.css"))
-      (setq markdown-preview-stylesheets (list "//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css"))
-      (setq markdown-preview-javascript (list "//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"))
-      (setq markdown-preview-script-onupdate "hljs.highlightAll();")
-      ))
+      (setq markdown-preview-stylesheets
+            (list
+             "//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/styles/default.min.css"))
+      (setq markdown-preview-javascript
+            (list
+             "//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"))
+      (setq markdown-preview-script-onupdate "hljs.highlightAll();")))
 
   ;; Prerequisite: apt install cmigemo
   (leaf migemo
     :ensure t
     :require t
-    :if (executable-find "cmigemo")
-    :custom
-    (migemo-dictionary . "/usr/share/cmigemo/utf-8/migemo-dict")
+    :custom (migemo-dictionary . "/usr/share/cmigemo/utf-8/migemo-dict")
     :defun migemo-init
     :config
-    (migemo-init))
+    (when (executable-find "cmigemo")
+      (migemo-init)))
 
   (leaf orderless
     :ensure t
@@ -1599,7 +1605,7 @@ The following %-sequences are provided:
     (push 'orderless completion-styles))
 
   (leaf paradox
-    :doc "wrapper of package.el"
+    :doc "A modern Packages Menu. Colored, with package ratings, and customizable."
     :ensure t
     :config
     (let ((inhibit-message t)
@@ -1607,6 +1613,8 @@ The following %-sequences are provided:
       (paradox-enable)))
 
   (leaf pulsar
+    :doc "Pulse highlight on demand or after select functions"
+    :disabled t
     :ensure t
     :global-minor-mode pulsar-global-mode)
 
