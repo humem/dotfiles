@@ -698,7 +698,7 @@ The following %-sequences are provided:
          ("C--" . text-scale-decrease)
          ("C-0" . text-scale-reset)))
 
-(defvar my/themes 'doom-zenburn) ;; modus-operandi modus-vivendi
+(defvar my/themes 'zenburn) ;; doom-zenburn modus-operandi modus-vivendi
 (defvar my/modus-themes-region '(bg-only no-extend)) ;; accented
 (defvar my/accent-dark-themes nil)
 (when my/accent-dark-themes
@@ -724,7 +724,9 @@ The following %-sequences are provided:
   (global-set-key (kbd "<f5>") 'modus-themes-toggle)
   :init
 
-  (leaf doom-themes :ensure t))
+  (leaf doom-themes :ensure t)
+
+  (leaf zenburn-theme :ensure t))
 
 (leaf tramp
   :custom ((tramp-remote-path . '(tramp-own-remote-path))
