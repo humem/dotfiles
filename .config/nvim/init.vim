@@ -4,8 +4,11 @@ Plug 'jiangmiao/auto-pairs'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'tjdevries/colorbuddy.nvim'
 Plug 'lambdalisue/fern.vim'
-" Plug 'junegunn/fzf', {'dir': '~/.fzf_bin', 'do': './install --all'}
+Plug 'lambdalisue/fern-renderer-nerdfont.vim'
 Plug 'lambdalisue/gina.vim'
+Plug 'lambdalisue/nerdfont.vim'
+Plug 'lambdalisue/glyph-palette.vim'
+" Plug 'junegunn/fzf', {'dir': '~/.fzf_bin', 'do': './install --all'}
 Plug 'sainnhe/gruvbox-material'
 Plug 'Yggdroot/indentLine'
 Plug 'ishan9299/modus-theme-vim', {'branch': 'stable'}
@@ -24,23 +27,30 @@ Plug 'puremourning/vimspector'
 call plug#end()
 
 " set options
-set termguicolors
+set expandtab
+set list listchars=tab:\▸\-
 set number
+set shiftwidth=2
+set tabstop=2
+set termguicolors
 
 " map prefix
 let g:mapleader = ","
 nnoremap <Leader> <Nop>
 xnoremap <Leader> <Nop>
 
-noremap <Space> <PageDown>
+noremap <Space>   <PageDown>
 noremap <S-Space> <PageUp>
 
 nnoremap <Esc><Esc> :nohlsearch<CR>
 
-inoremap <Esc> <Esc><Esc>
+map  <C-g> <Esc>
+map! <C-g> <Esc>
+
+" inoremap <Esc> <Esc><Esc>
 
 iab tilda ~
-" iab backtick
+iab backtick `
 
 let openuri_cmd = '!am start --user 0 -a android.intent.action.VIEW -t text/html -d %s'
 
@@ -109,6 +119,21 @@ inoremap <expr> <C-p>   pumvisible() ? "\<Up>"   : "\<C-p>"
 nnoremap <silent> <Leader>e :<C-u>Fern . -drawer<CR>
 nnoremap <silent> <Leader>E :<C-u>Fern . -drawer -reveal=%<CR>
 let g:fern#default_hidden = 1
+let g:fern#renderer = 'nerdfont'
+" アイコンに色をつける
+augroup my-glyph-palette
+  autocmd! *
+  autocmd FileType fern call glyph_palette#apply()
+  autocmd FileType nerdtree,startify call glyph_palette#apply()
+augroup END
+
+" function! s:open(filename, ...) abort
+"   let options = copy(a:0 ? a:1 : {})
+"   return s:Process.start([
+"         \ 'open',
+"         \ a:filename,
+"         \], options)
+" endfunction
 
 "" indentLine
 let g:indentLine_color_term =239
@@ -117,23 +142,21 @@ let g:indentLine_char = '¦'
 
 "" orgmode + treesitter
 lua << EOF
--- Load custom treesitter grammar for org filetype
 require('orgmode').setup_ts_grammar()
 
--- Treesitter configuration
 require('nvim-treesitter.configs').setup {
-  -- If TS highlights are not enabled at all, or disabled via `disable` prop,
-  -- highlighting will fallback to default Vim syntax highlighting
   highlight = {
     enable = true,
-    -- Required for spellcheck, some LaTex highlights and
-    -- code block highlights that do not have ts grammar
     additional_vim_regex_highlighting = {'org'},
   },
   ensure_installed = {
-	  "org", -- Or run :TSUpdate org
-	  "typescript",
-	  "tsx"},
+    "c",
+    "help",
+    "lua",
+    "vim",
+    "org",
+    "typescript",
+    "tsx"},
 }
 
 require('orgmode').setup({
