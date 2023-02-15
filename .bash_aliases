@@ -11,6 +11,7 @@ alias en='emacs -nw'
 alias g='grep'
 alias jl='jupyter lab --ip 0.0.0.0 --no-browser'
 alias l='less'
+alias ll='ls -alF'
 alias m='more'
 alias nv='nvidia-smi -l'
 alias t='tmux a'
@@ -20,11 +21,17 @@ alias upg='sudo apt upgrade'
 alias v='source .venv/bin/activate'
 
 # CUDA Toolkit
-export CUDA_VERSION=11.5
+CUDA_VERSION=11.5
 if [ -d "/usr/local/cuda-$CUDA_VERSION" ]; then
     export PATH="/usr/local/cuda-$CUDA_VERSION/bin:$PATH"
     export LD_LIBRARY_PATH="/usr/local/cuda-$CUDA_VERSION/lib64:$LD_LIBRARY_PATH"
 fi
+
+# Input Method
+export GTK_IM_MODULE=fcitx
+export QT_IM_MODULE=fcitx
+export XMODIFIERS=@im=fcitx
+export DefaultIMModule=fcitx
 
 # Language
 export LANG=C.UTF-8
@@ -56,7 +63,9 @@ if [ -d "$HOME/.cargo" ]; then
 fi
 
 # Terminal
-export TERM=xterm-24bit
+export TERM=tmux-256color
+# export TERM=xterm-256color
+# export TERM=xterm-24bit
 
 # WSL
 if [ $WSL_DISTRO_NAME ]; then

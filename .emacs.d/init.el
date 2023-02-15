@@ -1476,7 +1476,7 @@ The following %-sequences are provided:
 
   (leaf avy-migemo
     :el-get momomo5717/avy-migemo
-    :after migeo
+    :after migemo
     :global-minor-mode avy-migemo-mode)
 
   (leaf epc :ensure t)
@@ -1566,6 +1566,7 @@ The following %-sequences are provided:
       (migemo-init)))
 
   (leaf orderless
+    :disabled t
     :ensure t
     :require t
     :after migemo
@@ -1624,6 +1625,7 @@ The following %-sequences are provided:
     :global-minor-mode pixel-scroll-mode)
 
   (leaf tree-sitter
+    :disabled t
     :ensure t
     :hook (tree-sitter-after-on-hook . tree-sitter-hl-mode)
     :global-minor-mode global-tree-sitter-mode
