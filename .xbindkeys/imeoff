@@ -1,0 +1,22 @@
+#!/bin/bash
+
+wait=3
+start=$(date +%s)
+
+while :
+do
+  status=$(fcitx-remote)
+  case $status in
+    1 ) break ;;
+    2 ) fcitx-remote -c ;;
+  esac
+  current=$(date +%s)
+  if [ $(expr $current - $start) -gt $wait ]; then
+    break
+  fi
+done
+
+if [ -x "`which xdotool`" ]; then
+  xdotool key --clearmodifiers Escape
+#  xdotool key --clearmodifiers ctrl+c
+fi

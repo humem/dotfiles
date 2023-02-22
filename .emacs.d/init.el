@@ -1394,6 +1394,8 @@ The following %-sequences are provided:
   :custom (typescript-indent-level . 2)
   :mode (("\\.tsx\\'" . typescript-tsx-mode)))
 
+(leaf vimrc-mode :ensure t)
+
 (leaf yaml-mode :ensure t)
 
 ;; ;; web-mode

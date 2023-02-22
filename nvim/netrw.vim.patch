@@ -1,0 +1,47 @@
+--- share/nvim/runtime/autoload/netrw.vim.orig	2023-02-22 13:30:42.091861825 +0900
++++ share/nvim/runtime/autoload/netrw.vim	2023-02-21 23:32:55.994105277 +0900
+@@ -9766,8 +9766,12 @@
+    NetrwKeepj exe "sil! NetrwKeepj ".w:netrw_bannercnt
+   else
+ "   call Decho("--no banner",'~'.expand("<slnum>"))
+-   NetrwKeepj 1
++   " NetrwKeepj 1
++   " let w:netrw_bannercnt= 1
++   let curdir= b:netrw_curdir
++   NetrwKeepj call setline(1, curdir)
+    let w:netrw_bannercnt= 1
++   NetrwKeepj exe "sil! NetrwKeepj ".w:netrw_bannercnt
+   endif
+ "  call Decho("w:netrw_bannercnt=".w:netrw_bannercnt." win#".winnr(),'~'.expand("<slnum>"))
+ "  call Decho("tab#".tabpagenr()." win#".winnr()." buf#".bufnr("%")."<".bufname("%")."> line#".line(".")." col#".col(".")." winline#".winline()." wincol#".wincol()." line($)=".line("$"),'~'.expand("<slnum>"))
+@@ -9840,13 +9844,13 @@
+   endif
+ 
+   " bannercnt should index the line just after the banner
+-  if g:netrw_banner
++"  if g:netrw_banner
+    let w:netrw_bannercnt= w:netrw_bannercnt + 1
+    exe "sil! NetrwKeepj ".w:netrw_bannercnt
+ "   call Decho("--w:netrw_bannercnt=".w:netrw_bannercnt." (should index line just after banner) line($)=".line("$"),'~'.expand("<slnum>"))
+ "  else " Decho
+ "   call Decho("g:netrw_banner=".g:netrw_banner.": banner ".(g:netrw_banner? "enabled" : "suppressed").": (line($)=".line("$")." byte2line(1)=".byte2line(1)." bannercnt=".w:netrw_bannercnt.")",'~'.expand("<slnum>"))
+-  endif
++"  endif
+ 
+   " get list of files
+ "  call Decho("--Get list of files - islocal=".a:islocal,'~'.expand("<slnum>"))
+@@ -11020,12 +11024,12 @@
+ 
+    if w:netrw_liststyle == s:LONGLIST
+     let sz   = getfsize(filename)
+-    let fsz  = strpart("               ",1,15-strlen(sz)).sz
+     if g:netrw_sizestyle =~# "[hH]"
+      let sz= s:NetrwHumanReadable(sz)
+     endif
++    let fsz  = strpart("               ",1,15-strlen(sz)).sz
+     let longfile= printf("%-".(g:netrw_maxfilenamelen+1)."s",pfile)
+-    let pfile   = longfile.sz." ".strftime(g:netrw_timefmt,getftime(filename))
++    let pfile   = longfile.fsz." ".strftime(g:netrw_timefmt,getftime(filename))
+ "    call Decho("longlist support: sz=".sz." fsz=".fsz,'~'.expand("<slnum>"))
+    endif
+ 
