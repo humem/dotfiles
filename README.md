@@ -5,8 +5,11 @@ vi .config/fcitx/config
 vi .config/fcitx/conf/clipboard
 fcitx-configtool
 /usr/lib/mozc/mozc_tool --mode=config_dialog
-sudo apt install xbindkeys xdotool
-fcitx; xbindkeys &
+fcitx 2?/dev/null
+autokey 2>/dev/null &
+
+# sudo apt install xbindkeys xdotool
+# fcitx; xbindkeys &
 ```
 Hit F2 or Ctrl-SPC to enable mozc, and Ctrl-[ to disable.
 
@@ -21,6 +24,7 @@ export TERM=xterm-24bit
 My Phrases>Terminal>
 # ctrl+semicolon: <ctrl>+/
 shift+space: <page_up>
+ctrl+bracketleft: fcitx-remote -c
 ```
 
 # Docker

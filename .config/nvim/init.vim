@@ -3,6 +3,7 @@ call plug#begin(has('nvim') ? stdpath('data') . '/plugged' : '~/.vim/plugged')
 Plug 'jiangmiao/auto-pairs'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'tjdevries/colorbuddy.nvim'
+Plug 'numToStr/Comment.nvim'
 Plug 'lambdalisue/fern.vim'
 Plug 'lambdalisue/fern-renderer-nerdfont.vim'
 Plug 'lambdalisue/gina.vim'
@@ -17,6 +18,7 @@ Plug 'TimUntersberger/neogit'
 " Plug 'prichrd/netrw.nvim'
 " Plug 'nvim-tree/nvim-web-devicons'
 Plug 'nvim-treesitter/nvim-treesitter'
+Plug 'tyru/open-browser.vim'
 Plug 'nvim-orgmode/orgmode'
 " Plug 'Xuyuanp/scrollbar.nvim'
 Plug 'nvim-lua/plenary.nvim'
@@ -28,8 +30,10 @@ Plug 'tomasiser/vim-code-dark'
 Plug 'tpope/vim-fugitive'
 Plug 'airblade/vim-gitgutter'
 Plug 'machakann/vim-sandwich'
+Plug 'voldikss/vim-translator'
 Plug 'vim-jp/vimdoc-ja'
 Plug 'puremourning/vimspector'
+Plug 'simeji/winresizer'
 
 call plug#end()
 
@@ -123,6 +127,9 @@ function! s:show_documentation() abort
     call CocActionAsync('doHover')
   endif
 endfunction
+
+"" Comment"
+lua require('Comment').setup()
 
 """ completion
 set completeopt=menuone,preview,noinsert
@@ -346,6 +353,10 @@ let g:netrw_timefmt="%Y-%m-%d %H:%M:%S"
 " "" nvim-web-devicons
 " lua require'nvim-web-devicons'.setup()
 
+"" oepn-browser"
+nmap <Leader>x <Plug>(openbrowser-smart-search)
+vmap <Leader>x <Plug>(openbrowser-smart-search)
+
 "" orgmode + treesitter
 lua << EOF
 require('orgmode').setup_ts_grammar()
@@ -386,6 +397,25 @@ nnoremap <leader>ff <cmd>Telescope find_files hidden=true<cr>
 nnoremap <leader>fg <cmd>Telescope live_grep<cr>
 nnoremap <leader>fb <cmd>Telescope buffers<cr>
 nnoremap <leader>fh <cmd>Telescope help_tags<cr>
+
+"" translator"
+let g:translator_target_lang = "ja"
+""" Configuration example
+" Echo translation in the cmdline
+nmap <silent> <Leader>t <Plug>Translate
+vmap <silent> <Leader>t <Plug>TranslateV
+" Display translation in a window
+nmap <silent> <Leader>w <Plug>TranslateW
+vmap <silent> <Leader>w <Plug>TranslateWV
+" " Replace the text with translation
+" nmap <silent> <Leader>r <Plug>TranslateR
+" vmap <silent> <Leader>r <Plug>TranslateRV
+" " Translate the text in clipboard
+" nmap <silent> <Leader>x <Plug>TranslateX
+nnoremap <silent><expr> <M-f> translator#window#float#has_scroll() ?
+                            \ translator#window#float#scroll(1) : "\<M-f>"
+nnoremap <silent><expr> <M-b> translator#window#float#has_scroll() ?
+                            \ translator#window#float#scroll(0) : "\<M-b>"
 
 "" vimspector
 let g:vimspector_enable_mappings = 'HUMAN'

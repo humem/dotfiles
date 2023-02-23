@@ -8,16 +8,17 @@ alias d='docker'
 alias docker_start='sudo service docker start'
 alias e='emacs &'
 alias en='emacs -nw'
+alias fc='fcitx 2>/dev/null'
 alias g='grep'
 alias jl='jupyter lab --ip 0.0.0.0 --no-browser'
 alias l='less'
 alias ll='ls -alF'
 alias m='more'
-alias mz='fcitx; xbindkeys &'
-alias mozc='fcitx; xbindkeys &'
 alias nv='nvidia-smi -l'
 alias t='tmux a'
+alias ta='gnome-terminal; fcitx 2>/dev/null; autokey 2>/dev/null &'
 alias tb='tensorboard --bind_all --logdir'
+alias term='gnome-terminal'
 alias upd='sudo apt update'
 alias upg='sudo apt upgrade'
 alias v='source .venv/bin/activate'
@@ -71,9 +72,6 @@ export TERM=tmux-256color
 
 # WSL
 if [ $WSL_DISTRO_NAME ]; then
-    # Aliases
-    alias st='gnome-terminal; autokey 2>/dev/null &'
-    alias term='gnome-terminal'
     # X Server e.g. VcXsrv
     # WSL1
     #export DISPLAY="localhost:0.0"
