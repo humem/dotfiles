@@ -30,6 +30,7 @@ Plug 'tomasiser/vim-code-dark'
 Plug 'tpope/vim-fugitive'
 Plug 'airblade/vim-gitgutter'
 Plug 'machakann/vim-sandwich'
+Plug 'dstein64/vim-startuptime'
 Plug 'voldikss/vim-translator'
 Plug 'vim-jp/vimdoc-ja'
 Plug 'puremourning/vimspector'
@@ -421,5 +422,8 @@ nnoremap <silent><expr> <M-b> translator#window#float#has_scroll() ?
 let g:vimspector_enable_mappings = 'HUMAN'
 let g:vimspector_install_gadgets = ['debugpy']
 
-" colorscheme gruvbox-material
-colorscheme modus-operandi
+if filereadable(expand('~/.config/nvim/cs.vim'))
+  runtime cs.vim
+else
+  colorscheme gruvbox-material
+endif
