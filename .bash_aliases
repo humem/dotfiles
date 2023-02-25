@@ -80,3 +80,7 @@ if [ $WSL_DISTRO_NAME ]; then
     # Emacs to fix for dbind-WARINING
     export NO_AT_BRIDGE=1
 fi
+
+if [ -f "$HOME/.bash_local" ]; then
+    source $HOME/.bash_local
+fi

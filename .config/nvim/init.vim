@@ -9,24 +9,22 @@ Plug 'lambdalisue/fern-renderer-nerdfont.vim'
 Plug 'lambdalisue/gina.vim'
 Plug 'lambdalisue/nerdfont.vim'
 Plug 'lambdalisue/glyph-palette.vim'
-" Plug 'junegunn/fzf', {'dir': '~/.fzf_bin', 'do': './install --all'}
 Plug 'sainnhe/gruvbox-material'
 Plug 'Yggdroot/indentLine'
 Plug 'ishan9299/modus-theme-vim', {'branch': 'stable'}
 Plug 'TimUntersberger/neogit'
-" Plug 'preservim/nerdtree'
-" Plug 'prichrd/netrw.nvim'
-" Plug 'nvim-tree/nvim-web-devicons'
 Plug 'nvim-treesitter/nvim-treesitter'
+Plug 'nvim-tree/nvim-web-devicons'
 Plug 'tyru/open-browser.vim'
 Plug 'nvim-orgmode/orgmode'
-" Plug 'Xuyuanp/scrollbar.nvim'
 Plug 'nvim-lua/plenary.nvim'
-Plug 'nvim-telescope/telescope.nvim', { 'tag': '0.1.1' }
+Plug 'kkharji/sqlite.lua'
+Plug 'nvim-telescope/telescope.nvim'
+Plug 'nvim-telescope/telescope-file-browser.nvim'
+Plug 'nvim-telescope/telescope-frecency.nvim'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 Plug 'tomasiser/vim-code-dark'
-" Plug 'ryanoasis/vim-devicons'
 Plug 'tpope/vim-fugitive'
 Plug 'airblade/vim-gitgutter'
 Plug 'machakann/vim-sandwich'
@@ -40,9 +38,11 @@ call plug#end()
 
 " set options
 set clipboard+=unnamedplus
+set completeopt=menuone,preview,noinsert
 set cursorline
 set expandtab
 set ignorecase
+set laststatus=2
 set list listchars=tab:\▸\-
 set number
 set shiftwidth=2
@@ -54,30 +54,32 @@ set termguicolors
 let g:mapleader = ","
 nnoremap <Leader> <Nop>
 xnoremap <Leader> <Nop>
-
 nnoremap <Leader>R :source $MYVIMRC<CR>
 
-noremap <Space>   <PageDown>
-noremap <S-Space> <PageUp>
-
+nnoremap <Space>   <PageDown>
+nnoremap <S-Space> <PageUp>
 nnoremap <Esc><Esc> :nohlsearch<CR><Esc>
-
-map  <C-g> <Esc>
-map! <C-g> <Esc>
-
+nnoremap ; :
 " 折り返し時に表示行単位での移動できるようにする
 nnoremap j gj
 nnoremap k gk
 
-" inoremap <Esc> <Esc><Esc>
+map  <C-g> <Esc>
+map! <C-g> <Esc>
 
 iab tilda ~
 iab backtick `
 
-let openuri_cmd = '!am start --user 0 -a android.intent.action.VIEW -t text/html -d %s'
+" edit real file of symbolic link
+nnoremap <Leader>l :call EditResolved('%:p')<CR>
+
+function! EditResolved(filename) abort
+  let l:resolved = resolve(expand(a:filename))
+  echo l:resolved
+  execute 'edit ' . fnameescape(l:resolved)
+endfunction
 
 "" airline
-set laststatus=2
 let g:airline_powerline_fonts = 1
 let g:airline_theme = 'papercolor'
 let g:airline#extensions#scrollbar#enabled = 1
@@ -133,7 +135,6 @@ endfunction
 lua require('Comment').setup()
 
 """ completion
-set completeopt=menuone,preview,noinsert
 inoremap <expr> <Tab>   pumvisible() ? "\<C-n>"  : "\<Tab>"
 inoremap <expr> <S-Tab> pumvisible() ? "\<C-p>"  : "\<S-Tab>"
 " inoremap <expr> <CR>    pumvisible() ? "\<C-y>"  : "\<CR>"
@@ -152,14 +153,6 @@ augroup my-glyph-palette
   autocmd FileType nerdtree,startify call glyph_palette#apply()
 augroup END
 
-" function! s:open(filename, ...) abort
-"   let options = copy(a:0 ? a:1 : {})
-"   return s:Process.start([
-"         \ 'open',
-"         \ a:filename,
-"         \], options)
-" endfunction
-
 "" indentLine
 let g:indentLine_color_term =239
 let g:indentLine_color_gui = '#708090'
@@ -167,14 +160,15 @@ let g:indentLine_char = '¦'
 
 "" neogit"
 lua require('neogit').setup {}
+nnoremap <Leader>g :Neogit<CR>
 
 "" netrw"
 " https://vonheikemen.github.io/devlog/tools/using-netrw-vim-builtin-file-explorer/
 " Open Netrw on the directory of the current file
-nnoremap <leader>dd :Lexplore %:p:h<CR>
+" nnoremap <leader>dd :Lexplore %:p:h<CR>
 
 " Toggle the Netrw window
-nnoremap <Leader>da :Lexplore<CR>
+" nnoremap <Leader>da :Lexplore<CR>
 
 if &columns < 90
   " If the screen is small, occupy half
@@ -245,7 +239,7 @@ endfunction
 " Better keymaps for Netrw
 function! NetrwMapping()
   " Close Netrw window
-  nmap <buffer> <leader>dd :Lexplore<CR>
+  " nmap <buffer> <leader>dd :Lexplore<CR>
 
   " Go to file and close Netrw window
   nmap <buffer> L <CR>:Lexplore<CR>
@@ -328,8 +322,6 @@ augroup END
 " https://qiita.com/gorilla0513/items/bf2f78dfec67242f5bcf
 " ファイルツリーの表示形式、1にするとls -laのような表示になります
 let g:netrw_liststyle=1
-" ヘッダを非表示にする
-" let g:netrw_banner=0
 " サイズを(K,M,G)で表示する
 let g:netrw_sizestyle="H"
 " 日付フォーマットを yyyy-mm-dd hh:mm:ss で表示する
@@ -337,22 +329,8 @@ let g:netrw_timefmt="%Y-%m-%d %H:%M:%S"
 " プレビューウィンドウを垂直分割で表示する
 " let g:netrw_preview=1
 
-" lua << EOF
-" require'netrw'.setup{
-"   -- Put your configuration here, or leave the object empty to take the default
-"   -- configuration.
-"   icons = {
-"     symlink = '', -- Symlink icon (directory and file)
-"     directory = '', -- Directory icon
-"     file = '', -- File icon
-"   },
-"   use_devicons = true, -- Uses nvim-web-devicons if true, otherwise use the file icon specified above
-"   mappings = {}, -- Custom key mappings
-" }
-" EOF
-" 
-" "" nvim-web-devicons
-" lua require'nvim-web-devicons'.setup()
+"" nvim-web-devicons
+lua require'nvim-web-devicons'.setup()
 
 "" oepn-browser"
 nmap <Leader>x <Plug>(openbrowser-smart-search)
@@ -380,28 +358,28 @@ require('nvim-treesitter.configs').setup {
 require('orgmode').setup({
   org_agenda_files = {'~/Dropbox/org/*', '~/my-orgs/**/*'},
   org_default_notes_file = '~/Dropbox/org/refile.org',
+  calendar_week_start_day = 0,
 })
 EOF
 
 nnoremap <Leader>c <Cmd>lua require("orgmode").action("org_mappings.org_time_stamp")<CR>
 
-" "" scrollbar
-" augroup ScrollbarInit
-"   autocmd!
-"   autocmd WinScrolled,VimResized,QuitPre * silent! lua require('scrollbar').show()
-"   autocmd WinEnter,FocusGained           * silent! lua require('scrollbar').show()
-"   autocmd WinLeave,BufLeave,BufWinLeave,FocusLost            * silent! lua require('scrollbar').clear()
-" augroup end
-
 "" telescope"
-nnoremap <leader>ff <cmd>Telescope find_files hidden=true<cr>
-nnoremap <leader>fg <cmd>Telescope live_grep<cr>
-nnoremap <leader>fb <cmd>Telescope buffers<cr>
-nnoremap <leader>fh <cmd>Telescope help_tags<cr>
+nnoremap <leader>b <cmd>Telescope buffers<cr>
+nnoremap <leader>d <cmd>Telescope file_browser<cr>
+nnoremap <leader>f <cmd>Telescope find_files hidden=true<cr>
+nnoremap <leader>F <cmd>Telescope frecency<cr>
+nnoremap <leader>G <cmd>Telescope live_grep<cr>
+nnoremap <leader>h <cmd>Telescope help_tags<cr>
+nnoremap <leader>j <cmd>Telescope jumplist<cr>
+
+lua << EOF
+require("telescope").load_extension "file_browser"
+require("telescope").load_extension "frecency"
+EOF
 
 "" translator"
 let g:translator_target_lang = "ja"
-""" Configuration example
 " Echo translation in the cmdline
 nmap <silent> <Leader>t <Plug>Translate
 vmap <silent> <Leader>t <Plug>TranslateV
