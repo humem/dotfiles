@@ -74,7 +74,7 @@ iab backtick `
 nnoremap <Leader>l :call EditResolved('%:p')<CR>
 
 function! EditResolved(filename) abort
-  let l:resolved = resolve(expand(a:filename))
+  let l:resolved = fnamemodify(resolve(expand(a:filename)), ":p:h")
   echo l:resolved
   execute 'edit ' . fnameescape(l:resolved)
 endfunction
