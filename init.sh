@@ -16,6 +16,6 @@ for f in init.el early-init.el; do
 done
 
 mkdir -p "${HOME}/.config/nvim"
-ln -s "${PWD}/.config/nvim/init.lua" "${HOME}/.config/nvim/"
+ln -sf "${PWD}/.config/nvim/init.lua" "${HOME}/.config/nvim/"
 
 ./fix_netrw.sh
