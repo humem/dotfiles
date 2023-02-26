@@ -12,6 +12,7 @@ local vim_options = {
   number = true,
   shiftwidth = 2,
   smartcase = true,
+  swapfile = false,
   tabstop = 2,
   termguicolors = true,
 }
