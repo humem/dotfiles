@@ -5,6 +5,7 @@ local vim_options = {
   completeopt = { "menuone", "noinsert", "preview" },
   cursorline = true,
   expandtab = true,
+  fileencodings = { "utf-8", "cp932", "euc-jp", "sjis" },
   ignorecase = true,
   laststatus = 2,
   list = true,
