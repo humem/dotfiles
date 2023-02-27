@@ -192,7 +192,6 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
-  { "windwp/nvim-autopairs", event = "InsertEnter", config = true },
   {
     "neoclide/coc.nvim", branch = "release",
     event = { "BufWinEnter" },
@@ -229,6 +228,8 @@ require("lazy").setup({
     dependencies = { "nvim-lua/plenary.nvim" },
     keys = {{ "<leader>g", "<cmd>Neogit<cr>" }},
   },
+  { "windwp/nvim-autopairs", event = "InsertEnter", config = true },
+  { 'kevinhwang91/nvim-hlslens', event = "InsertEnter", config = true },
   {
     "petertriho/nvim-scrollbar", config = true,
     event = { "BufWinEnter", "TabEnter", "TermEnter", "WinEnter" },
