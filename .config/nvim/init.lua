@@ -15,6 +15,7 @@ local vim_options = {
   swapfile = false,
   tabstop = 2,
   termguicolors = true,
+  updatetime = 300,
 }
 for k, v in pairs(vim_options) do
   vim.opt[k] = v
@@ -26,24 +27,21 @@ vim.g.mapleader = ","
 local keymaps = {
   { "<c-g>", "<esc>", mode = { "n", "i", "v", "x" }, opts = { remap = true } },
   { "<esc><esc>", ":nohlsearch<cr><esc>" },
+  { "<leader>d", ":Explore<cr>" },
   { "<leader>l", ":call EditResolved('%:p')<cr>" },
   { "<leader>R", ":source $MYVIMRC<cr>" },
   { "<leader>q", ":qa<cr>" },
+  { "<leader>w", ":w<cr>" },
   { "<space>", "<pagedown>", mode = { "n", "v" } },
   { "<s-space>", "<pageup>", mode = { "n", "v" } },
+  { "jj", "<esc>", mode = "i" },
   { "j", "gj" },
   { "k", "gk" },
   { ";", ":" },
 }
 for i, km in ipairs(keymaps) do
-  local mode = "n"
-  if km.mode then
-    mode = km.mode
-  end
-  local opts = {}
-  if km.opts then
-    opts = km.opts
-  end
+  local mode = km.mode and km.mode or "n"
+  local opts = km.opts and km.opts or {}
   vim.keymap.set(mode, km[1], km[2], opts)
 end
 
@@ -55,6 +53,15 @@ function! EditResolved(filename) abort
 endfunction
 ]])
 
+-- provider
+vim.g.loaded_node_provider = 0
+vim.g.loaded_perl_provider = 0
+vim.g.loaded_ruby_provider = 0
+local prog = vim.fn.expand("~/.venv/bin/python3")
+if vim.fn.filereadable(prog) then
+  vim.g.python3_host_prog = prog
+end
+
 -- abbreviations
 vim.cmd([[
 iab tilda ~
@@ -64,6 +71,7 @@ iab backtick `
 -- netrw
 vim.g.netrw_banner = 0
 vim.g.netrw_keepdir = 0
+vim.g.netrw_keepj = ""
 vim.g.netrw_liststyle = 1
 vim.g.netrw_localcopydircmd = "cp -r"
 vim.g.netrw_sizestyle = "H"
@@ -187,7 +195,7 @@ require("lazy").setup({
   { "windwp/nvim-autopairs", event = "InsertEnter", config = true },
   {
     "neoclide/coc.nvim", branch = "release",
-    event = "InsertEnter",
+    event = { "BufWinEnter" },
     keys = {
       { "K", ":call ShowDocumentation()<cr>" },
       { "<leader>a", "<Plug>(coc-codeaction-selected)iw" },
@@ -201,7 +209,7 @@ require("lazy").setup({
     "lewis6991/gitsigns.nvim", config = true,
     event = { "BufNewFile", "BufRead" }, 
   },
-  { "sainnhe/gruvbox-material", lazy = false, priority = 1000 },
+  { "ellisonleao/gruvbox.nvim", lazy = false, priority = 1000 },
   {
     "lukas-reineke/indent-blankline.nvim",
     event = "BufRead",
@@ -274,7 +282,7 @@ require("lazy").setup({
     cmd = { "Telescope" },
     keys = {
       { "<leader>b", "<cmd>Telescope buffers<cr>" },
-      { "<leader>d", "<cmd>Telescope file_browser<cr>" },
+      { "<leader>D", "<cmd>Telescope file_browser<cr>" },
       { "<leader>f", "<cmd>Telescope frecency<cr>" },
       { "<leader>F", "<cmd>Telescope find_files hidden=true<cr>" },
       { "<leader>G", "<cmd>Telescope live_grep<cr>" },
@@ -291,8 +299,10 @@ require("lazy").setup({
   {
     "voldikss/vim-translator",
     keys = {
-      { "<leader>t", "<Plug>Translate" },
-      { "<leader>w", "<Plug>TranslateW" },
+      { "<leader>T", "<Plug>Translate" },
+      { "<leader>t", "<Plug>TranslateW" },
+      { "<leader>T", "<Plug>TranslateV", mode = "v" },
+      { "<leader>t", "<Plug>TranslateWV", mode = "v" },
     },
   },
   { "vim-jp/vimdoc-ja", event = "InsertEnter", ft = "help" },
@@ -306,6 +316,7 @@ require("lazy").setup({
 vim.g.coc_global_extensions = {
   "coc-eslint8",
   "coc-git",
+  "coc-highlight",
   "coc-lists",
   "coc-prettier",
   "coc-pyright",
@@ -320,6 +331,8 @@ function! ShowDocumentation() abort
     call CocActionAsync('doHover')
   endif
 endfunction
+
+autocmd CursorHold * silent call CocActionAsync('highlight')
 ]])
 
 -- indent-blankline
@@ -337,5 +350,6 @@ vim.g.vimspector_install_gadgets = { "debugpy" }
 -- colorscheme
 local ok, _ = pcall(require, "cs")
 if not ok then
-  vim.cmd([[colorscheme gruvbox-material]])
+  vim.o.background = "dark"
+  vim.cmd([[colorscheme gruvbox]])
 end
