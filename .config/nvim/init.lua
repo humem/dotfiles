@@ -334,13 +334,12 @@ function! ShowDocumentation() abort
   endif
 endfunction
 
+highlight CocHighlightText gui=bold,underline
 autocmd CursorHold * silent call CocActionAsync('highlight')
 ]])
 
 -- indent-blankline
--- vim.g.indentLine_color_term = 239
--- vim.g.indentLine_color_gui = '#708090'
-vim.cmd([[highlight IndentBlanklineChar guibg=#708090 gui=nocombine]])
+vim.cmd([[highlight IndentBlanklineChar guifg=#708090 gui=nocombine]])
 
 -- vim-translator
 vim.g.translator_target_lang = "ja"
