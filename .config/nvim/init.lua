@@ -210,7 +210,7 @@ require("lazy").setup({
     event = { "BufNewFile", "BufRead" }, 
   },
   { "ellisonleao/gruvbox.nvim", lazy = false, priority = 1000 },
-  { "RRethy/vim-illuminate", event = { "BufWinEnter" } },
+  { "RRethy/vim-illuminate", event = { "BufRead" } },
   {
     "lukas-reineke/indent-blankline.nvim",
     event = "BufRead",
