@@ -195,7 +195,7 @@ vim.opt.rtp:prepend(lazypath)
 require("lazy").setup({
   {
     "neoclide/coc.nvim", branch = "release",
-    event = { "BufWinEnter" },
+    event = { "BufNewFile", "BufRead" }, 
     keys = {
       { "K", ":call ShowDocumentation()<cr>" },
       { "<leader>a", "<Plug>(coc-codeaction-selected)iw" },
@@ -210,6 +210,7 @@ require("lazy").setup({
     event = { "BufNewFile", "BufRead" }, 
   },
   { "ellisonleao/gruvbox.nvim", lazy = false, priority = 1000 },
+  { "RRethy/vim-illuminate", event = { "BufWinEnter" } },
   {
     "lukas-reineke/indent-blankline.nvim",
     event = "BufRead",
@@ -221,13 +222,29 @@ require("lazy").setup({
   {
     "nvim-lualine/lualine.nvim", event = "VeryLazy",
     dependencies = { "nvim-tree/nvim-web-devicons" },
-    opts = { options = { theme = "PaperColor" } },
+    opts = {
+      options = {
+        theme = "PaperColor",
+      },
+      sections = {
+        lualine_a = {
+          "g:coc_git_blame",
+          "g:coc_status",
+          "bo:filetype",
+        },
+        lualine_b = {
+          "g:coc_git_status",
+          "diff",
+          { "diagnostics", sources = { "coc" } },
+        },
+      },
+    },
   },
   { "ishan9299/modus-theme-vim", lazy = false, priority = 1000 },
   {
     "TimUntersberger/neogit", config = true,
     dependencies = { "nvim-lua/plenary.nvim" },
-    keys = {{ "<leader>g", "<cmd>Neogit<cr>" }},
+    keys = {{ "<leader>g", "<cmd>Neogit cwd=%:p:h<cr>" }},
   },
   { "windwp/nvim-autopairs", event = "InsertEnter", config = true },
   { 'kevinhwang91/nvim-hlslens', event = "InsertEnter", config = true },
@@ -237,6 +254,7 @@ require("lazy").setup({
   },
   {
     "nvim-treesitter/nvim-treesitter",
+    build = ":TSUpdate",
     event = "VeryLazy",
     config = function()
       require('nvim-treesitter.configs').setup {
@@ -244,11 +262,15 @@ require("lazy").setup({
           enable = true,
           additional_vim_regex_highlighting = { "org" },
         },
+        indent = {
+          enabled = true,
+        },
         ensure_installed = {
           "c",
           "help",
           "lua",
           "org",
+          "python",
           "tsx",
           "typescript",
           "vim",
@@ -310,6 +332,7 @@ require("lazy").setup({
   { "vim-jp/vimdoc-ja", event = "InsertEnter", ft = "help" },
   { "puremourning/vimspector", ft = "python" },
   { "simeji/winresizer", keys = { "<C-e>" } },
+  { "folke/which-key.nvim", config = true, event = "InsertEnter" },
 })
 
 -- plugin settings
@@ -334,8 +357,8 @@ function! ShowDocumentation() abort
   endif
 endfunction
 
-highlight CocHighlightText gui=bold,underline
-autocmd CursorHold * silent call CocActionAsync('highlight')
+" highlight CocHighlightText gui=bold,underline
+" autocmd CursorHold * silent call CocActionAsync('highlight')
 ]])
 
 -- indent-blankline
