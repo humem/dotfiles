@@ -38,13 +38,18 @@ local keymaps = {
   { "jj", "<esc>", mode = "i" },
   { "j", "gj" },
   { "k", "gk" },
-  { ";", ":" },
+  { ";", ":", mode = { "n", "v" } },
 }
-for i, km in ipairs(keymaps) do
-  local mode = km.mode and km.mode or "n"
-  local opts = km.opts and km.opts or {}
-  vim.keymap.set(mode, km[1], km[2], opts)
+
+local function set_keymap(keymaps)
+  for i, km in ipairs(keymaps) do
+    local mode = km.mode and km.mode or "n"
+    local opts = km.opts and km.opts or {}
+    vim.keymap.set(mode, km[1], km[2], opts)
+  end
 end
+
+set_keymap(keymaps)
 
 vim.cmd([[
 function! EditResolved(filename) abort
@@ -193,24 +198,153 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
+  { 'neovim/nvim-lspconfig', event = { "BufRead", "InsertEnter" } },
+  { 'williamboman/mason.nvim', config = true, event = { "BufRead", "InsertEnter" } },
   {
-    "neoclide/coc.nvim", branch = "release",
-    event = { "BufNewFile", "BufRead" }, 
-    keys = {
-      { "K", ":call ShowDocumentation()<cr>" },
-      { "<leader>a", "<Plug>(coc-codeaction-selected)iw" },
-      { "<leader>r", "<Plug>(coc-rename)" },
-      { "<leader>.", "<Plug>(coc-definition)" },
-      { "<leader>/", "<Plug>(coc-references)" },
+    'williamboman/mason-lspconfig',
+    dependencies = {
+      "neovim/nvim-lspconfig",
+      "hrsh7th/cmp-nvim-lsp",
+    },
+    event = { "BufRead", "InsertEnter" },
+    config = function()
+      require("mason-lspconfig").setup({
+        ensure_installed = {
+          'eslint',
+          'pyright',
+          'tsserver',
+        },
+        automatic_installation = true,
+      })
+      local lspconfig = require("lspconfig")
+      require("mason-lspconfig").setup_handlers({
+        function(server_name)
+          local opts = {
+            capabilities = require("cmp_nvim_lsp").default_capabilities(),
+          }
+          lspconfig[server_name].setup(opts)
+        end,
+      })
+    end,
+  },
+  {
+    'jose-elias-alvarez/null-ls.nvim', event = { "BufRead", "InsertEnter" },
+    config = function()
+      local null_ls = require("null-ls")
+      null_ls.setup({
+        sources = { null_ls.builtins.formatting.prettier },
+      })
+    end,
+  },
+  {
+    'jayp0521/mason-null-ls.nvim', event = { "BufRead", "InsertEnter" },
+    opts = {
+      ensure_installed = { 'prettier' },
+      automatic_installation = true,
     },
   },
-  { "numToStr/Comment.nvim", keys = { "gc" }, config = true },
+  { 'stevearc/dressing.nvim', config = true, event = { "BufRead", "InsertEnter" } },
+  { 'tami5/lspsaga.nvim', config = true, event = { "BufRead", "InsertEnter" } },
+  {
+    'ray-x/lsp_signature.nvim',
+    opts = { hint_enable = false },
+    event = { "BufRead", "InsertEnter" },
+  },
+  { 'onsails/lspkind-nvim', event = { "BufRead", "InsertEnter" } },
+  { 'j-hui/fidget.nvim', config = true },
+  {
+    'hrsh7th/nvim-cmp',
+    event = { "BufRead", "InsertEnter" }, 
+    dependencies = {
+      'hrsh7th/cmp-nvim-lsp',
+      'hrsh7th/cmp-buffer',
+      'hrsh7th/cmp-path',
+    },
+    config = function()
+      local cmp = require("cmp")
+      cmp.setup({
+        enabled = true,
+        mapping = cmp.mapping.preset.insert({
+          ["<C-u>"] = cmp.mapping.scroll_docs(-4),
+          ["<C-d>"] = cmp.mapping.scroll_docs(4),
+          -- ["<tab>"] = cmp.mapping.complete(),
+          ["<C-y>"] = cmp.mapping.confirm({ select = true }),
+        }),
+        window = {
+          completion = cmp.config.window.bordered(),
+          documentation = cmp.config.window.bordered(),
+        },
+        sources = cmp.config.sources({
+          { name = "nvim_lsp" },
+          { name = "nvim_lsp_signature_help" },
+          { name = "buffer" },
+          { name = "path" },
+          { name = "cmdline" },
+          { name = "git" },
+        }),
+        formatting = {
+          fields = { "abbr", "kind", "menu" },
+          format = require("lspkind").cmp_format({
+            mode = "text",
+          }),
+        },
+      })
+    end,
+  },
+  { "mfussenegger/nvim-dap", ft = { "python" } },
+  {
+    "rcarriga/nvim-dap-ui", ft = { "python" },
+    opts = {
+      icons = { expanded = "", collapsed = "" },
+      layouts = {
+        {
+          elements = {
+            { id = "watches", size = 0.20 },
+            { id = "stacks", size = 0.20 },
+            { id = "breakpoints", size = 0.20 },
+            { id = "scopes", size = 0.40 },
+          },
+          size = 64,
+          position = "right",
+        },
+        {
+          elements = {
+            "repl",
+            "console",
+          },
+          size = 0.20,
+          position = "bottom",
+        },
+      },
+    },
+  },
+  {
+    "mfussenegger/nvim-dap-python",
+    ft = { "python" },
+    config = function()
+      local venv = os.getenv('VIRTUAL_ENV')
+      command = string.format('%s/bin/python', venv)
+      require('dap-python').setup(command)
+    end,
+  },
+  {
+    "numToStr/Comment.nvim",
+    event = "InsertEnter", keys = { "gc" }, config = true,
+  },
   {
     "lewis6991/gitsigns.nvim", config = true,
     event = { "BufNewFile", "BufRead" }, 
   },
   { "ellisonleao/gruvbox.nvim", lazy = false, priority = 1000 },
-  { "RRethy/vim-illuminate", event = { "BufRead" } },
+  {
+    "RRethy/vim-illuminate",
+    event = { "BufRead" },
+    config = function()
+      require('illuminate').configure({
+        filetypes_allowlist = { "lua", "python", "vim" },
+      })
+    end,
+  },
   {
     "lukas-reineke/indent-blankline.nvim",
     event = "BufRead",
@@ -226,18 +360,6 @@ require("lazy").setup({
       options = {
         theme = "PaperColor",
       },
-      sections = {
-        lualine_a = {
-          "g:coc_git_blame",
-          "g:coc_status",
-          "bo:filetype",
-        },
-        lualine_b = {
-          "g:coc_git_status",
-          "diff",
-          { "diagnostics", sources = { "coc" } },
-        },
-      },
     },
   },
   { "ishan9299/modus-theme-vim", lazy = false, priority = 1000 },
@@ -247,6 +369,13 @@ require("lazy").setup({
     keys = {{ "<leader>g", "<cmd>Neogit cwd=%:p:h<cr>" }},
   },
   { "windwp/nvim-autopairs", event = "InsertEnter", config = true },
+  {
+    "norcalli/nvim-colorizer.lua",
+    event = "BufRead",
+    config = function()
+      require("colorizer").setup()
+    end,
+  },
   { 'kevinhwang91/nvim-hlslens', event = "InsertEnter", config = true },
   {
     "petertriho/nvim-scrollbar", config = true,
@@ -254,6 +383,11 @@ require("lazy").setup({
   },
   {
     "nvim-treesitter/nvim-treesitter",
+    dependencies = {
+      "RRethy/nvim-treesitter-endwise",
+      "p00f/nvim-ts-rainbow",
+      "andymass/vim-matchup",
+    },
     build = ":TSUpdate",
     event = "VeryLazy",
     config = function()
@@ -263,7 +397,18 @@ require("lazy").setup({
           additional_vim_regex_highlighting = { "org" },
         },
         indent = {
-          enabled = true,
+          enable = true,
+        },
+        endwise = {
+          enable = true,
+        },
+        rainbow = {
+          enable = true,
+          extended_mode = true,
+          max_file_lines = nil,
+        },
+        matchup = {
+          enable = true,
         },
         ensure_installed = {
           "c",
@@ -318,6 +463,12 @@ require("lazy").setup({
       require("telescope").load_extension "frecency"
     end,
   },
+  {
+    "folke/trouble.nvim",
+    event = { "BufRead", "InsertEnter" },
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    config = true,
+  },
   { "machakann/vim-sandwich", event = "InsertEnter" },
   { "dstein64/vim-startuptime", cmd = "StartupTime" },
   {
@@ -330,46 +481,81 @@ require("lazy").setup({
     },
   },
   { "vim-jp/vimdoc-ja", event = "InsertEnter", ft = "help" },
-  { "puremourning/vimspector", ft = "python" },
   { "simeji/winresizer", keys = { "<C-e>" } },
   { "folke/which-key.nvim", config = true, event = "InsertEnter" },
 })
 
 -- plugin settings
 
--- coc
-vim.g.coc_global_extensions = {
-  "coc-eslint8",
-  "coc-git",
-  "coc-highlight",
-  "coc-lists",
-  "coc-prettier",
-  "coc-pyright",
-  "coc-tsserver",
+-- lsp
+vim.api.nvim_create_autocmd({ "CursorHold" }, {
+  pattern = { "*" },
+  callback = function()
+    require("lspsaga.diagnostic").show_cursor_diagnostics()
+  end,
+})
+
+vim.api.nvim_create_autocmd({ "FileType" }, {
+  pattern = { "typescript", "typescriptreact", "typescript.tsx" },
+  callback = function()
+    vim.keymap.set({ "n" }, "ff", function()
+      vim.cmd([[EslintFixAll]])
+      vim.lsp.buf.format({ name = "null-ls" })
+    end)
+  end,
+})
+
+local function show_documentation()
+  local ft = vim.opt.filetype._value
+  if ft == "vim" or ft == "lua" or ft == "help" then
+    vim.cmd([[execute "h " . expand("<cword>") ]])
+  else
+    require("lspsaga.hover").render_hover_doc()
+  end
+end
+
+local keymaps = {
+  { "K", show_documentation },
+  { "<leader>a", require("lspsaga.codeaction").code_action },
+  { "<leader>i", "<Cmd>Telescope diagnostics<CR>" },
+  { "<leader>r", require("lspsaga.rename").rename },
+  { "<leader>]", require("lspsaga.diagnostic").navigate("next") },
+  { "<leader>[", require("lspsaga.diagnostic").navigate("prev") },
+  { "<leader>=", vim.lsp.buf.format },
+  { "<leader>.", "<Cmd>Telescope lsp_definitions<CR>" },
+  { "<leader>/", "<Cmd>Telescope lsp_references<CR>" },
 }
+set_keymap(keymaps)
 
-vim.cmd([[
-function! ShowDocumentation() abort
-  if index(['vim','lua','help'], &filetype) >= 0
-    execute 'h ' . expand('<cword>')
-  elseif coc#rpc#ready()
-    call CocActionAsync('doHover')
-  endif
-endfunction
-
-" highlight CocHighlightText gui=bold,underline
-" autocmd CursorHold * silent call CocActionAsync('highlight')
-]])
+-- dap
+local keymaps = {
+  { "<F5>", ":DapContinue<CR>" },
+  { "<F10>", ":DapStepOver<CR>" },
+  { "<F11>", ":DapStepInto<CR>" },
+  { "<F12>", ":DapStepOut<CR>" },
+  { "<leader>zb", ":DapToggleBreakpoint<CR>" },
+  { "<leader>zB", ':lua require("dap").set_breakpoint(nil, nil, vim.fn.input("Breakpoint condition: "))<CR>' },
+  { "<leader>zl", ':lua require("dap").set_breakpoint(nil, nil, vim.fn.input("Log point message: "))<CR>' },
+  { "<leader>zo", ':lua require("dap").repl.open()<CR>' },
+  { "<leader>zr", ':lua require("dap").run_last()<CR>' },
+  { "<leader>z", ':lua require("dapui").toggle()<CR>' },
+  { "<leader>zk", ':lua require("dapui").eval()<CR>' },
+}
+set_keymap(keymaps)
 
 -- indent-blankline
 vim.cmd([[highlight IndentBlanklineChar guifg=#708090 gui=nocombine]])
 
+-- vim-illuminate
+vim.cmd([[
+augroup illuminate_augroup
+    autocmd!
+    autocmd VimEnter * hi IlluminatedWordRead gui=bold,underline
+augroup END
+]])
+
 -- vim-translator
 vim.g.translator_target_lang = "ja"
-
--- vimspector
-vim.g.vimspector_enable_mappings = "HUMAN"
-vim.g.vimspector_install_gadgets = { "debugpy" }
 
 -- colorscheme
 local ok, _ = pcall(require, "cs")
