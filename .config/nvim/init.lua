@@ -244,7 +244,19 @@ require("lazy").setup({
     },
   },
   { 'stevearc/dressing.nvim', config = true, event = { "BufRead", "InsertEnter" } },
-  { 'tami5/lspsaga.nvim', config = true, event = { "BufRead", "InsertEnter" } },
+  { 
+    'tami5/lspsaga.nvim',
+    event = { "BufRead", "InsertEnter" },
+    config = function()
+      require("lspsaga").setup()
+      vim.api.nvim_create_autocmd({ "CursorHold" }, {
+        pattern = { "*" },
+        callback = function()
+          require("lspsaga.diagnostic").show_cursor_diagnostics()
+        end,
+      })
+    end,
+  },
   {
     'ray-x/lsp_signature.nvim',
     opts = { hint_enable = false },
@@ -488,13 +500,6 @@ require("lazy").setup({
 -- plugin settings
 
 -- lsp
-vim.api.nvim_create_autocmd({ "CursorHold" }, {
-  pattern = { "*" },
-  callback = function()
-    require("lspsaga.diagnostic").show_cursor_diagnostics()
-  end,
-})
-
 vim.api.nvim_create_autocmd({ "FileType" }, {
   pattern = { "typescript", "typescriptreact", "typescript.tsx" },
   callback = function()
@@ -516,12 +521,12 @@ end
 
 local keymaps = {
   { "K", show_documentation },
-  { "<leader>a", require("lspsaga.codeaction").code_action },
+  { "<leader>a", ':lua require("lspsaga.codeaction").code_action<cr>' },
   { "<leader>i", "<Cmd>Telescope diagnostics<CR>" },
-  { "<leader>r", require("lspsaga.rename").rename },
-  { "<leader>]", require("lspsaga.diagnostic").navigate("next") },
-  { "<leader>[", require("lspsaga.diagnostic").navigate("prev") },
-  { "<leader>=", vim.lsp.buf.format },
+  { "<leader>r", ':lua require("lspsaga.rename").rename<cr>' },
+  { "<leader>]", ':lua require("lspsaga.diagnostic").navigate("next")<cr>' },
+  { "<leader>[", ':lua require("lspsaga.diagnostic").navigate("prev")<cr>' },
+  { "<leader>=", ':lua vim.lsp.buf.format<cr>' },
   { "<leader>.", "<Cmd>Telescope lsp_definitions<CR>" },
   { "<leader>/", "<Cmd>Telescope lsp_references<CR>" },
 }
@@ -551,6 +556,8 @@ vim.cmd([[
 augroup illuminate_augroup
     autocmd!
     autocmd VimEnter * hi IlluminatedWordRead gui=bold,underline
+    autocmd VimEnter * hi IlluminatedWordText gui=bold,underline
+    autocmd VimEnter * hi IlluminatedWordWrite gui=bold,underline
 augroup END
 ]])
 
