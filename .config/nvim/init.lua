@@ -479,10 +479,10 @@ require("lazy").setup({
     },
     cmd = { "Telescope" },
     keys = {
-      { "<leader>b", "<cmd>Telescope frecency<cr>" },
-      { "<leader>B", "<cmd>Telescope buffers<cr>" },
+      { "<leader>b", "<cmd>Telescope buffers<cr>" },
       { "<leader>D", "<cmd>Telescope file_browser<cr>" },
-      { "<leader>f", "<cmd>Telescope find_files hidden=true<cr>" },
+      { "<leader>f", "<cmd>Telescope frecency<cr>" },
+      { "<leader>F", "<cmd>Telescope find_files hidden=true<cr>" },
       { "<leader>G", "<cmd>Telescope live_grep<cr>" },
       { "<leader>h", "<cmd>Telescope help_tags<cr>" },
       { "<leader>j", "<cmd>Telescope jumplist<cr>" },
