@@ -339,6 +339,22 @@ require("lazy").setup({
       require('dap-python').setup(command)
     end,
   },
+
+  {
+    "Vonr/align.nvim",
+    event = "InsertEnter",
+    config = function()
+      local keymaps = {
+        { "<leader>aa", ':lua require("align").align_to_char(1, true)<cr>' },
+        { "<leader>as", ':lua require("align").align_to_char(2, true, true)<cr>' },
+        { "<leader>aw", ':lua require("align").align_to_string(false, true, true)<cr>' },
+        { "<leader>ar", ':lua require("align").align_to_string(true, true, true)<cr>' },
+      }
+      for i, km in ipairs(keymaps) do
+        vim.keymap.set("x", km[1], km[2])
+      end
+    end,
+  },
   {
     "numToStr/Comment.nvim",
     event = "InsertEnter", keys = { "gc" }, config = true,
@@ -399,6 +415,7 @@ require("lazy").setup({
       "RRethy/nvim-treesitter-endwise",
       "p00f/nvim-ts-rainbow",
       "andymass/vim-matchup",
+      "nvim-treesitter/nvim-treesitter-context",
     },
     build = ":TSUpdate",
     event = "VeryLazy",
