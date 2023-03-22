@@ -22,6 +22,10 @@ for k, v in pairs(vim_options) do
   vim.opt[k] = v
 end
 
+vim.cmd([[
+set iskeyword-=_
+]])
+
 -- keymaps
 vim.g.mapleader = ","
 
@@ -30,6 +34,7 @@ local keymaps = {
   { "<esc><esc>", ":nohlsearch<cr><esc>" },
   { "<leader>d", ":Explore<cr>" },
   { "<leader>l", ":call EditResolved('%:p')<cr>" },
+  { "<leader>m", ":terminal<cr>" },
   { "<leader>R", ":source $MYVIMRC<cr>" },
   { "<leader>q", ":qa<cr>" },
   { "<leader>w", ":w<cr>" },
@@ -58,6 +63,8 @@ function! EditResolved(filename) abort
   execute 'edit ' . fnameescape(l:resolved)
 endfunction
 ]])
+
+-- search completion: C-r C-w
 
 -- provider
 vim.g.loaded_node_provider = 0
@@ -183,6 +190,16 @@ augroup netrw_mapping
 augroup END
 ]])
 
+-- terminal
+vim.cmd([[
+:tnoremap <C-c> <C-\><C-n>
+command! -nargs=* T split | wincmd j | resize 20 | terminal <args>
+autocmd TermOpen * startinsert
+" ターミナルモードで行番号を非表示
+autocmd TermOpen * setlocal norelativenumber
+autocmd TermOpen * setlocal nonumber
+]])
+
 -- lazy
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
@@ -249,12 +266,12 @@ require("lazy").setup({
     event = { "BufRead", "InsertEnter" },
     config = function()
       require("lspsaga").setup()
-      vim.api.nvim_create_autocmd({ "CursorHold" }, {
-        pattern = { "*" },
-        callback = function()
-          require("lspsaga.diagnostic").show_cursor_diagnostics()
-        end,
-      })
+      -- vim.api.nvim_create_autocmd({ "CursorHold" }, {
+      --   pattern = { "*" },
+      --   callback = function()
+      --     require("lspsaga.diagnostic").show_cursor_diagnostics()
+      --   end,
+      -- })
     end,
   },
   {
@@ -479,10 +496,10 @@ require("lazy").setup({
     },
     cmd = { "Telescope" },
     keys = {
-      { "<leader>b", "<cmd>Telescope frecency<cr>" },
-      { "<leader>B", "<cmd>Telescope buffers<cr>" },
+      { "<leader>b", "<cmd>Telescope buffers<cr>" },
       { "<leader>D", "<cmd>Telescope file_browser<cr>" },
-      { "<leader>f", "<cmd>Telescope find_files hidden=true<cr>" },
+      { "<leader>f", "<cmd>Telescope frecency<cr>" },
+      { "<leader>F", "<cmd>Telescope find_files hidden=true<cr>" },
       { "<leader>G", "<cmd>Telescope live_grep<cr>" },
       { "<leader>h", "<cmd>Telescope help_tags<cr>" },
       { "<leader>j", "<cmd>Telescope jumplist<cr>" },
