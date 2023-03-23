@@ -15,7 +15,9 @@ for f in init.el early-init.el; do
   ln -sf "${PWD}/.emacs.d/${f}" "${HOME}/.emacs.d/"
 done
 
-mkdir -p "${HOME}/.config/nvim"
-ln -sf "${PWD}/.config/nvim/init.lua" "${HOME}/.config/nvim/"
-
+if [ ! -d "$HOME/.config/nvim/astronvim" ]; then
+  git clone --depth 1 https://github.com/AstroNvim/AstroNvim ~/.config/nvim
+fi
+ln -sf "${PWD}/astronvim/user" "${HOME}/.config/nvim/lua/"
 ./fix_netrw.sh
+nvim  --headless -c 'quitall'
