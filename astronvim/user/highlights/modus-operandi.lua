@@ -1,0 +1,3 @@
+return {
+  Folded = { bg = "#ffffff" },
+}
