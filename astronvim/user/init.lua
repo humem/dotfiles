@@ -1,15 +1,20 @@
 return {
-  colorscheme = "modus-operandi",
+  -- set iskeyword-=_
+  -- iab tilda ~
+  -- iab backtick `
+  -- netrw
 
   mappings = {
     n = {
       ["<space>"] = { "<pagedown>", desc = "Scroll down" },
       ["<S-space>"] = { "<pageup>", desc = "Scroll up" },
-      ["<leader>Q"] = { ":qa<cr>", desc = "Quit all" },
+      ["<leader>Q"] = { "<cmd>qa<cr>", desc = "Quit all" },
+      [";"] = { ":", desc = "Vim command" },
     },
     v = {
       ["<space>"] = { "<pagedown>", desc = "Scroll down" },
       ["<S-space>"] = { "<pageup>", desc = "Scroll up" },
+      [";"] = { ":", desc = "Vim command" },
     },
     t = {
       ["<C-c>"] = { "<C-\\><C-n>", desc = "Detach terminal" },
@@ -18,7 +23,6 @@ return {
 
   options = {
     g = {
-      foldenable = false,
       loaded_node_provider = 0,
       loaded_perl_provider = 0,
       loaded_ruby_provider = 0,
@@ -26,6 +30,7 @@ return {
       translator_target_lang = "ja",
     },
     opt = {
+      autochdir = true,
       fileencodings = { "utf-8", "cp932", "euc-jp", "sjis" },
     }
   },
@@ -34,7 +39,12 @@ return {
     { "ishan9299/modus-theme-vim", lazy = false, priority = 1000 },
     {
       "nvim-treesitter/nvim-treesitter",
+      event = "VeryLazy",
       opts = {
+        highlight = {
+          enable = true,
+          additional_vim_regex_highlighting = { "org" },
+        },
         ensure_installed = {
           "c",
           "help",
@@ -47,6 +57,7 @@ return {
         },
       },
     },
+    { "kevinhwang91/nvim-ufo", enabled = false },
     { 
       "tyru/open-browser.vim",
       keys = {{
@@ -59,9 +70,12 @@ return {
       "nvim-orgmode/orgmode", ft = "org",
       dependencies = { "nvim-treesitter/nvim-treesitter" },
       keys = {{
-        "<leader>Oc",
+        "<leader>o", name = "Orgmode",
+      },
+      {
+        "<leader>oC",
         '<cmd>lua require("orgmode").action("org_mappings.org_time_stamp")<cr>',
-        desc = "Calendar",
+        desc = "org Calendar",
       }},
       config = function()
         require('orgmode').setup_ts_grammar()
@@ -70,6 +84,13 @@ return {
         })
       end,
     },
+    {
+      "folke/trouble.nvim",
+      event = { "BufRead", "InsertEnter" },
+      dependencies = { "nvim-tree/nvim-web-devicons" },
+      config = true,
+    },
+    { "machakann/vim-sandwich", event = "InsertEnter" },
     { "dstein64/vim-startuptime", cmd = "StartupTime" },
     {
       "voldikss/vim-translator",
