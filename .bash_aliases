@@ -81,6 +81,12 @@ if [ $WSL_DISTRO_NAME ]; then
     export NO_AT_BRIDGE=1
 fi
 
+# z
+export Z=$HOME/distfiles/z/z.sh
+if [ -f $Z ]; then
+    source $Z
+fi
+
 if [ -f "$HOME/.bash_local" ]; then
     source $HOME/.bash_local
 fi
