@@ -49,6 +49,17 @@ return {
       },
     },
     { "ishan9299/modus-theme-vim", lazy = false, priority = 1000 },
+    -- {
+    --   "TimUntersberger/neogit",
+    --   cmd = "Neogit",
+    --   keys = {{
+    --     "<leader>gt",
+    --     "<cmd>Neogit<cr>",
+    --     desc = "Neogit status",
+    --   }},
+    --   dependencies = "nvim-lua/plenary.nvim",
+    --   config = true,
+    -- },
     {
       "nvim-treesitter/nvim-treesitter",
       event = "VeryLazy",
@@ -62,6 +73,7 @@ return {
           "help",
           "lua",
           "org",
+          "query",
           "python",
           "tsx",
           "typescript",
@@ -69,6 +81,7 @@ return {
         },
       },
     },
+    -- { "nvim-treesitter/playground", event = "VeryLazy" },
     { "kevinhwang91/nvim-ufo", enabled = false },
     { 
       "tyru/open-browser.vim",
@@ -121,46 +134,12 @@ return {
     if vim.fn.filereadable(prog) then
       vim.g.python3_host_prog = prog
     end
-
-    --- https://qiita.com/sff1019/items/3f73856b78d7fa2731c7
+    -- keyword unit
+    vim.cmd([[set iskeyword-=_]])
+    -- abbreviations
     vim.cmd([[
-      function! s:get_syn_id(transparent)
-        let synid = synID(line("."), col("."), 1)
-        if a:transparent
-          return synIDtrans(synid)
-        else
-          return synid
-        endif
-      endfunction
-      function! s:get_syn_attr(synid)
-        let name = synIDattr(a:synid, "name")
-        let ctermfg = synIDattr(a:synid, "fg", "cterm")
-        let ctermbg = synIDattr(a:synid, "bg", "cterm")
-        let guifg = synIDattr(a:synid, "fg", "gui")
-        let guibg = synIDattr(a:synid, "bg", "gui")
-        return {
-              \ "name": name,
-              \ "ctermfg": ctermfg,
-              \ "ctermbg": ctermbg,
-              \ "guifg": guifg,
-              \ "guibg": guibg}
-      endfunction
-      function! s:get_syn_info()
-        let baseSyn = s:get_syn_attr(s:get_syn_id(0))
-        echo "name: " . baseSyn.name .
-              \ " ctermfg: " . baseSyn.ctermfg .
-              \ " ctermbg: " . baseSyn.ctermbg .
-              \ " guifg: " . baseSyn.guifg .
-              \ " guibg: " . baseSyn.guibg
-        let linkedSyn = s:get_syn_attr(s:get_syn_id(1))
-        echo "link to"
-        echo "name: " . linkedSyn.name .
-              \ " ctermfg: " . linkedSyn.ctermfg .
-              \ " ctermbg: " . linkedSyn.ctermbg .
-              \ " guifg: " . linkedSyn.guifg .
-              \ " guibg: " . linkedSyn.guibg
-      endfunction
-      command! SyntaxInfo call s:get_syn_info()
+    iab tilda ~
+    iab backtick `
     ]])
   end,
 }
