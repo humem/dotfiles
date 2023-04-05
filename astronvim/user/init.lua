@@ -1,7 +1,4 @@
 return {
-  -- set iskeyword-=_
-  -- iab tilda ~
-  -- iab backtick `
   -- netrw
 
   lsp = {
@@ -14,6 +11,7 @@ return {
     n = {
       ["<space>"] = { "<pagedown>", desc = "Scroll down" },
       ["<S-space>"] = { "<pageup>", desc = "Scroll up" },
+      ["<leader>E"] = { "<cmd>e!<cr>", desc = "Reload" },
       ["<leader>Q"] = { "<cmd>qa<cr>", desc = "Quit all" },
       [";"] = { ":", desc = "Vim command" },
     },
@@ -23,7 +21,7 @@ return {
       [";"] = { ":", desc = "Vim command" },
     },
     t = {
-      ["<C-c>"] = { "<C-\\><C-n>", desc = "Detach terminal" },
+      ["<C-w><C-h>"] = { "<C-\\><C-n><C-w>h", desc = "Leave terminal" },
     },
   },
 
@@ -38,6 +36,8 @@ return {
     opt = {
       autochdir = true,
       fileencodings = { "utf-8", "cp932", "euc-jp", "sjis" },
+      listchars = { tab = "▸-" },
+      ttimeoutlen = 100,
     },
   },
 
@@ -45,32 +45,48 @@ return {
     {
       "jay-babu/mason-nvim-dap.nvim",
       opts = {
-        ensure_installed = { "python" }
+        -- ensure_installed = { "python" }
       },
     },
     { "ishan9299/modus-theme-vim", lazy = false, priority = 1000 },
-    -- {
-    --   "TimUntersberger/neogit",
-    --   cmd = "Neogit",
-    --   keys = {{
-    --     "<leader>gt",
-    --     "<cmd>Neogit<cr>",
-    --     desc = "Neogit status",
-    --   }},
-    --   dependencies = "nvim-lua/plenary.nvim",
-    --   config = true,
-    -- },
+    {
+      "TimUntersberger/neogit",
+      cmd = "Neogit",
+      keys = {{
+        "<leader>gt",
+        "<cmd>Neogit<cr>",
+        desc = "Neogit status",
+      }},
+      dependencies = "nvim-lua/plenary.nvim",
+      config = true,
+    },
     {
       "nvim-treesitter/nvim-treesitter",
+      dependencies = {
+        "nvim-treesitter/nvim-treesitter-context",
+        "RRethy/nvim-treesitter-endwise",
+        "mrjones2014/nvim-ts-rainbow",
+        "andymass/vim-matchup",
+      },
       event = "VeryLazy",
       opts = {
         highlight = {
           enable = true,
           additional_vim_regex_highlighting = { "org" },
         },
+        endwise = {
+          enable = true,
+        },
+        matchup = {
+          enable = true,
+        },
+        rainbow = {
+          enable = true,
+          extended_mode = true,
+          max_file_lines = nil,
+        },
         ensure_installed = {
           "c",
-          "help",
           "lua",
           "org",
           "query",
@@ -81,7 +97,6 @@ return {
         },
       },
     },
-    -- { "nvim-treesitter/playground", event = "VeryLazy" },
     { "kevinhwang91/nvim-ufo", enabled = false },
     { 
       "tyru/open-browser.vim",
@@ -109,11 +124,21 @@ return {
         })
       end,
     },
+    { "nvim-treesitter/playground", event = "VeryLazy" },
     {
       "folke/trouble.nvim",
       event = { "BufRead", "InsertEnter" },
       dependencies = { "nvim-tree/nvim-web-devicons" },
       config = true,
+    },
+    {
+      "RRethy/vim-illuminate",
+      event = { "BufRead" },
+      config = function()
+        require('illuminate').configure({
+          filetypes_allowlist = { "lua", "python", "vim" },
+        })
+      end,
     },
     { "machakann/vim-sandwich", event = "InsertEnter" },
     { "dstein64/vim-startuptime", cmd = "StartupTime" },
@@ -130,6 +155,31 @@ return {
   },
 
   polish = function ()
+    -- vim-illuminate
+    vim.cmd([[
+    augroup illuminate_augroup
+        autocmd!
+        autocmd VimEnter * hi IlluminatedWordRead gui=bold  ",underline
+        autocmd VimEnter * hi IlluminatedWordText gui=bold  ",underline
+        autocmd VimEnter * hi IlluminatedWordWrite gui=bold ",underline
+    augroup END
+    ]])
+    -- ime
+    vim.cmd([[
+    augroup restore-ime
+      autocmd!
+      if exists("$TMUX")
+        autocmd InsertEnter * silent call chansend(v:stderr, "\ePtmux;\e\e[<r\e\\")
+        autocmd InsertLeave * silent call chansend(v:stderr, "\ePtmux;\e\e[<s\e\e[<0t\e\\")
+        autocmd VimLeave * silent call chansend(v:stderr, "\ePtmux;\e\e[<0t\e\e[<s\e\\")
+      else
+        autocmd InsertEnter * silent call chansend(v:stderr, "\e[<r")
+        autocmd InsertLeave * silent call chansend(v:stderr, "\e[<s\e[<0t")
+        autocmd VimLeave * silent call chansend(v:stderr, "\e[<0t\e[<s")
+      endif
+    augroup END
+    ]])
+    -- python3_host_prog
     local prog = vim.fn.expand("~/.venv/bin/python3")
     if vim.fn.filereadable(prog) then
       vim.g.python3_host_prog = prog
