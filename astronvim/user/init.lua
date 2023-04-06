@@ -148,15 +148,15 @@ return {
       dependencies = { "nvim-tree/nvim-web-devicons" },
       config = true,
     },
-    {
-      "RRethy/vim-illuminate",
-      event = { "BufRead" },
-      config = function()
-        require('illuminate').configure({
-          filetypes_allowlist = { "lua", "python", "vim" },
-        })
-      end,
-    },
+    -- {
+    --   "RRethy/vim-illuminate",
+    --   event = { "BufRead" },
+    --   config = function()
+    --     require('illuminate').configure({
+    --       filetypes_allowlist = { "lua", "python", "vim" },
+    --     })
+    --   end,
+    -- },
     { "machakann/vim-sandwich", event = "InsertEnter" },
     { "dstein64/vim-startuptime", cmd = "StartupTime" },
     {
@@ -172,15 +172,21 @@ return {
   },
 
   polish = function ()
-    -- vim-illuminate
+    -- lsp highlight
     vim.cmd([[
-    augroup illuminate_augroup
-        autocmd!
-        autocmd VimEnter * hi IlluminatedWordRead gui=bold  ",underline
-        autocmd VimEnter * hi IlluminatedWordText gui=bold  ",underline
-        autocmd VimEnter * hi IlluminatedWordWrite gui=bold ",underline
-    augroup END
+    hi LspReferenceText gui=bold  ",underline
+    hi LspReferenceRead gui=bold  ",underline
+    hi LspReferenceWrite gui=bold ",underline
     ]])
+    -- vim-illuminate
+    -- vim.cmd([[
+    -- augroup illuminate_augroup
+    --     autocmd!
+    --     autocmd VimEnter * hi IlluminatedWordRead gui=bold  ",underline
+    --     autocmd VimEnter * hi IlluminatedWordText gui=bold  ",underline
+    --     autocmd VimEnter * hi IlluminatedWordWrite gui=bold ",underline
+    -- augroup END
+    -- ]])
     -- ime
     vim.cmd([[
     augroup restore-ime
