@@ -13,6 +13,14 @@ return {
       ["<S-space>"] = { "<pageup>", desc = "Scroll up" },
       ["<leader>E"] = { "<cmd>e!<cr>", desc = "Reload" },
       ["<leader>Q"] = { "<cmd>qa<cr>", desc = "Quit all" },
+      ["<leader>ll"] = { "<cmd>Telescope lsp_definitions<cr>",
+                         desc = "Search definitions" },
+      ["<leader>tb"] = { function() require"astronvim.utils".toggle_term_cmd "btm" end,
+                         desc = "ToggleTerm btm" },
+      ["<leader>tt"] = { "<cmd>ToggleTerm direction=float<cr>",
+                         desc = "ToggleTerm float" },
+      ["<leader>uI"] = { "<cmd>IlluminateToggleBuf<cr>",
+                         desc = "Toggle Illuminate" },
       [";"] = { ":", desc = "Vim command" },
     },
     v = {
@@ -34,8 +42,9 @@ return {
       translator_target_lang = "ja",
     },
     opt = {
-      autochdir = true,
+      -- autochdir = true,
       fileencodings = { "utf-8", "cp932", "euc-jp", "sjis" },
+      list = true,
       listchars = { tab = "▸-" },
       ttimeoutlen = 100,
     },
@@ -51,6 +60,7 @@ return {
     { "ishan9299/modus-theme-vim", lazy = false, priority = 1000 },
     {
       "TimUntersberger/neogit",
+      event = { "BufRead", "InsertEnter" },
       cmd = "Neogit",
       keys = {{
         "<leader>gt",
@@ -124,7 +134,11 @@ return {
         })
       end,
     },
-    { "nvim-treesitter/playground", event = "VeryLazy" },
+    {
+      "nvim-treesitter/playground",
+      dependencies = { "nvim-treesitter/nvim-treesitter" },
+      event = "VeryLazy",
+    },
     {
       "folke/trouble.nvim",
       event = { "BufRead", "InsertEnter" },
