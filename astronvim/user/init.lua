@@ -57,6 +57,9 @@ return {
         -- ensure_installed = { "python" }
       },
     },
+    { "catppuccin/nvim", name = "catppuccin", lazy = false, priority = 1000 },
+    { "folke/tokyonight.nvim", lazy = false, priority = 1000 },
+    { "sainnhe/gruvbox-material", lazy = false, priority = 1000 },
     { "ishan9299/modus-theme-vim", lazy = false, priority = 1000 },
     {
       "TimUntersberger/neogit",
