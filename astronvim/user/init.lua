@@ -11,16 +11,14 @@ return {
     n = {
       ["<space>"] = { "<pagedown>", desc = "Scroll down" },
       ["<S-space>"] = { "<pageup>", desc = "Scroll up" },
-      ["<leader>E"] = { "<cmd>e!<cr>", desc = "Reload" },
       ["<leader>Q"] = { "<cmd>qa<cr>", desc = "Quit all" },
       ["<leader>ll"] = { "<cmd>Telescope lsp_definitions<cr>",
                          desc = "Search definitions" },
+      ["<leader>r"] = { "<cmd>e<cr>", desc = "Reload" },
       ["<leader>tb"] = { function() require"astronvim.utils".toggle_term_cmd "btm" end,
                          desc = "ToggleTerm btm" },
       ["<leader>tt"] = { "<cmd>ToggleTerm direction=float<cr>",
                          desc = "ToggleTerm float" },
-      ["<leader>uI"] = { "<cmd>IlluminateToggleBuf<cr>",
-                         desc = "Toggle Illuminate" },
       [";"] = { ":", desc = "Vim command" },
     },
     v = {
@@ -76,7 +74,6 @@ return {
     {
       "nvim-treesitter/nvim-treesitter",
       dependencies = {
-        "nvim-treesitter/nvim-treesitter-context",
         "RRethy/nvim-treesitter-endwise",
         "mrjones2014/nvim-ts-rainbow",
         "andymass/vim-matchup",
@@ -101,6 +98,7 @@ return {
         ensure_installed = {
           "c",
           "lua",
+          "markdown",
           "org",
           "query",
           "python",
@@ -110,7 +108,7 @@ return {
         },
       },
     },
-    { "kevinhwang91/nvim-ufo", enabled = false },
+    -- { "kevinhwang91/nvim-ufo", enabled = false },
     { 
       "tyru/open-browser.vim",
       keys = {{
@@ -126,13 +124,15 @@ return {
         "<leader>o", name = "Orgmode",
       },
       {
-        "<leader>oC",
+        "<leader>o.",
         '<cmd>lua require("orgmode").action("org_mappings.org_time_stamp")<cr>',
-        desc = "org Calendar",
+        desc = "org calendar",
       }},
       config = function()
         require('orgmode').setup_ts_grammar()
         require('orgmode').setup({
+          org_blank_before_new_entry =
+            { heading = false, plain_list_item = false },
           calendar_week_start_day = 0,
         })
       end,
@@ -187,6 +187,8 @@ return {
     --     autocmd VimEnter * hi IlluminatedWordWrite gui=bold ",underline
     -- augroup END
     -- ]])
+    -- vim-ufo
+    vim.cmd([[au FileType org UfoDetach]])
     -- ime
     vim.cmd([[
     augroup restore-ime
