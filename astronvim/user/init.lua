@@ -40,7 +40,6 @@ return {
       translator_target_lang = "ja",
     },
     opt = {
-      -- autochdir = true,
       fileencodings = { "utf-8", "cp932", "euc-jp", "sjis" },
       list = true,
       listchars = { tab = "▸-" },
@@ -52,8 +51,36 @@ return {
     {
       "jay-babu/mason-nvim-dap.nvim",
       opts = {
-        -- ensure_installed = { "python" }
+        ensure_installed = { "python" }
       },
+      config = function(plugin, opts)
+        local venv = os.getenv('VIRTUAL_ENV')
+        local command = string.format('%s/bin/python', venv)
+        local mason_nvim_dap = require "mason-nvim-dap"
+        mason_nvim_dap.setup(opts) -- run setup
+        -- do more configuration as needed
+        mason_nvim_dap.setup_handlers {
+          python = function(source_name)
+            local dap = require "dap"
+            dap.adapters.python = {
+              type = "executable",
+              command = command,
+              args = {
+                "-m",
+                "debugpy.adapter",
+              },
+            }
+            dap.configurations.python = {
+              {
+                type = "python",
+                request = "launch",
+                name = "Launch file",
+                program = "${file}", -- This configuration will launch the current file if used.
+              },
+            }
+          end,
+        }
+      end,
     },
     { "catppuccin/nvim", name = "catppuccin", lazy = false, priority = 1000 },
     { "folke/tokyonight.nvim", lazy = false, priority = 1000 },
@@ -80,20 +107,8 @@ return {
       },
       event = "VeryLazy",
       opts = {
-        highlight = {
-          enable = true,
-          additional_vim_regex_highlighting = { "org" },
-        },
         endwise = {
           enable = true,
-        },
-        matchup = {
-          enable = true,
-        },
-        rainbow = {
-          enable = true,
-          extended_mode = true,
-          max_file_lines = nil,
         },
         ensure_installed = {
           "c",
@@ -106,9 +121,23 @@ return {
           "typescript",
           "vim",
         },
+        highlight = {
+          enable = true,
+          additional_vim_regex_highlighting = { "org" },
+        },
+        indent = {
+          enable = true,
+        },
+        matchup = {
+          enable = true,
+        },
+        rainbow = {
+          enable = true,
+          extended_mode = true,
+          max_file_lines = nil,
+        },
       },
     },
-    -- { "kevinhwang91/nvim-ufo", enabled = false },
     { 
       "tyru/open-browser.vim",
       keys = {{
@@ -148,15 +177,6 @@ return {
       dependencies = { "nvim-tree/nvim-web-devicons" },
       config = true,
     },
-    -- {
-    --   "RRethy/vim-illuminate",
-    --   event = { "BufRead" },
-    --   config = function()
-    --     require('illuminate').configure({
-    --       filetypes_allowlist = { "lua", "python", "vim" },
-    --     })
-    --   end,
-    -- },
     { "machakann/vim-sandwich", event = "InsertEnter" },
     { "dstein64/vim-startuptime", cmd = "StartupTime" },
     {
@@ -178,15 +198,6 @@ return {
     hi LspReferenceRead gui=bold  ",underline
     hi LspReferenceWrite gui=bold ",underline
     ]])
-    -- vim-illuminate
-    -- vim.cmd([[
-    -- augroup illuminate_augroup
-    --     autocmd!
-    --     autocmd VimEnter * hi IlluminatedWordRead gui=bold  ",underline
-    --     autocmd VimEnter * hi IlluminatedWordText gui=bold  ",underline
-    --     autocmd VimEnter * hi IlluminatedWordWrite gui=bold ",underline
-    -- augroup END
-    -- ]])
     -- vim-ufo
     vim.cmd([[au FileType org UfoDetach]])
     -- ime
@@ -211,10 +222,5 @@ return {
     end
     -- keyword unit
     vim.cmd([[set iskeyword-=_]])
-    -- abbreviations
-    vim.cmd([[
-    iab tilda ~
-    iab backtick `
-    ]])
   end,
 }
