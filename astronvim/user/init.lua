@@ -51,36 +51,27 @@ return {
     {
       "jay-babu/mason-nvim-dap.nvim",
       opts = {
-        ensure_installed = { "python" }
-      },
-      config = function(plugin, opts)
-        local venv = os.getenv('VIRTUAL_ENV')
-        local command = string.format('%s/bin/python', venv)
-        local mason_nvim_dap = require "mason-nvim-dap"
-        mason_nvim_dap.setup(opts) -- run setup
-        -- do more configuration as needed
-        mason_nvim_dap.setup_handlers {
-          python = function(source_name)
-            local dap = require "dap"
-            dap.adapters.python = {
+        ensure_installed = {'stylua', 'jq'},
+        handlers = {
+          function(config)
+            -- all sources with no handler get passed here
+
+            -- Keep original functionality
+            require('mason-nvim-dap').default_setup(config)
+          end,
+          python = function(config)
+            config.adapters = {
               type = "executable",
-              command = command,
+              command = string.format('%s/bin/python', os.getenv('VIRTUAL_ENV')),
               args = {
                 "-m",
                 "debugpy.adapter",
               },
             }
-            dap.configurations.python = {
-              {
-                type = "python",
-                request = "launch",
-                name = "Launch file",
-                program = "${file}", -- This configuration will launch the current file if used.
-              },
-            }
+            require('mason-nvim-dap').default_setup(config) -- don't forget this!
           end,
-        }
-      end,
+        },
+      },
     },
     { "catppuccin/nvim", name = "catppuccin", lazy = false, priority = 1000 },
     { "folke/tokyonight.nvim", lazy = false, priority = 1000 },

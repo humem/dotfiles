@@ -9,12 +9,13 @@ alias docker_start='sudo service docker start'
 alias e='emacs &'
 alias en='emacs -nw'
 alias fc='fcitx 2>/dev/null'
-alias g='grep'
+alias g='git'
 alias jl='jupyter lab --ip 0.0.0.0 --no-browser'
 alias l='less'
 alias ll='ls -alF'
 alias m='more'
 alias nv='nvidia-smi -l'
+alias r='grep'
 alias t='tmux a'
 alias ta='gnome-terminal; fcitx 2>/dev/null; autokey 2>/dev/null &'
 alias tb='tensorboard --bind_all --logdir'
@@ -86,6 +87,9 @@ export Z=$HOME/distfiles/z/z.sh
 if [ -f $Z ]; then
     source $Z
 fi
+
+export PATH=$HOME/.local/bin:$PATH
+export LD_LIBRARY_PATH=$HOME/.local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
 
 if [ -f "$HOME/.bash_local" ]; then
     source $HOME/.bash_local
