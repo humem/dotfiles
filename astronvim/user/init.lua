@@ -213,5 +213,7 @@ return {
     end
     -- keyword unit
     vim.cmd([[set iskeyword-=_]])
+    -- japanese
+    -- vim.cmd([[set fileoptions+=mM]])
   end,
 }

@@ -1,4 +1,4 @@
 return {
-  -- "modus-operandi"
-  "catppuccin-mocha"
+  "modus-operandi"
+  -- "catppuccin-mocha"
 }
