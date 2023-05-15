@@ -1,20 +1,12 @@
 return {
-  -- netrw
-
-  lsp = {
-    servers = {
-      "pyright",
-    },
-  },
-
   mappings = {
     n = {
       ["<space>"] = { "<pagedown>", desc = "Scroll down" },
       ["<S-space>"] = { "<pageup>", desc = "Scroll up" },
       ["<leader>Q"] = { "<cmd>qa<cr>", desc = "Quit all" },
-      ["<leader>r"] = { "<cmd>e<cr>", desc = "Reload" },
       ["<leader>ll"] = { "<cmd>Telescope lsp_definitions<cr>",
                          desc = "Search definitions" },
+      ["<leader>r"] = { "<cmd>e<cr>", desc = "Reload" },
       ["<leader>tb"] = { function() require"astronvim.utils".toggle_term_cmd "btm" end,
                          desc = "ToggleTerm btm" },
       ["<leader>tt"] = { "<cmd>ToggleTerm size=10 direction=horizontal<cr>",
@@ -43,7 +35,6 @@ return {
       fileencodings = { "utf-8", "cp932", "euc-jp", "sjis" },
       list = true,
       listchars = { tab = "▸-" },
-      ttimeoutlen = 100,
     },
   },
 
@@ -213,7 +204,7 @@ return {
     end
     -- keyword unit
     vim.cmd([[set iskeyword-=_]])
-    -- japanese
-    -- vim.cmd([[set fileoptions+=mM]])
+    -- concat japanese strings
+    vim.cmd([[set formatoptions+=mM]])
   end,
 }
