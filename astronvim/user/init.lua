@@ -237,6 +237,8 @@ return {
   },
 
   polish = function ()
+    -- colorscheme
+    vim.cmd[[colorscheme catppuccin-mocha]]
     -- lsp highlight
     vim.cmd([[
     hi LspReferenceText gui=bold  ",underline
