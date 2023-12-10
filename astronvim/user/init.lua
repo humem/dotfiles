@@ -246,7 +246,7 @@ return {
     hi LspReferenceWrite gui=bold ",underline
     ]])
     -- vim-ufo
-    vim.cmd([[au FileType org UfoDetach]])
+    -- vim.cmd([[au FileType org UfoDetach]])
     -- ime
     vim.cmd([[
     augroup restore-ime
