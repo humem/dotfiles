@@ -102,6 +102,13 @@ return {
     --     return opts
     --   end,
     -- },
+    { "CoderCookE/vim-chatgpt", event = "VeryLazy" },
+    {
+      "iamcco/markdown-preview.nvim",
+      cmd = { "MarkdownPreviewToggle", "MarkdownPreview", "MarkdownPreviewStop" },
+      ft = { "markdown" },
+      build = function() vim.fn["mkdp#util#install"]() end,
+    },
     {
       "jay-babu/mason-nvim-dap.nvim",
       opts = {
@@ -237,6 +244,8 @@ return {
   },
 
   polish = function ()
+    -- markdown-preview
+    vim.cmd[[let g:mkdp_open_to_the_world = 1]]
     -- colorscheme
     vim.cmd[[colorscheme catppuccin-mocha]]
     -- lsp highlight
@@ -260,6 +269,31 @@ return {
         autocmd InsertLeave * silent call chansend(v:stderr, "\e[<s\e[<0t")
         autocmd VimLeave * silent call chansend(v:stderr, "\e[<0t\e[<s")
       endif
+    augroup END
+
+    " IME制御の設定
+    command! ImeOff silent !spzenhan.exe 0
+    command! ImeOn  silent !spzenhan.exe 1
+
+    function! ImeAutoOn()
+        if !exists('b:ime_status')
+            let b:ime_status=0
+        endif
+        if b:ime_status==1
+            :silent ImeOn
+        endif
+    endfunction
+
+    function! ImeAutoOff()
+        let b:ime_status=system(['spzenhan.exe'])
+        :silent ImeOff
+    endfunction
+
+    " IME off when in insert mode
+    augroup InsertHook
+        autocmd!
+        autocmd InsertEnter * call ImeAutoOn()
+        autocmd InsertLeave * call ImeAutoOff()
     augroup END
     ]])
     -- python3_host_prog
